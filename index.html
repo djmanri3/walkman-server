@@ -8948,16 +8948,18 @@ let audioQuality = null;
         audioCtx.resume();
       }
 
-      const streamUrl = track.IsLocal
-        ? track.objUrl || track.Path
-        : embyConfig.serverType === 'plex'
-          ? `${embyConfig.host}/library/parts/${track._plexPartId}/stream?X-Plex-Token=${embyConfig.token}`
-          : `${embyConfig.host}/Audio/${track.Id}/stream?static=true&api_key=${embyConfig.token}`;
-      const doSwitch = () => {
+      const streamUrl = buildStreamUrl(track);
+      const doSwitch = async () => {
         audio._crossfadeAdvancing = false;
-        audio.src = streamUrl;
+        const cachedUrl = await getCachedStreamUrl(streamUrl);
+        const newSrc = cachedUrl || streamUrl;
+        const oldSrc = audio.src;
+        audio.src = newSrc;
         audio._userPaused = false;
         audio.play();
+        if (oldSrc && oldSrc.startsWith('blob:') && oldSrc !== newSrc) {
+          try { URL.revokeObjectURL(oldSrc); } catch (e) {}
+        }
         document.getElementById('play-icon').textContent = 'pause';
         document.getElementById('vis-play-icon').textContent = 'pause';
       };
@@ -8996,6 +8998,79 @@ let audioQuality = null;
       showNowPlayingNotification(track);
       setupMediaSessionHandlers();
       setMediaSessionPlayback(true);
+      prefetchUpcomingTracks();
+    }
+
+    // ─── Cache de cola de reproducción ───
+    const AUDIO_CACHE_NAME = 'walkman-audio-prefetch';
+    const PREFETCH_THRESHOLD = 80;
+    const PREFETCH_COUNT = 40;
+    const PREFETCH_CONCURRENCY = 5;
+    let prefetchPool = [];
+    let prefetchRunning = 0;
+
+    function buildStreamUrl(track) {
+      if (track.IsLocal) return track.objUrl || track.Path || null;
+      if (embyConfig.serverType === 'plex') {
+        return `${embyConfig.host}/library/parts/${track._plexPartId}/stream?X-Plex-Token=${embyConfig.token}`;
+      }
+      return `${embyConfig.host}/Audio/${track.Id}/stream?static=true&api_key=${embyConfig.token}`;
+    }
+
+    async function getCachedStreamUrl(url) {
+      if (!url || !url.startsWith('http') || !('caches' in window)) return null;
+      try {
+        const cache = await caches.open(AUDIO_CACHE_NAME);
+        const resp = await cache.match(url);
+        if (!resp) return null;
+        const blob = await resp.blob();
+        if (!blob || blob.size === 0) { cache.delete(url); return null; }
+        return URL.createObjectURL(blob);
+      } catch (e) { return null; }
+    }
+
+    async function fetchAndCacheTrack(url) {
+      if (!url || !url.startsWith('http')) return;
+      try {
+        const cache = await caches.open(AUDIO_CACHE_NAME);
+        const existing = await cache.match(url);
+        if (existing) return;
+        const resp = await fetch(url);
+        if (resp && resp.ok) {
+          const clone = resp.clone();
+          await cache.put(url, clone);
+        }
+      } catch (e) {}
+    }
+
+    function drainPrefetchPool() {
+      while (prefetchRunning < PREFETCH_CONCURRENCY && prefetchPool.length > 0) {
+        const url = prefetchPool.shift();
+        prefetchRunning++;
+        fetchAndCacheTrack(url).then(() => {
+          prefetchRunning--;
+          drainPrefetchPool();
+        }).catch(() => {
+          prefetchRunning--;
+          drainPrefetchPool();
+        });
+      }
+    }
+
+    function prefetchUpcomingTracks() {
+      if (!navigator.onLine || !('caches' in window)) return;
+      if (playlist.length <= PREFETCH_THRESHOLD) return;
+      prefetchPool = [];
+      const start = currentTrackIndex + 1;
+      const end = Math.min(start + PREFETCH_COUNT, playlist.length);
+      for (let i = start; i < end; i++) {
+        const track = playlist[i];
+        if (!track || track.IsLocal) continue;
+        const url = buildStreamUrl(track);
+        if (!url || !url.startsWith('http')) continue;
+        prefetchPool.push(url);
+      }
+      drainPrefetchPool();
     }
 
     function togglePlay() {
