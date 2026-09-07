@@ -4154,7 +4154,7 @@
     let availableLibraries = [];
     
     // Estados de reproducción
-    let repeatMode = 0; // 0: Off, 1: All, 2: One
+    let repeatMode = 1; // 0: Off, 1: All, 2: One
     let isShuffle = false;
     let originalPlaylist = [];
     let lastVolume = 1;
@@ -6351,17 +6351,19 @@ let audioQuality = null;
     }
 
     // LÓGICA DE REPETICIÓN Y ALEATORIO
-    function toggleRepeat() {
+    function syncRepeatButton() {
       const btn = document.getElementById('repeat-btn');
-      repeatMode = (repeatMode + 1) % 3;
-
       btn.classList.remove('active', 'repeat-one');
-
       if (repeatMode === 1) {
         btn.classList.add('active');
       } else if (repeatMode === 2) {
         btn.classList.add('active', 'repeat-one');
       }
+    }
+
+    function toggleRepeat() {
+      repeatMode = (repeatMode + 1) % 3;
+      syncRepeatButton();
     }
 
     function toggleShuffle() {
@@ -9227,6 +9229,7 @@ let audioQuality = null;
       initXpspLeds();
       initFullscreen();
       fitHeader();
+      syncRepeatButton();
       // Restaurar crossfade desde localStorage
       const xf = loadLS('walkman_crossfade');
       if (xf !== null) { crossfadeSeconds = Number(xf) || 0; setCrossfade(crossfadeSeconds); }
