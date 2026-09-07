@@ -8135,6 +8135,20 @@ let audioQuality = null;
       container.innerHTML = '';
       const fragment = document.createDocumentFragment();
 
+      if (albumTracks.length > 0) {
+        const shuffleDiv = document.createElement('div');
+        shuffleDiv.className = 'list-item list-item-shuffle';
+        shuffleDiv.innerHTML = `
+          <div class="list-item-shuffle-icon"><span class="material-icons">shuffle</span></div>
+          <div class="list-item-info">
+            <div class="list-item-title">${t('shuffle')}</div>
+            <div class="list-item-sub">${t('shuffleAll')} ${albumTracks.length}</div>
+          </div>
+        `;
+        shuffleDiv.onclick = () => playShuffleAll(albumTracks);
+        fragment.appendChild(shuffleDiv);
+      }
+
       albumTracks.forEach((track, index) => {
         const div = document.createElement('div');
         div.className = 'list-item';
