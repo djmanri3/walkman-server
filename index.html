@@ -5350,7 +5350,10 @@ let audioQuality = null;
       if (!audioProcessingEnabled) return;
 
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContext();
+      const isAndroid = /Android/.test(navigator.userAgent);
+      audioCtx = new AudioContext({
+        latencyHint: isAndroid ? 'playback' : 'interactive'
+      });
       trackSource = audioCtx.createMediaElementSource(audio);
 
       // Analizador de Audio para el Visualizador Canvas
@@ -5397,6 +5400,7 @@ let audioQuality = null;
       clearBassFilter.connect(vptDryGain);
       clearBassFilter.connect(vptConvolver);
       vptConvolver.connect(vptWetGain);
+      vptConvolver.__connected = true;
 
       vptDryGain.connect(audioCtx.destination);
       vptWetGain.connect(audioCtx.destination);
@@ -6199,24 +6203,41 @@ let audioQuality = null;
       if (!audioCtx || !vptConvolver || !vptWetGain || !vptDryGain) return;
 
       if (profileIndex === 0) {
-        // Desactivado
+        // Desactivado: desconectar convolver para ahorrar CPU
+        if (vptConvolver.__connected) {
+          try {
+            clearBassFilter.disconnect(vptConvolver);
+            vptConvolver.disconnect(vptWetGain);
+          } catch (e) {}
+          vptConvolver.__connected = false;
+        }
         vptDryGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
         vptWetGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-      } else if (profileIndex === 1) {
-        // Estudio (Reverb muy corta y brillante)
-        vptConvolver.buffer = createImpulseResponse(0.6, 2.5, false);
-        vptDryGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
-        vptWetGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      } else if (profileIndex === 2) {
-        // Club (Reverb mediana con graves potentes)
-        vptConvolver.buffer = createImpulseResponse(1.5, 2.0, false);
-        vptDryGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
-        vptWetGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      } else if (profileIndex === 3) {
-        // Auditorio (Reverb larga y envolvente)
-        vptConvolver.buffer = createImpulseResponse(3.2, 1.5, false);
-        vptDryGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
-        vptWetGain.gain.setValueAtTime(0.55, audioCtx.currentTime);
+      } else {
+        // Reconectar convolver si estaba desconectado
+        if (!vptConvolver.__connected) {
+          try {
+            clearBassFilter.connect(vptConvolver);
+            vptConvolver.connect(vptWetGain);
+            vptConvolver.__connected = true;
+          } catch (e) {}
+        }
+        if (profileIndex === 1) {
+          // Estudio (Reverb muy corta y brillante)
+          vptConvolver.buffer = createImpulseResponse(0.6, 2.5, false);
+          vptDryGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+          vptWetGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        } else if (profileIndex === 2) {
+          // Club (Reverb mediana con graves potentes)
+          vptConvolver.buffer = createImpulseResponse(1.5, 2.0, false);
+          vptDryGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+          vptWetGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        } else if (profileIndex === 3) {
+          // Auditorio (Reverb larga y envolvente)
+          vptConvolver.buffer = createImpulseResponse(3.2, 1.5, false);
+          vptDryGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
+          vptWetGain.gain.setValueAtTime(0.55, audioCtx.currentTime);
+        }
       }
     }
 
