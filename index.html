@@ -9397,6 +9397,10 @@ let audioQuality = null;
 
       function resumePlayback() {
         if (!wasPlaying || !audio.src || audio._userPaused) return;
+        if (audio.ended) {
+          nextTrack();
+          return;
+        }
         if (audioCtx && audioCtx.state !== 'running' && audioCtx.resume) {
           try { audioCtx.resume().catch(function() {}); } catch (e) {}
         }
@@ -9459,10 +9463,13 @@ let audioQuality = null;
         resumePlayback();
       });
 
-      // Si Safari pausa el elemento por una interrupción involuntaria,
-      // capturamos que estaba sonando para poder reanudarla al volver.
+      // Si el navegador pausa el elemento por una interrupción involuntaria
+      // (Safari, Android background throttle), capturamos que estaba sonando
+      // para poder reanudarla al volver.
       audio.addEventListener('pause', function() {
-        wasPlaying = !!audio.src && !audio.ended && !audio._userPaused && !document.hidden;
+        if (audio._userPaused || audio.ended) {
+          wasPlaying = false;
+        }
       });
 
       // Estado inicial
