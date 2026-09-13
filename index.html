@@ -279,20 +279,22 @@
       flex-shrink: 0;
     }
 
-    /* VISTA DE LETRAS (Lyrics) — fondo estilo crystal glass */
+    /* VISTA DE LETRAS (Lyrics) — fondo estilo crystal glass.
+       Se coloca dentro del carrusel y hereda el MISMO zoom/escala que la
+       carátula (Tamaño Barra Walkman + zoom de carrusel), por lo que siempre
+       se ajusta al tamaño real de la portada sin necesidad de medir en JS. */
     .lyrics-view {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 300;
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: var(--album-size);
+      height: var(--album-size);
+      z-index: 6;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 0;
       box-sizing: border-box;
-      /* Overlay transparente: deja que los clics pasen al resto de la app */
+      /* Deja que los clics pasen a otras zonas del carrusel */
       pointer-events: none;
     }
     .lyrics-view.active {
@@ -308,7 +310,7 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
       overflow: hidden;
-      position: fixed;
+      position: relative;
       display: flex;
       flex-direction: column;
       /* La ventana sí captura los clics */
@@ -3441,45 +3443,6 @@
       </div>
     </div>
 
-    <!-- VISTA: LETRAS (Lyrics) -->
-    <div id="view-lyrics" class="lyrics-view">
-      <div class="lyrics-glass">
-        <div class="lyrics-header">
-          <span class="lyrics-title" id="lyrics-title" data-i18n="lyrics">Letras</span>
-          <div class="lyrics-actions">
-            <button class="lyrics-follow on" id="lyrics-follow-btn" type="button"
-              onclick="toggleLyricsFollow()" data-i18n-title="followLyrics"
-              aria-pressed="true">
-              <span class="material-icons">vertical_align_bottom</span>
-            </button>
-            <select id="lyrics-lang" class="lyrics-lang" title="Idioma de traducción" onchange="translateLyrics(this.value)">
-              <option value="" data-i18n="original">Original</option>
-              <option value="es">Español</option>
-              <option value="en">Inglés</option>
-              <option value="de">Alemán</option>
-              <option value="fr">Francés</option>
-              <option value="it">Italiano</option>
-              <option value="pt">Portugués</option>
-              <option value="ja">Japonés</option>
-              <option value="zh">Chino</option>
-              <option value="ru">Ruso</option>
-              <option value="ar">Árabe</option>
-            </select>
-            <span class="material-icons" style="cursor:pointer;" onclick="toggleLyricsView()">close</span>
-          </div>
-        </div>
-        <div class="lyrics-scroll" id="lyrics-scroll">
-          <div class="lyrics-body" id="lyrics-body">
-            <div class="lyrics-loading" data-i18n="searchingLyrics">Buscando letras...</div>
-          </div>
-        </div>
-        <div class="lyrics-translating" id="lyrics-translating" style="display:none;">
-          <div class="lyrics-spinner"></div>
-          <span data-i18n="translating">Traduciendo...</span>
-        </div>
-      </div>
-    </div>
-
     <!-- CARRUSEL DE PORTADAS -->
     <div class="carousel-wrapper">
       <div class="carousel-container">
@@ -3518,6 +3481,47 @@
         </div>
         <div class="art-card next" id="card-next" onclick="nextTrack()">
           <img id="img-next" src="" />
+        </div>
+
+        <!-- VISTA: LETRAS (Lyrics) — overlay absoluto dentro del carrusel.
+             Comparte el entorno de zoom/escala con card-current (--album-size),
+             por lo que se adapta automáticamente a la carátula. -->
+        <div id="view-lyrics" class="lyrics-view">
+          <div class="lyrics-glass">
+            <div class="lyrics-header">
+              <span class="lyrics-title" id="lyrics-title" data-i18n="lyrics">Letras</span>
+              <div class="lyrics-actions">
+                <button class="lyrics-follow on" id="lyrics-follow-btn" type="button"
+                  onclick="toggleLyricsFollow()" data-i18n-title="followLyrics"
+                  aria-pressed="true">
+                  <span class="material-icons">vertical_align_bottom</span>
+                </button>
+                <select id="lyrics-lang" class="lyrics-lang" title="Idioma de traducción" onchange="translateLyrics(this.value)">
+                  <option value="" data-i18n="original">Original</option>
+                  <option value="es">Español</option>
+                  <option value="en">Inglés</option>
+                  <option value="de">Alemán</option>
+                  <option value="fr">Francés</option>
+                  <option value="it">Italiano</option>
+                  <option value="pt">Portugués</option>
+                  <option value="ja">Japonés</option>
+                  <option value="zh">Chino</option>
+                  <option value="ru">Ruso</option>
+                  <option value="ar">Árabe</option>
+                </select>
+                <span class="material-icons" style="cursor:pointer;" onclick="toggleLyricsView()">close</span>
+              </div>
+            </div>
+            <div class="lyrics-scroll" id="lyrics-scroll">
+              <div class="lyrics-body" id="lyrics-body">
+                <div class="lyrics-loading" data-i18n="searchingLyrics">Buscando letras...</div>
+              </div>
+            </div>
+            <div class="lyrics-translating" id="lyrics-translating" style="display:none;">
+              <div class="lyrics-spinner"></div>
+              <span data-i18n="translating">Traduciendo...</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -7093,7 +7097,6 @@ let audioQuality = null;
       const cw = document.querySelector('.controls-wrapper');
       if (cw) cw.classList.toggle('lyrics-open', open);
       if (open) {
-        syncLyricsToAlbum();
         loadLyrics();
         if (!lrcInterval) {
           lrcInterval = setInterval(() => {
@@ -7116,50 +7119,6 @@ let audioQuality = null;
       }
     }
 
-    // Ajusta el popup de letras al tamaño y posición exactos de la carátula
-    // del álbum (card-current). Así el "cristal" de las letras acompaña el
-    // mismo tamaño al que se dibuja la portada en pantalla (zoom, orientación,
-    // carrusel, etc.) y se adapta automáticamente a cualquier cambio.
-    function syncLyricsToAlbum() {
-      const view = document.getElementById('view-lyrics');
-      const glass = view.querySelector('.lyrics-glass');
-      const card = document.getElementById('card-current');
-      if (!view || !glass || !card || !view.classList.contains('active')) return;
-      const rect = card.getBoundingClientRect();
-      const vw = window.innerWidth || document.documentElement.clientWidth;
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      if (!rect.width || !rect.height) return;
-      // Rounded rect mide el área visible de la tarjeta (recorta el desbordamiento)
-      const box = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-      const rTop = Math.max(0, box.top);
-      const rLeft = Math.max(0, box.left);
-      const rRight = Math.min(vw, box.left + box.width);
-      const rBottom = Math.min(vh, box.top + box.height);
-      if (rRight <= rLeft || rBottom <= rTop) return;
-      glass.style.top = rTop + 'px';
-      glass.style.left = rLeft + 'px';
-      glass.style.width = (rRight - rLeft) + 'px';
-      glass.style.height = (rBottom - rTop) + 'px';
-    }
-
-    // Mantener el tamaño del popup de letras sincronizado con la carátula
-    // cuando cambia el tamaño de la ventana o la orientación.
-    let _lyricsResizeTimer = null;
-    window.addEventListener('resize', () => {
-      clearTimeout(_lyricsResizeTimer);
-      _lyricsResizeTimer = setTimeout(() => {
-        const view = document.getElementById('view-lyrics');
-        if (view && view.classList.contains('active')) syncLyricsToAlbum();
-      }, 60);
-    });
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        const view = document.getElementById('view-lyrics');
-        if (view && view.classList.contains('active')) syncLyricsToAlbum();
-      }, 120);
-    });
-
-    // Cierra el popup de letras al salir de la pestaña Playing (p. ej. ir a My Music)
     function closeLyricsIfOpen() {
       const view = document.getElementById('view-lyrics');
       if (view && view.classList.contains('active')) toggleLyricsView();
@@ -7607,11 +7566,6 @@ let audioQuality = null;
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.czoom) === num);
       });
-      // Si las letras están abiertas, re-ajustar el popup al nuevo tamaño de carátula
-      const lview = document.getElementById('view-lyrics');
-      if (lview && lview.classList.contains('active')) {
-        setTimeout(syncLyricsToAlbum, 60);
-      }
     }
 
     function setCarouselZoom(z) {
