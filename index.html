@@ -44,6 +44,21 @@
       --accent-color: #aa00ff;
       --walkman-green: #76c02a;
       --carousel-size: 1;
+      /* Tamaño fluido de la carátula en la pestaña Playing: se adapta a
+         cualquier pantalla usando el ancho (vw), el alto disponible (reserva
+         para header + info + controles + LEDs) y un máximo ideal (560px,
+         para que en escritorio y tablets los álbumes se vean grandes). */
+      --album-h-reserve: 290px;
+      --album-base: max(110px, min(72vw, 560px, calc((100vh - var(--album-h-reserve)) * 0.917)));
+      --album-size: calc(var(--album-base) * var(--carousel-size));
+      --album-shift: calc(var(--album-size) * 0.58);
+    }
+    @supports (height: 100dvh) {
+      :root {
+        /* En móviles con barra del navegador dinámica, 100dvh refleja el
+           alto realmente visible */
+        --album-base: max(110px, min(72vw, 560px, calc((100dvh - var(--album-h-reserve)) * 0.917)));
+      }
     }
 
     * {
@@ -80,9 +95,13 @@
       background-color: #000;
       color: #fff;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      /* Evita que el contenido quede bajo muescas/redondeos (notch) en móvil */
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
 
     /* Fondo dinámico radial estilo Walkman */
@@ -101,7 +120,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: env(safe-area-inset-top, 0px) 16px 0;
       background: rgba(0, 0, 0, 0.4);
       position: relative;
       z-index: 10;
@@ -172,6 +191,7 @@
       flex-direction: column;
       overflow-y: auto;
       padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     }
 
     .view.active {
@@ -182,7 +202,7 @@
     #view-playing {
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       overflow-x: hidden;
       position: relative;
     }
@@ -259,20 +279,22 @@
       flex-shrink: 0;
     }
 
-    /* VISTA DE LETRAS (Lyrics) — fondo estilo crystal glass */
+    /* VISTA DE LETRAS (Lyrics) — fondo estilo crystal glass.
+       Se coloca dentro del carrusel y hereda el MISMO zoom/escala que la
+       carátula (Tamaño Barra Walkman + zoom de carrusel), por lo que siempre
+       se ajusta al tamaño real de la portada sin necesidad de medir en JS. */
     .lyrics-view {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 300;
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: var(--album-size);
+      height: var(--album-size);
+      z-index: 6;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
       box-sizing: border-box;
-      /* Overlay transparente: deja que los clics pasen al resto de la app */
+      /* Deja que los clics pasen a otras zonas del carrusel */
       pointer-events: none;
     }
     .lyrics-view.active {
@@ -280,12 +302,9 @@
     }
     .lyrics-glass {
       width: 100%;
-      max-width: 500px;
-      height: 62vh;
-      min-height: 340px;
-      max-height: 560px;
+      height: 100%;
       border-radius: 24px;
-      background: rgba(0, 0, 0, 0.32);
+      background: rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(28px) saturate(160%);
       -webkit-backdrop-filter: blur(28px) saturate(160%);
       border: 1px solid rgba(255, 255, 255, 0.18);
@@ -445,7 +464,7 @@
 
     .carousel-container {
       width: 100%;
-      height: calc(360px * var(--carousel-size));
+      height: calc(var(--album-size) * 1.09);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -455,8 +474,8 @@
 
     .art-card {
       position: absolute;
-      width: calc(330px * var(--carousel-size));
-      height: calc(330px * var(--carousel-size));
+      width: var(--album-size);
+      height: var(--album-size);
       transition: all 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
       border-radius: 2px;
@@ -504,7 +523,7 @@
     }
 
     .art-card.next {
-      transform: translateX(calc(190px * var(--carousel-size))) scale(0.82);
+      transform: translateX(var(--album-shift)) scale(0.82);
       z-index: 2;
       opacity: 0.5;
       cursor: pointer;
@@ -513,7 +532,7 @@
     }
 
     .art-card.prev {
-      transform: translateX(calc(-190px * var(--carousel-size))) scale(0.82);
+      transform: translateX(calc(-1 * var(--album-shift))) scale(0.82);
       z-index: 2;
       opacity: 0.5;
       cursor: pointer;
@@ -569,19 +588,6 @@
     }
 
     @media (max-width: 400px) {
-      .carousel-container {
-        height: calc(260px * var(--carousel-size));
-      }
-      .art-card {
-        width: calc(230px * var(--carousel-size));
-        height: calc(230px * var(--carousel-size));
-      }
-      .art-card.next {
-        transform: translateX(calc(140px * var(--carousel-size))) scale(0.82);
-      }
-      .art-card.prev {
-        transform: translateX(calc(-140px * var(--carousel-size))) scale(0.82);
-      }
       .vis-progress-side {
         width: 90px;
         min-width: 80px;
@@ -592,46 +598,24 @@
       }
     }
 
-    @media (min-width: 401px) and (max-width: 500px) {
-      .carousel-container {
-        height: calc(300px * var(--carousel-size));
-      }
-      .art-card {
-        width: calc(280px * var(--carousel-size));
-        height: calc(280px * var(--carousel-size));
-      }
-      .art-card.next {
-        transform: translateX(calc(160px * var(--carousel-size))) scale(0.82);
-      }
-      .art-card.prev {
-        transform: translateX(calc(-160px * var(--carousel-size))) scale(0.82);
-      }
-    }
-
-    /* Orientación horizontal (landscape): compactar para que se vea a escala */
+    /* Orientación horizontal (landscape): compactar para que se vea a escala.
+       El alto de la carátula se ajusta reduciendo la reserva vertical.
+       Nota: las reglas de botones/controles de este bloque se aplican luego,
+       al final de la hoja de estilos, para que ganen a las base. */
     @media (orientation: landscape) and (max-height: 520px) {
-      header { height: 42px; padding: 0 10px; }
-      .carousel-container { height: calc(190px * var(--carousel-size)); margin: 0; }
-      .art-card { width: calc(170px * var(--carousel-size)); height: calc(170px * var(--carousel-size)); }
-      .art-card.next { transform: translateX(calc(110px * var(--carousel-size))) scale(0.82); }
-      .art-card.prev { transform: translateX(calc(-110px * var(--carousel-size))) scale(0.82); }
-      .track-title { font-size: 17px; }
-      .track-artist { font-size: 12px; }
-      .vis-control-btn { width: 46px; height: 46px; }
-      .vis-control-btn span { font-size: 24px; }
-      .control-btn { width: 44px; height: 44px; }
-      .control-btn.play { width: 52px; height: 52px; }
-      .control-btn span { font-size: 24px; }
-      .controls { gap: 18px; margin-bottom: 6px; }
-      .controls-wrapper { max-width: 380px; }
-      .extra-controls-right { bottom: 46px; }
-      .visualizer-controls { gap: 20px; margin-top: 4px; }
-      .vis-progress-side { min-width: 90px; }
+      :root {
+        --album-h-reserve: 155px;
+      }
+      header { height: 40px; padding: 0 10px; }
+      .carousel-container { margin: 0; }
+      .track-title { font-size: 14px; }
+      .track-artist { font-size: 10px; }
+      #view-playing { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
     }
 
     /* MÓVILES: compactar el header para que los iconos (ajustes) no se corten */
     @media (max-width: 520px) {
-      header { padding: 0 8px; }
+      header { padding: env(safe-area-inset-top, 0px) 8px 0; }
       .top-nav { gap: 14px; font-size: 14px; }
       .header-icons { gap: 12px; }
     }
@@ -736,6 +720,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      flex-wrap: wrap;
     }
 
     .visualizer-thumb {
@@ -1238,7 +1223,7 @@
 
     .grid-menu {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
       gap: 10px;
       margin-bottom: 16px;
     }
@@ -1830,6 +1815,7 @@
       position: absolute;
       top: 56px; right: 12px;
       width: 290px;
+      max-width: calc(100vw - 16px);
       background: rgba(18, 18, 18, 0.96);
       backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -2348,7 +2334,7 @@
     .settings-menu {
       position: fixed;
       top: 56px; right: 12px;
-      width: 280px;
+      width: min(280px, calc(100vw - 16px));
       max-height: calc(100vh - 70px);
       max-height: calc(100dvh - 70px);
       overflow-y: auto;
@@ -2950,6 +2936,26 @@
         padding: 18px 14px;
       }
     }
+
+    /* Landscape móvil: botones y controles compactos (al final de la hoja
+       para que venzan a las reglas base y dejen espacio a la carátula) */
+    @media (orientation: landscape) and (max-height: 520px) {
+      .queue-btn-top { width: 34px; height: 34px; }
+      .queue-btn-top span { font-size: 18px; }
+      .control-btn { width: 36px; height: 36px; }
+      .control-btn.play { width: 42px; height: 42px; }
+      .control-btn span { font-size: 20px; }
+      .controls { gap: 14px; margin-bottom: 2px; }
+      .controls-wrapper { max-width: 340px; }
+      .mode-btn span { font-size: 18px; }
+      .extra-controls-right { bottom: 30px; gap: 6px; }
+      .progress-container { font-size: 10px; gap: 6px; }
+      .volume-container { margin-top: 6px; gap: 8px; }
+      .vis-control-btn { width: 40px; height: 40px; }
+      .vis-control-btn span { font-size: 20px; }
+      .visualizer-controls { gap: 16px; margin-top: 2px; }
+      .vis-progress-side { min-width: 80px; }
+    }
   </style>
 </head>
 <body>
@@ -3437,45 +3443,6 @@
       </div>
     </div>
 
-    <!-- VISTA: LETRAS (Lyrics) -->
-    <div id="view-lyrics" class="lyrics-view">
-      <div class="lyrics-glass">
-        <div class="lyrics-header">
-          <span class="lyrics-title" id="lyrics-title" data-i18n="lyrics">Letras</span>
-          <div class="lyrics-actions">
-            <button class="lyrics-follow on" id="lyrics-follow-btn" type="button"
-              onclick="toggleLyricsFollow()" data-i18n-title="followLyrics"
-              aria-pressed="true">
-              <span class="material-icons">vertical_align_bottom</span>
-            </button>
-            <select id="lyrics-lang" class="lyrics-lang" title="Idioma de traducción" onchange="translateLyrics(this.value)">
-              <option value="" data-i18n="original">Original</option>
-              <option value="es">Español</option>
-              <option value="en">Inglés</option>
-              <option value="de">Alemán</option>
-              <option value="fr">Francés</option>
-              <option value="it">Italiano</option>
-              <option value="pt">Portugués</option>
-              <option value="ja">Japonés</option>
-              <option value="zh">Chino</option>
-              <option value="ru">Ruso</option>
-              <option value="ar">Árabe</option>
-            </select>
-            <span class="material-icons" style="cursor:pointer;" onclick="toggleLyricsView()">close</span>
-          </div>
-        </div>
-        <div class="lyrics-scroll" id="lyrics-scroll">
-          <div class="lyrics-body" id="lyrics-body">
-            <div class="lyrics-loading" data-i18n="searchingLyrics">Buscando letras...</div>
-          </div>
-        </div>
-        <div class="lyrics-translating" id="lyrics-translating" style="display:none;">
-          <div class="lyrics-spinner"></div>
-          <span data-i18n="translating">Traduciendo...</span>
-        </div>
-      </div>
-    </div>
-
     <!-- CARRUSEL DE PORTADAS -->
     <div class="carousel-wrapper">
       <div class="carousel-container">
@@ -3514,6 +3481,47 @@
         </div>
         <div class="art-card next" id="card-next" onclick="nextTrack()">
           <img id="img-next" src="" />
+        </div>
+
+        <!-- VISTA: LETRAS (Lyrics) — overlay absoluto dentro del carrusel.
+             Comparte el entorno de zoom/escala con card-current (--album-size),
+             por lo que se adapta automáticamente a la carátula. -->
+        <div id="view-lyrics" class="lyrics-view">
+          <div class="lyrics-glass">
+            <div class="lyrics-header">
+              <span class="lyrics-title" id="lyrics-title" data-i18n="lyrics">Letras</span>
+              <div class="lyrics-actions">
+                <button class="lyrics-follow on" id="lyrics-follow-btn" type="button"
+                  onclick="toggleLyricsFollow()" data-i18n-title="followLyrics"
+                  aria-pressed="true">
+                  <span class="material-icons">vertical_align_bottom</span>
+                </button>
+                <select id="lyrics-lang" class="lyrics-lang" title="Idioma de traducción" onchange="translateLyrics(this.value)">
+                  <option value="" data-i18n="original">Original</option>
+                  <option value="es">Español</option>
+                  <option value="en">Inglés</option>
+                  <option value="de">Alemán</option>
+                  <option value="fr">Francés</option>
+                  <option value="it">Italiano</option>
+                  <option value="pt">Portugués</option>
+                  <option value="ja">Japonés</option>
+                  <option value="zh">Chino</option>
+                  <option value="ru">Ruso</option>
+                  <option value="ar">Árabe</option>
+                </select>
+                <span class="material-icons" style="cursor:pointer;" onclick="toggleLyricsView()">close</span>
+              </div>
+            </div>
+            <div class="lyrics-scroll" id="lyrics-scroll">
+              <div class="lyrics-body" id="lyrics-body">
+                <div class="lyrics-loading" data-i18n="searchingLyrics">Buscando letras...</div>
+              </div>
+            </div>
+            <div class="lyrics-translating" id="lyrics-translating" style="display:none;">
+              <div class="lyrics-spinner"></div>
+              <span data-i18n="translating">Traduciendo...</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -7111,7 +7119,6 @@ let audioQuality = null;
       }
     }
 
-    // Cierra el popup de letras al salir de la pestaña Playing (p. ej. ir a My Music)
     function closeLyricsIfOpen() {
       const view = document.getElementById('view-lyrics');
       if (view && view.classList.contains('active')) toggleLyricsView();
@@ -7138,17 +7145,60 @@ let audioQuality = null;
       }
       const artist = (track.Artists && track.Artists.length) ? track.Artists.join(' ') : '';
       const title = track.Name || '';
+      const album = track.Album || '';
       lrcLoadedTitle = title + '|' + artist;
       document.getElementById('lyrics-title').textContent = title ? title : 'Letras';
       const duration = Number(track.RunTimeTicks ? (track.RunTimeTicks / 10000000) : 0);
-      const durParam = duration ? `&duration=${duration.toFixed(2)}` : '';
+
+      // Busca la mejor coincidencia entre los resultados de LRCLIB priorizando
+      // la duración más cercana a la de la canción local.  Esto evita que versiones
+      // con duraciones muy diferentes (hi-res, remasters, directos) se emparejen
+      // con la letra equivocada y provoquen desfase.
+      function pickBestMatch(results, dur) {
+        if (!Array.isArray(results) || !results.length) return null;
+        if (!dur) return results[0];
+        let best = null;
+        let bestDiff = Infinity;
+        for (const r of results) {
+          if (r.instrumental) continue;
+          const rd = Number(r.duration) || 0;
+          const diff = rd ? Math.abs(rd - dur) : Infinity;
+          if (diff < bestDiff) { bestDiff = diff; best = r; }
+        }
+        // Si todos son instrumentales o sin duración, tomar el primero
+        return best || results[0];
+      }
+
       try {
-        const res = await fetchWithRetry(
-          `https://lrclib.net/api/search?track_name=${encodeURIComponent(title)}` +
-          `&artist_name=${encodeURIComponent(artist)}${durParam}`, {}, 2);
-        if (!res.ok) throw new Error('http');
-        const results = await res.json();
-        const match = Array.isArray(results) && results[0];
+        // 1) Intento preciso: /api/get con album_name
+        const params = new URLSearchParams();
+        params.set('track_name', title);
+        if (artist) params.set('artist_name', artist);
+        if (album) params.set('album_name', album);
+        if (duration) params.set('duration', duration.toFixed(2));
+        const getUrl = `https://lrclib.net/api/get?${params}`;
+        let match = null;
+        try {
+          const resGet = await fetchWithRetry(getUrl, {}, 2);
+          if (resGet.ok) {
+            const data = await resGet.json();
+            if (data && (data.syncedLyrics || data.plainLyrics)) match = data;
+          }
+        } catch (_) { /* ignorar, continuar con search */ }
+
+        // 2) Fallback: /api/search con mejor selección
+        if (!match) {
+          const searchParams = new URLSearchParams();
+          searchParams.set('track_name', title);
+          if (artist) searchParams.set('artist_name', artist);
+          if (duration) searchParams.set('duration', duration.toFixed(2));
+          const res = await fetchWithRetry(
+            `https://lrclib.net/api/search?${searchParams}`, {}, 2);
+          if (!res.ok) throw new Error('http');
+          const results = await res.json();
+          match = pickBestMatch(results, duration);
+        }
+
         if (match) {
           displayLrc(match.syncedLyrics || match.plainLyrics, title);
         } else {
