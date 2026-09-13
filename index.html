@@ -44,6 +44,21 @@
       --accent-color: #aa00ff;
       --walkman-green: #76c02a;
       --carousel-size: 1;
+      /* Tamaño fluido de la carátula en la pestaña Playing: se adapta a
+         cualquier pantalla usando el ancho (vw), el alto disponible (reserva
+         para header + info + controles + LEDs) y un máximo ideal (560px,
+         para que en escritorio y tablets los álbumes se vean grandes). */
+      --album-h-reserve: 290px;
+      --album-base: max(110px, min(72vw, 560px, calc((100vh - var(--album-h-reserve)) * 0.917)));
+      --album-size: calc(var(--album-base) * var(--carousel-size));
+      --album-shift: calc(var(--album-size) * 0.58);
+    }
+    @supports (height: 100dvh) {
+      :root {
+        /* En móviles con barra del navegador dinámica, 100dvh refleja el
+           alto realmente visible */
+        --album-base: max(110px, min(72vw, 560px, calc((100dvh - var(--album-h-reserve)) * 0.917)));
+      }
     }
 
     * {
@@ -80,9 +95,13 @@
       background-color: #000;
       color: #fff;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      /* Evita que el contenido quede bajo muescas/redondeos (notch) en móvil */
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
 
     /* Fondo dinámico radial estilo Walkman */
@@ -101,7 +120,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: env(safe-area-inset-top, 0px) 16px 0;
       background: rgba(0, 0, 0, 0.4);
       position: relative;
       z-index: 10;
@@ -172,6 +191,7 @@
       flex-direction: column;
       overflow-y: auto;
       padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     }
 
     .view.active {
@@ -182,7 +202,7 @@
     #view-playing {
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       overflow-x: hidden;
       position: relative;
     }
@@ -445,7 +465,7 @@
 
     .carousel-container {
       width: 100%;
-      height: calc(360px * var(--carousel-size));
+      height: calc(var(--album-size) * 1.09);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -455,8 +475,8 @@
 
     .art-card {
       position: absolute;
-      width: calc(330px * var(--carousel-size));
-      height: calc(330px * var(--carousel-size));
+      width: var(--album-size);
+      height: var(--album-size);
       transition: all 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
       border-radius: 2px;
@@ -504,7 +524,7 @@
     }
 
     .art-card.next {
-      transform: translateX(calc(190px * var(--carousel-size))) scale(0.82);
+      transform: translateX(var(--album-shift)) scale(0.82);
       z-index: 2;
       opacity: 0.5;
       cursor: pointer;
@@ -513,7 +533,7 @@
     }
 
     .art-card.prev {
-      transform: translateX(calc(-190px * var(--carousel-size))) scale(0.82);
+      transform: translateX(calc(-1 * var(--album-shift))) scale(0.82);
       z-index: 2;
       opacity: 0.5;
       cursor: pointer;
@@ -569,19 +589,6 @@
     }
 
     @media (max-width: 400px) {
-      .carousel-container {
-        height: calc(260px * var(--carousel-size));
-      }
-      .art-card {
-        width: calc(230px * var(--carousel-size));
-        height: calc(230px * var(--carousel-size));
-      }
-      .art-card.next {
-        transform: translateX(calc(140px * var(--carousel-size))) scale(0.82);
-      }
-      .art-card.prev {
-        transform: translateX(calc(-140px * var(--carousel-size))) scale(0.82);
-      }
       .vis-progress-side {
         width: 90px;
         min-width: 80px;
@@ -592,29 +599,14 @@
       }
     }
 
-    @media (min-width: 401px) and (max-width: 500px) {
-      .carousel-container {
-        height: calc(300px * var(--carousel-size));
-      }
-      .art-card {
-        width: calc(280px * var(--carousel-size));
-        height: calc(280px * var(--carousel-size));
-      }
-      .art-card.next {
-        transform: translateX(calc(160px * var(--carousel-size))) scale(0.82);
-      }
-      .art-card.prev {
-        transform: translateX(calc(-160px * var(--carousel-size))) scale(0.82);
-      }
-    }
-
-    /* Orientación horizontal (landscape): compactar para que se vea a escala */
+    /* Orientación horizontal (landscape): compactar para que se vea a escala.
+       El alto de la carátula se ajusta reduciendo la reserva vertical. */
     @media (orientation: landscape) and (max-height: 520px) {
+      :root {
+        --album-h-reserve: 185px;
+      }
       header { height: 42px; padding: 0 10px; }
-      .carousel-container { height: calc(190px * var(--carousel-size)); margin: 0; }
-      .art-card { width: calc(170px * var(--carousel-size)); height: calc(170px * var(--carousel-size)); }
-      .art-card.next { transform: translateX(calc(110px * var(--carousel-size))) scale(0.82); }
-      .art-card.prev { transform: translateX(calc(-110px * var(--carousel-size))) scale(0.82); }
+      .carousel-container { margin: 0; }
       .track-title { font-size: 17px; }
       .track-artist { font-size: 12px; }
       .vis-control-btn { width: 46px; height: 46px; }
@@ -631,7 +623,7 @@
 
     /* MÓVILES: compactar el header para que los iconos (ajustes) no se corten */
     @media (max-width: 520px) {
-      header { padding: 0 8px; }
+      header { padding: env(safe-area-inset-top, 0px) 8px 0; }
       .top-nav { gap: 14px; font-size: 14px; }
       .header-icons { gap: 12px; }
     }
@@ -736,6 +728,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      flex-wrap: wrap;
     }
 
     .visualizer-thumb {
@@ -1238,7 +1231,7 @@
 
     .grid-menu {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
       gap: 10px;
       margin-bottom: 16px;
     }
@@ -1830,6 +1823,7 @@
       position: absolute;
       top: 56px; right: 12px;
       width: 290px;
+      max-width: calc(100vw - 16px);
       background: rgba(18, 18, 18, 0.96);
       backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -2348,7 +2342,7 @@
     .settings-menu {
       position: fixed;
       top: 56px; right: 12px;
-      width: 280px;
+      width: min(280px, calc(100vw - 16px));
       max-height: calc(100vh - 70px);
       max-height: calc(100dvh - 70px);
       overflow-y: auto;
