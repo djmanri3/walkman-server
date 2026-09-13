@@ -600,25 +600,18 @@
     }
 
     /* Orientación horizontal (landscape): compactar para que se vea a escala.
-       El alto de la carátula se ajusta reduciendo la reserva vertical. */
+       El alto de la carátula se ajusta reduciendo la reserva vertical.
+       Nota: las reglas de botones/controles de este bloque se aplican luego,
+       al final de la hoja de estilos, para que ganen a las base. */
     @media (orientation: landscape) and (max-height: 520px) {
       :root {
-        --album-h-reserve: 185px;
+        --album-h-reserve: 155px;
       }
-      header { height: 42px; padding: 0 10px; }
+      header { height: 40px; padding: 0 10px; }
       .carousel-container { margin: 0; }
-      .track-title { font-size: 17px; }
-      .track-artist { font-size: 12px; }
-      .vis-control-btn { width: 46px; height: 46px; }
-      .vis-control-btn span { font-size: 24px; }
-      .control-btn { width: 44px; height: 44px; }
-      .control-btn.play { width: 52px; height: 52px; }
-      .control-btn span { font-size: 24px; }
-      .controls { gap: 18px; margin-bottom: 6px; }
-      .controls-wrapper { max-width: 380px; }
-      .extra-controls-right { bottom: 46px; }
-      .visualizer-controls { gap: 20px; margin-top: 4px; }
-      .vis-progress-side { min-width: 90px; }
+      .track-title { font-size: 14px; }
+      .track-artist { font-size: 10px; }
+      #view-playing { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
     }
 
     /* MÓVILES: compactar el header para que los iconos (ajustes) no se corten */
@@ -2943,6 +2936,26 @@
       .local-wait-content {
         padding: 18px 14px;
       }
+    }
+
+    /* Landscape móvil: botones y controles compactos (al final de la hoja
+       para que venzan a las reglas base y dejen espacio a la carátula) */
+    @media (orientation: landscape) and (max-height: 520px) {
+      .queue-btn-top { width: 34px; height: 34px; }
+      .queue-btn-top span { font-size: 18px; }
+      .control-btn { width: 36px; height: 36px; }
+      .control-btn.play { width: 42px; height: 42px; }
+      .control-btn span { font-size: 20px; }
+      .controls { gap: 14px; margin-bottom: 2px; }
+      .controls-wrapper { max-width: 340px; }
+      .mode-btn span { font-size: 18px; }
+      .extra-controls-right { bottom: 30px; gap: 6px; }
+      .progress-container { font-size: 10px; gap: 6px; }
+      .volume-container { margin-top: 6px; gap: 8px; }
+      .vis-control-btn { width: 40px; height: 40px; }
+      .vis-control-btn span { font-size: 20px; }
+      .visualizer-controls { gap: 16px; margin-top: 2px; }
+      .vis-progress-side { min-width: 80px; }
     }
   </style>
 </head>
@@ -7132,17 +7145,60 @@ let audioQuality = null;
       }
       const artist = (track.Artists && track.Artists.length) ? track.Artists.join(' ') : '';
       const title = track.Name || '';
+      const album = track.Album || '';
       lrcLoadedTitle = title + '|' + artist;
       document.getElementById('lyrics-title').textContent = title ? title : 'Letras';
       const duration = Number(track.RunTimeTicks ? (track.RunTimeTicks / 10000000) : 0);
-      const durParam = duration ? `&duration=${duration.toFixed(2)}` : '';
+
+      // Busca la mejor coincidencia entre los resultados de LRCLIB priorizando
+      // la duración más cercana a la de la canción local.  Esto evita que versiones
+      // con duraciones muy diferentes (hi-res, remasters, directos) se emparejen
+      // con la letra equivocada y provoquen desfase.
+      function pickBestMatch(results, dur) {
+        if (!Array.isArray(results) || !results.length) return null;
+        if (!dur) return results[0];
+        let best = null;
+        let bestDiff = Infinity;
+        for (const r of results) {
+          if (r.instrumental) continue;
+          const rd = Number(r.duration) || 0;
+          const diff = rd ? Math.abs(rd - dur) : Infinity;
+          if (diff < bestDiff) { bestDiff = diff; best = r; }
+        }
+        // Si todos son instrumentales o sin duración, tomar el primero
+        return best || results[0];
+      }
+
       try {
-        const res = await fetchWithRetry(
-          `https://lrclib.net/api/search?track_name=${encodeURIComponent(title)}` +
-          `&artist_name=${encodeURIComponent(artist)}${durParam}`, {}, 2);
-        if (!res.ok) throw new Error('http');
-        const results = await res.json();
-        const match = Array.isArray(results) && results[0];
+        // 1) Intento preciso: /api/get con album_name
+        const params = new URLSearchParams();
+        params.set('track_name', title);
+        if (artist) params.set('artist_name', artist);
+        if (album) params.set('album_name', album);
+        if (duration) params.set('duration', duration.toFixed(2));
+        const getUrl = `https://lrclib.net/api/get?${params}`;
+        let match = null;
+        try {
+          const resGet = await fetchWithRetry(getUrl, {}, 2);
+          if (resGet.ok) {
+            const data = await resGet.json();
+            if (data && (data.syncedLyrics || data.plainLyrics)) match = data;
+          }
+        } catch (_) { /* ignorar, continuar con search */ }
+
+        // 2) Fallback: /api/search con mejor selección
+        if (!match) {
+          const searchParams = new URLSearchParams();
+          searchParams.set('track_name', title);
+          if (artist) searchParams.set('artist_name', artist);
+          if (duration) searchParams.set('duration', duration.toFixed(2));
+          const res = await fetchWithRetry(
+            `https://lrclib.net/api/search?${searchParams}`, {}, 2);
+          if (!res.ok) throw new Error('http');
+          const results = await res.json();
+          match = pickBestMatch(results, duration);
+        }
+
         if (match) {
           displayLrc(match.syncedLyrics || match.plainLyrics, title);
         } else {
