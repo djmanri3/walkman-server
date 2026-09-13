@@ -290,7 +290,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 0;
       box-sizing: border-box;
       /* Overlay transparente: deja que los clics pasen al resto de la app */
       pointer-events: none;
@@ -300,18 +300,15 @@
     }
     .lyrics-glass {
       width: 100%;
-      max-width: 500px;
-      height: 62vh;
-      min-height: 340px;
-      max-height: 560px;
+      height: 100%;
       border-radius: 24px;
-      background: rgba(0, 0, 0, 0.32);
+      background: rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(28px) saturate(160%);
       -webkit-backdrop-filter: blur(28px) saturate(160%);
       border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
       overflow: hidden;
-      position: relative;
+      position: fixed;
       display: flex;
       flex-direction: column;
       /* La ventana sí captura los clics */
@@ -7096,6 +7093,7 @@ let audioQuality = null;
       const cw = document.querySelector('.controls-wrapper');
       if (cw) cw.classList.toggle('lyrics-open', open);
       if (open) {
+        syncLyricsToAlbum();
         loadLyrics();
         if (!lrcInterval) {
           lrcInterval = setInterval(() => {
@@ -7117,6 +7115,49 @@ let audioQuality = null;
         if (lrcInterval) { clearInterval(lrcInterval); lrcInterval = null; }
       }
     }
+
+    // Ajusta el popup de letras al tamaño y posición exactos de la carátula
+    // del álbum (card-current). Así el "cristal" de las letras acompaña el
+    // mismo tamaño al que se dibuja la portada en pantalla (zoom, orientación,
+    // carrusel, etc.) y se adapta automáticamente a cualquier cambio.
+    function syncLyricsToAlbum() {
+      const view = document.getElementById('view-lyrics');
+      const glass = view.querySelector('.lyrics-glass');
+      const card = document.getElementById('card-current');
+      if (!view || !glass || !card || !view.classList.contains('active')) return;
+      const rect = card.getBoundingClientRect();
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (!rect.width || !rect.height) return;
+      // Rounded rect mide el área visible de la tarjeta (recorta el desbordamiento)
+      const box = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+      const rTop = Math.max(0, box.top);
+      const rLeft = Math.max(0, box.left);
+      const rRight = Math.min(vw, box.left + box.width);
+      const rBottom = Math.min(vh, box.top + box.height);
+      if (rRight <= rLeft || rBottom <= rTop) return;
+      glass.style.top = rTop + 'px';
+      glass.style.left = rLeft + 'px';
+      glass.style.width = (rRight - rLeft) + 'px';
+      glass.style.height = (rBottom - rTop) + 'px';
+    }
+
+    // Mantener el tamaño del popup de letras sincronizado con la carátula
+    // cuando cambia el tamaño de la ventana o la orientación.
+    let _lyricsResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(_lyricsResizeTimer);
+      _lyricsResizeTimer = setTimeout(() => {
+        const view = document.getElementById('view-lyrics');
+        if (view && view.classList.contains('active')) syncLyricsToAlbum();
+      }, 60);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        const view = document.getElementById('view-lyrics');
+        if (view && view.classList.contains('active')) syncLyricsToAlbum();
+      }, 120);
+    });
 
     // Cierra el popup de letras al salir de la pestaña Playing (p. ej. ir a My Music)
     function closeLyricsIfOpen() {
@@ -7566,6 +7607,11 @@ let audioQuality = null;
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.czoom) === num);
       });
+      // Si las letras están abiertas, re-ajustar el popup al nuevo tamaño de carátula
+      const lview = document.getElementById('view-lyrics');
+      if (lview && lview.classList.contains('active')) {
+        setTimeout(syncLyricsToAlbum, 60);
+      }
     }
 
     function setCarouselZoom(z) {
