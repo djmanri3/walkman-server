@@ -47,6 +47,11 @@
         quotaExceeded: 'Translation temporarily unavailable (daily free limit reached)',
         followLyrics: 'Follow the song', customization: 'Customization', effects: 'Effects', soundControl: 'Sound control',
         cardFlare: 'Cover glow on track change',
+        favorites: 'Favorites', favAlbums: 'Favorite albums', favSongs: 'Favorite songs',
+        addToFavorites: 'Add to favorites', removeFromFavorites: 'Remove from favorites',
+        addedToFavorites: 'Added to favorites', removedFromFavorites: 'Removed from favorites',
+        noFavorites: 'No favorites yet. Add them with the ⋮ menu.',
+        favError: 'Could not update favorites',
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
@@ -95,6 +100,11 @@
         quotaExceeded: 'Traducción no disponible temporalmente (límite gratuito diario alcanzado)',
         followLyrics: 'Seguir la canción', customization: 'Personalización', effects: 'Efectos', soundControl: 'Control del sonido',
         cardFlare: 'Brillo de carátula al cambiar de canción',
+        favorites: 'Favoritos', favAlbums: 'Álbumes favoritos', favSongs: 'Canciones favoritas',
+        addToFavorites: 'Añadir a favoritos', removeFromFavorites: 'Quitar de favoritos',
+        addedToFavorites: 'Añadida a favoritos', removedFromFavorites: 'Eliminada de favoritos',
+        noFavorites: 'Aún no hay favoritos. Añádelos con el menú ⋮',
+        favError: 'No se pudo actualizar el favorito',
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
@@ -132,6 +142,11 @@
         quotaExceeded: 'Traduction temporairement indisponible (limite gratuite quotidienne atteinte)',
         followLyrics: 'Suivre la chanson', customization: 'Personnalisation', effects: 'Effets', soundControl: 'Contrôle du son',
         cardFlare: 'Lueur de la pochette au changement de chanson',
+        favorites: 'Favoris', favAlbums: 'Albums favoris', favSongs: 'Chansons préférées',
+        addToFavorites: 'Ajouter aux favoris', removeFromFavorites: 'Retirer des favoris',
+        addedToFavorites: 'Ajouté aux favoris', removedFromFavorites: 'Retiré des favoris',
+        noFavorites: 'Aucun favori pour le moment. Ajoutez-les avec le menu ⋮',
+        favError: 'Impossible de mettre à jour les favoris',
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
@@ -168,6 +183,11 @@
         quotaExceeded: 'Übersetzung vorübergehend nicht verfügbar (tägliches kostenloses Limit erreicht)',
         followLyrics: 'Dem Lied folgen', customization: 'Anpassung', effects: 'Effekte', soundControl: 'Tonsteuerung',
         cardFlare: 'Cover-Lichtwechsel beim Liedwechsel',
+        favorites: 'Favoriten', favAlbums: 'Lieblingsalben', favSongs: 'Lieblingssongs',
+        addToFavorites: 'Zu Favoriten hinzufügen', removeFromFavorites: 'Aus Favoriten entfernen',
+        addedToFavorites: 'Zu Favoriten hinzugefügt', removedFromFavorites: 'Aus Favoriten entfernt',
+        noFavorites: 'Noch keine Favoriten. Hinzufügen über das ⋮-Menü',
+        favError: 'Favoriten konnten nicht aktualisiert werden',
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
@@ -204,6 +224,11 @@
         quotaExceeded: 'Traduzione temporaneamente non disponibile (limite gratuito giornaliero raggiunto)',
         followLyrics: 'Segui la canzone', customization: 'Personalizzazione', effects: 'Effetti', soundControl: 'Controllo del suono',
         cardFlare: 'Luce della copertina al cambio di canzone',
+        favorites: 'Preferiti', favAlbums: 'Album preferiti', favSongs: 'Canzoni preferite',
+        addToFavorites: 'Aggiungi ai preferiti', removeFromFavorites: 'Rimuovi dai preferiti',
+        addedToFavorites: 'Aggiunto ai preferiti', removedFromFavorites: 'Rimosso dai preferiti',
+        noFavorites: 'Ancora nessun preferito. Aggiungili dal menu ⋮',
+        favError: 'Impossibile aggiornare i preferiti',
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
@@ -240,6 +265,11 @@
         quotaExceeded: 'Tradução temporariamente indisponível (limite gratuito diário atingido)',
         followLyrics: 'Seguir a música', customization: 'Personalização', effects: 'Efeitos', soundControl: 'Controle de som',
         cardFlare: 'Brilho da capa ao mudar de música',
+        favorites: 'Favoritos', favAlbums: 'Álbuns favoritos', favSongs: 'Músicas favoritas',
+        addToFavorites: 'Adicionar aos favoritos', removeFromFavorites: 'Remover dos favoritos',
+        addedToFavorites: 'Adicionada aos favoritos', removedFromFavorites: 'Removida dos favoritos',
+        noFavorites: 'Ainda não há favoritos. Adicione-os pelo menu ⋮',
+        favError: 'Não foi possível atualizar os favoritos',
         httpWarning: 'Aviso: todo o tráfego HTTP será permitido, mas é muito inseguro, já que tudo pode tornar-se visível para outros utilizadores da rede.'
       }
     };
@@ -297,6 +327,10 @@
       });
       if (typeof renderVptCards === 'function' && document.getElementById('vpt-current-name')) {
         renderVptCards();
+      }
+      // La opción de favorito cambia de texto según el estado del item
+      if (typeof updateFavoriteMenuOption === 'function') {
+        updateFavoriteMenuOption();
       }
     }
     currentLang = getLang();

@@ -656,13 +656,13 @@
   <!-- VISTA: MY MUSIC -->
   <div id="view-music" class="view">
     <div id="category-view">
-      <div class="featured-section">
+      <div id="home-featured" class="featured-section">
         <div class="featured-slideshow" id="featured-slideshow">
           <div class="featured-title-strip" data-i18n="myMusicHome">My Music</div>
         </div>
         <span class="featured-refresh material-icons" title="Recargar side show" data-i18n-title="refreshSlideshow" onclick="refreshFeatured()">refresh</span>
       </div>
-      <div class="grid-menu">
+      <div class="grid-menu" id="home-grid">
         <div class="grid-card" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadCategory('Songs')">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="songs">Songs</div>
@@ -685,6 +685,34 @@
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="playlists">Playlists</div>
             <div class="grid-card-sub" id="count-playlists">--</div>
+          </div>
+        </div>
+        <div class="grid-card" style="background-image: linear-gradient(135deg, #f43f5e, #7c3aed);" onclick="showFavoritesMenu()">
+          <div class="grid-card-content">
+            <div class="grid-card-title" data-i18n="favorites">Favorites</div>
+            <div class="grid-card-sub" id="count-favorites">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMENÚ DE FAVORITOS: Álbumes favoritos / Canciones favoritas -->
+      <div id="fav-view" style="display:none;">
+        <div class="back-btn" onclick="backToCategories()">
+          <span class="material-icons">arrow_back</span> <span data-i18n="back">Volver</span>
+        </div>
+        <div class="menu-header" data-i18n="favorites">Favorites</div>
+        <div class="grid-menu">
+          <div class="grid-card" style="background-image: linear-gradient(135deg, #232526, #414345);" onclick="loadFavorites('Albums')">
+            <div class="grid-card-content">
+              <div class="grid-card-title" data-i18n="favAlbums">Favorite albums</div>
+              <div class="grid-card-sub" id="count-fav-albums">--</div>
+            </div>
+          </div>
+          <div class="grid-card" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadFavorites('Songs')">
+            <div class="grid-card-content">
+              <div class="grid-card-title" data-i18n="favSongs">Favorite songs</div>
+              <div class="grid-card-sub" id="count-fav-songs">--</div>
+            </div>
           </div>
         </div>
       </div>
@@ -808,6 +836,10 @@
         <span class="material-icons">delete</span>
         <span data-i18n="removeFromQueue">Eliminar de la cola</span>
       </div>
+      <div class="context-menu-option" id="ctx-favorite-option" onclick="ctxToggleFavorite()" style="display:none;">
+        <span class="material-icons">favorite_border</span>
+        <span class="ctx-favorite-label" data-i18n="addToFavorites">Añadir a favoritos</span>
+      </div>
       <div class="context-menu-option" onclick="ctxShowInfo()">
         <span class="material-icons">info_outline</span>
         <span data-i18n="musicInfo">Información de la música</span>
@@ -856,6 +888,7 @@
   <script src="js/effects.js"></script>
   <script src="js/lyrics.js"></script>
   <script src="js/queue.js"></script>
+  <script src="js/favorites.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 

@@ -55,6 +55,7 @@
       info.style.display = 'none';
       // Solo mostrar "Eliminar de la cola" cuando el menú sale de la Play Queue
       removeOpt.style.display = queueIdx >= 0 ? 'flex' : 'none';
+      updateFavoriteMenuOption();
       overlay.classList.add('open');
     }
 

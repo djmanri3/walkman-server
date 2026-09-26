@@ -1,6 +1,8 @@
 /* UI principal: pestañas, ajustes, zoom, búsqueda, vistas de biblioteca, menús contextuales, carrusel y acciones de álbum. */
     // Pila de navegación para el botón Volver
     let navStack = [];
+    // Tipo de lista de favoritos abierta ('' = ninguna, 'Songs' | 'Albums')
+    let favoritesViewKind = '';
 
     function switchTab(tab) {
       if (tab !== 'playing') closeLyricsIfOpen();
@@ -231,6 +233,9 @@
       if (!section) return;
       const enabled = isFeaturedEnabled();
       section.style.display = enabled ? '' : 'none';
+      // El contenedor incluye el botón de recargar, así que se oculta entero
+      const wrap = document.getElementById('home-featured');
+      if (wrap) wrap.style.display = enabled ? '' : 'none';
       const btn = document.getElementById('featured-btn');
       if (btn) btn.classList.toggle('on', enabled);
       const sizeWrap = document.getElementById('featured-size-wrap');
@@ -544,6 +549,7 @@
 
 
     async function loadCategory(category) {
+      favoritesViewKind = '';
       document.getElementById('category-view').style.display = 'none';
       document.getElementById('list-view').style.display = 'block';
       document.getElementById('selected-category-title').textContent = tCategory(category);
@@ -626,13 +632,107 @@
       container.appendChild(fragment);
     }
 
+    // --- FAVORITOS ---
+
+    // Muestra el submenú con "Álbumes favoritos" y "Canciones favoritas"
+    async function showFavoritesMenu() {
+      document.getElementById('list-view').style.display = 'none';
+      document.getElementById('category-view').style.display = 'block';
+      document.getElementById('home-featured').style.display = 'none';
+      document.getElementById('home-grid').style.display = 'none';
+      document.getElementById('fav-view').style.display = 'block';
+      navStack = [{ type: 'favmenu' }];
+      await refreshFavoritesCount();
+    }
+
+    async function loadFavorites(kind) {
+      document.getElementById('category-view').style.display = 'none';
+      document.getElementById('list-view').style.display = 'block';
+      document.getElementById('selected-category-title').textContent = kind === 'Albums' ? t('favAlbums') : t('favSongs');
+
+      // Desde aquí se accede a los elementos de cada favorito
+      navStack = [{ type: 'favmenu' }, { type: 'favorites', favKind: kind }];
+      favoritesViewKind = kind;
+
+      const container = document.getElementById('items-container');
+      container.innerHTML = '<div style="color:#aaa;">' + t('loadingSongs') + '</div>';
+
+      const items = await fetchFavorites(kind);
+
+      container.innerHTML = '';
+      if (items.length === 0) {
+        container.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:20px;">' + t('noFavorites') + '</div>';
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+
+      if (kind === 'Songs') {
+        const shuffleDiv = document.createElement('div');
+        shuffleDiv.className = 'list-item list-item-shuffle';
+        shuffleDiv.innerHTML = `
+          <div class="list-item-shuffle-icon"><span class="material-icons">shuffle</span></div>
+          <div class="list-item-info">
+            <div class="list-item-title">${t('shuffle')}</div>
+            <div class="list-item-sub">${t('shuffleAll')} ${items.length}</div>
+          </div>
+        `;
+        shuffleDiv.onclick = () => playShuffleAll(items);
+        fragment.appendChild(shuffleDiv);
+      }
+
+      items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const imgUrl = getEmbyImageUrl(item);
+
+        div.innerHTML = `
+          <img loading="lazy" src="${imgUrl}">
+          <div class="list-item-info">
+            <div class="list-item-title">${item.Name}${(item._hasHiRes || isHiResAudio(item)) ? hiresIconHtml() : ''}</div>
+            <div class="list-item-sub">${item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : (item.Album || ''))}</div>
+          </div>
+          <button class="list-item-more"><span class="material-icons">more_vert</span></button>
+        `;
+        const imgEl = div.querySelector('img');
+        applyArtistImageFallback(imgEl, item);
+
+        div.onclick = () => {
+          if (kind === 'Songs') {
+            playlist = [...items];
+            originalPlaylist = [...items];
+            playlistVersion++;
+            renderQueueList();
+            refreshCarouselImages();
+            playTrack(index);
+            saveQueue();
+            switchTab('playing');
+          } else {
+            loadSubItems(item.Id, item.Name, 'MusicAlbum');
+          }
+        };
+        div.querySelector('.list-item-more').onclick = (e) => {
+          e.stopPropagation();
+          openContextMenu(e, item);
+        };
+
+        fragment.appendChild(div);
+      });
+      container.appendChild(fragment);
+    }
+
     async function loadSubItems(parentId, title, parentKind) {
+      favoritesViewKind = '';
       document.getElementById('category-view').style.display = 'none';
       document.getElementById('list-view').style.display = 'block';
       document.getElementById('selected-category-title').textContent = title;
 
-      // Guardar hacia dónde volver (la categoría en la que estábamos)
-      navStack.push({ type: 'subitems', category: navStack.length ? navStack[navStack.length - 1].category : '' });
+      // Guardar hacia dónde volver (la categoría o el tipo de favorito en el que estábamos)
+      const current = navStack.length ? navStack[navStack.length - 1] : null;
+      navStack.push({
+        type: 'subitems',
+        category: current ? current.category : '',
+        favKind: current ? current.favKind : ''
+      });
 
       const container = document.getElementById('items-container');
       container.innerHTML = '<div style="color:#aaa;">' + t('loadingSongs') + '</div>';
@@ -701,11 +801,24 @@
           loadCategory(previous.category);
           return;
         }
+        if (previous && previous.type === 'favorites' && previous.favKind) {
+          loadFavorites(previous.favKind);
+          return;
+        }
+        if (previous && previous.type === 'favmenu') {
+          showFavoritesMenu();
+          return;
+        }
       }
       // Si no hay historial, volvemos al menú principal de My music
       navStack = [];
+      favoritesViewKind = '';
       document.getElementById('category-view').style.display = 'block';
       document.getElementById('list-view').style.display = 'none';
+      document.getElementById('fav-view').style.display = 'none';
+      document.getElementById('home-grid').style.display = '';
+      // applyFeaturedVisibility respeta si el side show está desactivado
+      applyFeaturedVisibility();
     }
 
     // --- MENÚ CONTEXTUAL ---

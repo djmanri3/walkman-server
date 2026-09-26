@@ -452,4 +452,6 @@
       document.getElementById('count-albums').textContent = new Set(localTracks.filter(t => t.Type !== 'Playlist').map(t => t.Album)).size;
       document.getElementById('count-artists').textContent = new Set(localTracks.filter(t => t.Type !== 'Playlist').map(t => t.AlbumArtist)).size;
       document.getElementById('count-playlists').textContent = localTracks.filter(t => t.Type === 'Playlist').length;
+      invalidateFavoritesCache();
+      updateFavoritesCount();
     }

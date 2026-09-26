@@ -500,6 +500,8 @@ let audioQuality = null;
         };
         walkmanDebug('[PlexDebug] audioQuality', audioQuality);
       }
+      // Plex no tiene favoritos: la valoración del usuario hace de "me gusta"
+      const userRating = item.userRating != null ? Number(item.userRating) : null;
       return {
         Id: plexItemId(item),
         Name: decodePlexEntities(item.title || item.grandparentTitle || ''),
@@ -519,6 +521,8 @@ let audioQuality = null;
         _plexGrandparentThumb: item.grandparentThumb || '',
         _plexPartId: item.Media?.[0]?.Part?.[0]?.id || '',
         _plexSectionKey: item.librarySectionID || '',
+        userRating: userRating,
+        IsFavorite: userRating !== null ? userRating >= PLEX_FAVORITE_RATING : undefined,
         _audioQuality: audioQuality
       };
     }
@@ -623,6 +627,7 @@ let audioQuality = null;
       if (!libId) return;
       embyConfig.libraryId = libId;
       saveServerSettings();
+      invalidateFavoritesCache();
       closeLibraryPicker();
       await updateCategoryCounts();
       showToast(t('libraryChanged'));
@@ -721,6 +726,7 @@ let audioQuality = null;
 
       embyConfig.libraryId = libId;
       saveServerSettings();
+      invalidateFavoritesCache();
       
       document.getElementById('emby-modal').style.display = 'none';
       await updateCategoryCounts();
@@ -761,6 +767,7 @@ let audioQuality = null;
         }
         if (parsed.host && parsed.token && parsed.libraryId) {
           embyConfig = { ...embyConfig, ...parsed };
+          invalidateFavoritesCache();
 
           document.getElementById('emby-host').value = embyConfig.host || '';
           document.getElementById('emby-user').value = embyConfig.user || '';
@@ -798,6 +805,10 @@ let audioQuality = null;
 
       const playlists = await fetchItems(types.Playlist);
       document.getElementById('count-playlists').textContent = playlists.TotalRecordCount || playlists.Items.length;
+
+      // Recuento de favoritos (en segundo plano: no bloquea la rejilla)
+      updateFavoritesCount();
+      refreshFavoritesCount();
     }
 
 
