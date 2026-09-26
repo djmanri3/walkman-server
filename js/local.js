@@ -229,6 +229,8 @@
             Path: file.webkitRelativePath || file.name,
             objUrl: objUrl,
             coverUrl: coverMap.get(albumName) || '',
+            // La fecha del archivo sirve para ordenar por "fecha añadida"
+            CreateDate: file.lastModified ? new Date(file.lastModified).toISOString() : null,
             IsLocal: true,
             _file: file
           });
@@ -440,6 +442,8 @@
               Path: entry.name,
               objUrl: objUrl,
               coverUrl: dirCoverUrl || '',
+              // La fecha del archivo sirve para ordenar por "fecha añadida"
+              CreateDate: file.lastModified ? new Date(file.lastModified).toISOString() : null,
               IsLocal: true
             });
           }
@@ -453,5 +457,6 @@
       document.getElementById('count-artists').textContent = new Set(localTracks.filter(t => t.Type !== 'Playlist').map(t => t.AlbumArtist)).size;
       document.getElementById('count-playlists').textContent = localTracks.filter(t => t.Type === 'Playlist').length;
       invalidateFavoritesCache();
+      invalidateAlbumDates();
       updateFavoritesCount();
     }

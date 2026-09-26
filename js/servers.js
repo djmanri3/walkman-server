@@ -502,6 +502,12 @@ let audioQuality = null;
       }
       // Plex no tiene favoritos: la valoración del usuario hace de "me gusta"
       const userRating = item.userRating != null ? Number(item.userRating) : null;
+      // Fechas para ordenar: addedAt es epoch (segundos) y originallyAvailableAt
+      // viene como "AAAA-MM-DD"; Plex no tiene PremiereDate ni ProductionYear.
+      const addedAt = item.addedAt != null ? Number(item.addedAt) * 1000 : NaN;
+      const release = item.originallyAvailableAt || null;
+      const year = item.year != null ? Number(item.year)
+        : (release ? parseInt(String(release).slice(0, 4), 10) : NaN);
       return {
         Id: plexItemId(item),
         Name: decodePlexEntities(item.title || item.grandparentTitle || ''),
@@ -514,6 +520,9 @@ let audioQuality = null;
         ImageTags: item.thumb ? { Primary: item.thumb } : {},
         AlbumId: item.parentRatingKey || '',
         AlbumPrimaryImageTag: '',
+        CreateDate: isNaN(addedAt) ? null : new Date(addedAt).toISOString(),
+        PremiereDate: release || null,
+        ProductionYear: isNaN(year) ? null : year,
         // Plex specifics
         _plexKey: item.ratingKey,
         _plexThumb: item.thumb || item.composite || '',
@@ -628,6 +637,7 @@ let audioQuality = null;
       embyConfig.libraryId = libId;
       saveServerSettings();
       invalidateFavoritesCache();
+      invalidateAlbumDates();
       closeLibraryPicker();
       await updateCategoryCounts();
       showToast(t('libraryChanged'));
@@ -727,6 +737,7 @@ let audioQuality = null;
       embyConfig.libraryId = libId;
       saveServerSettings();
       invalidateFavoritesCache();
+      invalidateAlbumDates();
       
       document.getElementById('emby-modal').style.display = 'none';
       await updateCategoryCounts();
@@ -768,6 +779,7 @@ let audioQuality = null;
         if (parsed.host && parsed.token && parsed.libraryId) {
           embyConfig = { ...embyConfig, ...parsed };
           invalidateFavoritesCache();
+          invalidateAlbumDates();
 
           document.getElementById('emby-host').value = embyConfig.host || '';
           document.getElementById('emby-user').value = embyConfig.user || '';
@@ -813,7 +825,10 @@ let audioQuality = null;
 
 
     async function fetchEmbyItems(type, parentId = embyConfig.libraryId, parentKind, artistName) {
-      const fields = "PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,MediaSources,MediaStreams";
+      // DateCreated es opt-in en Emby/Jellyfin (está en el enum ItemFields):
+      // sin pedirlo aquí no viene y "Ordenar por Fecha añadida" no puede
+      // funcionar. PremiereDate y ProductionYear en cambio son campos base.
+      const fields = "PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,DateCreated,MediaSources,MediaStreams";
       let url;
       if (type === 'Audio' && artistName) {
         // Buscar todas las canciones de un artista por nombre

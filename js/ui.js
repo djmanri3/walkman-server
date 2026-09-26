@@ -3,6 +3,190 @@
     let navStack = [];
     // Tipo de lista de favoritos abierta ('' = ninguna, 'Songs' | 'Albums')
     let favoritesViewKind = '';
+    // Categorías cuyo listado se puede ordenar por la barra superior
+    const SORTABLE_CATEGORIES = ['Songs', 'Albums', 'Playlists'];
+    // Categoría abierta en el listado, para reordenar sin recargar
+    let currentCategory = '';
+    // Copia sin ordenar de la categoría abierta (la consume renderCategoryList)
+    let currentCategoryItems = null;
+    // Pistas del listado abierto (interior de álbum, artista o playlist). Se
+    // guarda para reordenar una playlist en el sitio sin volver a pedirla.
+    let subItems = null;
+    // Año/fecha de lanzamiento por Id de álbum. Las canciones no los traen
+    // (Emby y Jellyfin los dejan a null), así que se piden de los álbumes.
+    let albumDates = null;
+    let albumDatesLoading = null;
+    const LIST_SORTS = {
+      // defDir: dirección que se usa hasta que el usuario elija otra
+      title: { field: null, defDir: 'asc' },
+      // Cada servidor llama distinto a "cuándo entró en la biblioteca":
+      //   Emby / Jellyfin -> DateCreated
+      //   Plex            -> CreateDate (añadido en normalizePlexItem)
+      //   local           -> CreateDate (última modificación del archivo)
+      // Se prueban en orden y gana el primero que venga informado.
+      dateAdded: { fields: ['DateCreated', 'DateAdded', 'addedAt', 'CreateDate'], defDir: 'desc' },
+      releaseDate: { field: 'PremiereDate', needsAlbum: true, defDir: 'asc' },
+      year: { field: 'ProductionYear', needsAlbum: true, defDir: 'asc' }
+    };
+
+    function getListSort() {
+      const key = loadLS('walkman_list_sort');
+      return LIST_SORTS[key] !== undefined ? key : 'title';
+    }
+
+    // Cada criterio tiene su dirección natural ("lo añadido más reciente
+    // primero"), pero en cuanto el usuario toca el desplegable su elección
+    // manda para todos los criterios.
+    function getListSortDir(key) {
+      const spec = LIST_SORTS[key || getListSort()];
+      if (loadLS('walkman_list_sort_dir_set') === '1') {
+        return loadLS('walkman_list_sort_dir') === 'desc' ? 'desc' : 'asc';
+      }
+      return (spec && spec.defDir) || 'asc';
+    }
+
+    function invalidateAlbumDates() {
+      albumDates = null;
+      albumDatesLoading = null;
+    }
+
+    // Una sola petición por biblioteca: los álbumes con su año y fecha, indexados
+    // por Id, para poder ordenar las canciones por los datos de su disco.
+    async function ensureAlbumDates() {
+      if (albumDates) return albumDates;
+      if (albumDatesLoading) return albumDatesLoading;
+      const st = embyConfig.serverType;
+      albumDatesLoading = (async () => {
+        const map = {};
+        try {
+          if (st === 'plex') {
+            const data = await fetchPlexItems(9, embyConfig.libraryId);
+            (data.Items || []).forEach(al => {
+              if (al.ProductionYear || al.PremiereDate) {
+                map[String(al.Id)] = { year: al.ProductionYear, premiere: al.PremiereDate };
+              }
+            });
+          } else if (st !== 'local') {
+            const res = await fetch(`${embyConfig.host}/Users/${embyConfig.userId}/Items?Recursive=true&IncludeItemTypes=MusicAlbum&Fields=ProductionYear,PremiereDate&api_key=${embyConfig.token}`);
+            if (!res.ok) return map;
+            const data = await res.json();
+            (data.Items || []).forEach(al => {
+              if (al.ProductionYear || al.PremiereDate) {
+                map[String(al.Id)] = { year: al.ProductionYear, premiere: al.PremiereDate };
+              }
+            });
+          }
+        } catch (e) {}
+        albumDates = map;
+        return map;
+      })();
+      return albumDatesLoading;
+    }
+
+    // Ordena en el sitio: las listas ya se cargan enteras, así que no hace
+    // falta volver a pedir nada al servidor. Lo que no tenga fecha va al final.
+    function sortListItems(items, key, dir) {
+      if (!items || LIST_SORTS[key] === undefined) return items || [];
+      const spec = LIST_SORTS[key];
+      const desc = (dir || getListSortDir()) === 'desc';
+      const sign = desc ? -1 : 1;
+      const arr = items.slice();
+      if (!spec.field && !spec.fields) {
+        arr.sort((a, b) => sign * String(a.SortName || a.Name || '').localeCompare(
+          String(b.SortName || b.Name || ''), undefined, { numeric: true, sensitivity: 'base' }));
+        return arr;
+      }
+      const val = item => {
+        let raw = null;
+        if (item) {
+          if (spec.fields) {
+            for (const f of spec.fields) {
+              const cand = item[f];
+              if (cand !== null && cand !== undefined && cand !== '') { raw = cand; break; }
+            }
+          } else {
+            raw = item[spec.field];
+          }
+        }
+        // Si es una canción, su año y fecha están en el álbum, no en la pista
+        if ((raw === null || raw === undefined || raw === '') && spec.needsAlbum && item && albumDates) {
+          const al = albumDates[String(item.AlbumId || '')];
+          if (al) raw = spec.field === 'ProductionYear' ? al.year : al.premiere;
+        }
+        if (raw === null || raw === undefined || raw === '') return null;
+        if (spec.field === 'ProductionYear') {
+          const n = parseInt(String(raw).slice(0, 4), 10);
+          return isNaN(n) ? null : n;
+        }
+        const time = new Date(raw).getTime();
+        return isNaN(time) ? null : time;
+      };
+      arr.sort((a, b) => {
+        const va = val(a);
+        const vb = val(b);
+        // Los que no tienen el dato se quedan siempre al final
+        if (va === null && vb === null) return 0;
+        if (va === null) return 1;
+        if (vb === null) return -1;
+        return va === vb ? 0 : sign * (va < vb ? -1 : 1);
+      });
+      return arr;
+    }
+
+    // Aplica el orden elegido y lo deja reflejado en los desplegables
+    async function applyListSort() {
+      updateSortControls();
+      // Dentro de una playlist: se repinta desde las pistas ya cargadas
+      if (subItems && subItems.ordenable) {
+        // Año y fecha de lanzamiento en canciones necesitan los datos del álbum
+        if (LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
+        renderTrackList(sortListItems(subItems.tracks, getListSort(), getListSortDir()));
+        return;
+      }
+      if (!currentCategory || !currentCategoryItems) return;
+      if (LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
+      renderCategoryList(currentCategory, currentCategoryItems);
+    }
+
+    // Cambia el criterio (Primer desplegable)
+    async function setListSort(key) {
+      // Si el valor no existe, solo resincronizamos el desplegable
+      if (LIST_SORTS[key] === undefined) { updateSortControls(); return; }
+      saveLS('walkman_list_sort', key);
+      await applyListSort();
+    }
+
+    // Cambia la dirección (segundo desplegable)
+    async function setListSortDir(dir) {
+      if (dir !== 'asc' && dir !== 'desc') { updateSortControls(); return; }
+      saveLS('walkman_list_sort_dir', dir);
+      saveLS('walkman_list_sort_dir_set', '1');
+      await applyListSort();
+    }
+
+    function updateSortControls() {
+      const key = getListSort();
+      const sel = document.getElementById('list-sort-select');
+      if (sel && sel.value !== key) sel.value = key;
+      const dirSel = document.getElementById('list-sort-dir');
+      if (dirSel) {
+        const dir = getListSortDir();
+        if (dirSel.value !== dir) dirSel.value = dir;
+        // La flecha del icono acompaña a la dirección activa
+        const ico = document.getElementById('list-sort-dir-icon');
+        if (ico) {
+          const wanted = dir === 'desc' ? 'arrow_downward' : 'arrow_upward';
+          if (ico.textContent.trim() !== wanted) ico.textContent = wanted;
+        }
+      }
+    }
+
+    function showSortBar(visible) {
+      const bar = document.getElementById('list-sortbar');
+      if (!bar) return;
+      bar.style.display = visible ? 'flex' : 'none';
+      if (visible) updateSortControls();
+    }
 
     function switchTab(tab) {
       if (tab !== 'playing') closeLyricsIfOpen();
@@ -550,6 +734,9 @@
 
     async function loadCategory(category) {
       favoritesViewKind = '';
+      subItems = null;
+      currentCategory = category;
+      showSortBar(SORTABLE_CATEGORIES.indexOf(category) !== -1);
       document.getElementById('category-view').style.display = 'none';
       document.getElementById('list-view').style.display = 'block';
       document.getElementById('selected-category-title').textContent = tCategory(category);
@@ -564,6 +751,8 @@
       const types = SERVER_TYPES[st];
       const typeMap = { 'Songs': types.Audio, 'Albums': types.Album, 'Artists': types.Artist, 'Playlists': types.Playlist };
       const data = await fetchItems(typeMap[category]);
+      // Si el orden activo necesita el año del álbum, lo pedimos antes de pintar
+      if (LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
 
       // Fix carátulas de álbumes (Emby/Jellyfin): el Id del álbum listado a
       // veces da 404 aunque reporte imagen; el fiable es el Id de la canción,
@@ -573,25 +762,34 @@
         await resolveAlbumCoverIds(data.Items || []);
       }
 
+      currentCategoryItems = data.Items || [];
+      renderCategoryList(category, currentCategoryItems);
+    }
+
+    // Pinta el listado ya ordenado. Separado de loadCategory para que cambiar
+    // el orden sea instantáneo y no vuelva a pedir la lista al servidor.
+    function renderCategoryList(category, rawItems) {
+      const items = sortListItems(rawItems, getListSort(), getListSortDir());
+      const container = document.getElementById('items-container');
       container.innerHTML = '';
       const catLabel = tCategory(category);
       const fragment = document.createDocumentFragment();
 
-      if (category === 'Songs' && data.Items.length > 0) {
+      if (category === 'Songs' && items.length > 0) {
         const shuffleDiv = document.createElement('div');
         shuffleDiv.className = 'list-item list-item-shuffle';
         shuffleDiv.innerHTML = `
           <div class="list-item-shuffle-icon"><span class="material-icons">shuffle</span></div>
           <div class="list-item-info">
             <div class="list-item-title">${t('shuffle')}</div>
-            <div class="list-item-sub">${t('shuffleAll')} ${data.Items.length}</div>
+            <div class="list-item-sub">${t('shuffleAll')} ${items.length}</div>
           </div>
         `;
-        shuffleDiv.onclick = () => playShuffleAll(data.Items);
+        shuffleDiv.onclick = () => playShuffleAll(items);
         fragment.appendChild(shuffleDiv);
       }
 
-      data.Items.forEach((item, index) => {
+      items.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'list-item';
         const imgUrl = getEmbyImageUrl(item);
@@ -609,8 +807,8 @@
 
         div.onclick = () => {
           if (category === 'Songs') {
-            playlist = [...data.Items];
-            originalPlaylist = [...data.Items];
+            playlist = [...items];
+            originalPlaylist = [...items];
             playlistVersion++;
             renderQueueList();
             refreshCarouselImages();
@@ -646,6 +844,10 @@
     }
 
     async function loadFavorites(kind) {
+      currentCategory = '';
+      currentCategoryItems = null;
+      subItems = null;
+      showSortBar(false);
       document.getElementById('category-view').style.display = 'none';
       document.getElementById('list-view').style.display = 'block';
       document.getElementById('selected-category-title').textContent = kind === 'Albums' ? t('favAlbums') : t('favSongs');
@@ -722,6 +924,13 @@
 
     async function loadSubItems(parentId, title, parentKind) {
       favoritesViewKind = '';
+      currentCategory = '';
+      currentCategoryItems = null;
+      // Solo las playlists se pueden ordenar: en un álbum o en un artista el
+      // orden de las pistas significa algo (número de pista, discos) y
+      // reordenarlas rompería esa intención.
+      const ordenable = parentKind === 'Playlist';
+      showSortBar(ordenable);
       document.getElementById('category-view').style.display = 'none';
       document.getElementById('list-view').style.display = 'block';
       document.getElementById('selected-category-title').textContent = title;
@@ -740,25 +949,35 @@
       const st = embyConfig.serverType;
       const types = SERVER_TYPES[st];
       const data = await fetchItems(types.Audio, parentId, parentKind);
-      const albumTracks = data.Items;
+      const tracks = data.Items || [];
+      subItems = { title: title, kind: parentKind, tracks: tracks, ordenable: ordenable };
+      if (ordenable && LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
+      renderTrackList(ordenable ? sortListItems(tracks, getListSort(), getListSortDir()) : tracks);
+    }
+
+    // Pinta las pistas de un álbum, un artista o una playlist. Va aparte de
+    // loadSubItems para poder reordenar una playlist en el sitio, sin volver a
+    // pedirle las pistas al servidor.
+    function renderTrackList(tracks) {
+      const container = document.getElementById('items-container');
       container.innerHTML = '';
       const fragment = document.createDocumentFragment();
 
-      if (albumTracks.length > 0) {
+      if (tracks.length > 0) {
         const shuffleDiv = document.createElement('div');
         shuffleDiv.className = 'list-item list-item-shuffle';
         shuffleDiv.innerHTML = `
           <div class="list-item-shuffle-icon"><span class="material-icons">shuffle</span></div>
           <div class="list-item-info">
             <div class="list-item-title">${t('shuffle')}</div>
-            <div class="list-item-sub">${t('shuffleAll')} ${albumTracks.length}</div>
+            <div class="list-item-sub">${t('shuffleAll')} ${tracks.length}</div>
           </div>
         `;
-        shuffleDiv.onclick = () => playShuffleAll(albumTracks);
+        shuffleDiv.onclick = () => playShuffleAll(tracks);
         fragment.appendChild(shuffleDiv);
       }
 
-      albumTracks.forEach((track, index) => {
+      tracks.forEach((track, index) => {
         const div = document.createElement('div');
         div.className = 'list-item';
         const imgUrl = getEmbyImageUrl(track);
@@ -773,8 +992,8 @@
         `;
 
         div.onclick = () => {
-          playlist = [...albumTracks];
-          originalPlaylist = [...albumTracks];
+          playlist = [...tracks];
+          originalPlaylist = [...tracks];
           playlistVersion++;
           renderQueueList();
           refreshCarouselImages();

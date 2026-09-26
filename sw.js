@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v17';
+const CACHE_NAME = 'walkman-v29';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -59,6 +59,26 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // Archivos de la app (JS, CSS, HTML): red primero. Con "cache first" se
+  // servía el JS viejo junto a un index.html nuevo, así que un despliegue
+  // tardaba dos arranques en verse. Sin conexión, la caché.
+  const origin = self.location.origin;
+  if (url.startsWith(origin)) {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-cache' })
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            CACHE_OPEN_PROMISE.then((cache) => cache.put(e.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(e.request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Externos (CDN de fuentes y color-thief): caché primero y revalidar.
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {

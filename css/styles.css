@@ -1495,6 +1495,146 @@
       gap: 8px;
     }
 
+    /* BARRA DE ORDEN: encima de la lista de canciones / álbumes / playlists */
+    .list-sortbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+    }
+    .list-sort-field {
+      flex: 1 1 150px;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .list-sort-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding-left: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #8a8a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      white-space: nowrap;
+    }
+    .list-sort-label span.material-icons {
+      font-size: 14px;
+      color: var(--accent-color);
+    }
+    /* Envoltorio: aquí se dibuja la flecha, que el `appearance: none` quita */
+    .list-sort-wrap {
+      position: relative;
+      display: block;
+    }
+    .list-sort-wrap::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 11px;
+      width: 9px;
+      height: 9px;
+      margin-top: -6px;
+      pointer-events: none;
+      opacity: 0.55;
+      background: no-repeat center / contain
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9.5 12 15.5 18 9.5'/%3E%3C/svg%3E");
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .list-sort-field:hover .list-sort-wrap::after,
+    .list-sort-field:focus-within .list-sort-wrap::after {
+      opacity: 1;
+      transform: translateY(1px);
+    }
+    /* Los dos desplegables, por id */
+    #list-sort-select,
+    #list-sort-dir {
+      width: 100%;
+      padding: 9px 30px 9px 11px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 7px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    #list-sort-select:hover,
+    #list-sort-dir:hover {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    #list-sort-select:focus,
+    #list-sort-dir:focus,
+    #list-sort-select:focus-visible,
+    #list-sort-dir:focus-visible {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(170, 0, 255, 0.25);
+    }
+    /* La lista de opciones la dibuja el navegador: de todo lo que existe, solo
+       se le puede cambiar color, fondo y espaciado. Ni marco, ni bordes, ni
+       scrollbar, ni animación: para eso habría que sustituir el <select>. */
+    #list-sort-select option,
+    #list-sort-dir option {
+      background: #1a1a1a;
+      color: #e6e6e6;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 7px 4px;
+    }
+    /* La opción elegida */
+    #list-sort-select option:checked,
+    #list-sort-dir option:checked {
+      background: #2c2c2c;
+      color: #fff;
+      font-weight: 600;
+    }
+    /* En algunos navegadores el hover de la lista sí se puede fijar */
+    #list-sort-select option:hover,
+    #list-sort-dir option:hover {
+      background: #383838;
+      color: #fff;
+    }
+    /* Flecha: el appearance: none la quita, así que se dibuja en el envoltorio */
+    .list-sort-wrap {
+      position: relative;
+      display: block;
+    }
+    .list-sort-wrap::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 11px;
+      width: 9px;
+      height: 9px;
+      margin-top: -6px;
+      pointer-events: none;
+      opacity: 0.55;
+      background: no-repeat center / contain
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9.5 12 15.5 18 9.5'/%3E%3C/svg%3E");
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .list-sort-field:hover .list-sort-wrap::after,
+    .list-sort-field:focus-within .list-sort-wrap::after {
+      opacity: 1;
+      transform: translateY(1px);
+    }
+
     .list-item {
       display: flex;
       align-items: center;

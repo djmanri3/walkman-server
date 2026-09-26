@@ -722,8 +722,31 @@
       <div class="back-btn" onclick="backToCategories()">
         <span class="material-icons">arrow_back</span> <span data-i18n="back">Volver</span>
       </div>
-      <div class="menu-header" id="selected-category-title">Categoría</div>
-      <div class="items-list" id="items-container"></div>
+        <div class="menu-header" id="selected-category-title">Categoría</div>
+        <div class="list-sortbar" id="list-sortbar" style="display:none;">
+          <div class="list-sort-field">
+            <label class="list-sort-label" for="list-sort-select"><span class="material-icons">sort</span> <span data-i18n="sortBy">Ordenar por</span></label>
+            <div class="list-sort-wrap">
+              <select class="list-sort-select" id="list-sort-select" onchange="setListSort(this.value)">
+                <option value="title" data-i18n="sortTitle">Título</option>
+                <option value="dateAdded" data-i18n="sortDateAdded">Fecha añadida</option>
+                <option value="releaseDate" data-i18n="sortReleaseDate">Fecha de lanzamiento</option>
+                <option value="year" data-i18n="sortYear">Año</option>
+              </select>
+            </div>
+          </div>
+          <div class="list-sort-field">
+            <label class="list-sort-label" for="list-sort-dir"><span class="material-icons" id="list-sort-dir-icon">arrow_upward</span> <span data-i18n="sortDirection">Dirección</span></label>
+            <div class="list-sort-wrap">
+              <select class="list-sort-select" id="list-sort-dir" onchange="setListSortDir(this.value)">
+                <option value="asc" data-i18n="sortAsc">Ascendente</option>
+                <option value="desc" data-i18n="sortDesc">Descendente</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="items-list" id="items-container"></div>
+
   </div>
     </div>
 
