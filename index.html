@@ -863,6 +863,10 @@
         <span class="material-icons">favorite_border</span>
         <span class="ctx-favorite-label" data-i18n="addToFavorites">Añadir a favoritos</span>
       </div>
+      <div class="context-menu-option" id="ctx-addplaylist-option" onclick="ctxAddToPlaylist()">
+        <span class="material-icons">playlist_add</span>
+        <span data-i18n="addToPlaylist">Añadir a lista de reproducción</span>
+      </div>
       <div class="context-menu-option" onclick="ctxShowInfo()">
         <span class="material-icons">info_outline</span>
         <span data-i18n="musicInfo">Información de la música</span>
@@ -925,5 +929,17 @@
       <span class="local-wait-close material-icons" onclick="hideLocalImportBanner()">close</span>
   </div>
     </div>
+
+  <!-- SELECCIONAR LISTA DE REPRODUCCIÓN -->
+  <div id="playlist-select-overlay" class="context-menu-overlay" onclick="closePlaylistSelectMenu()">
+    <div class="context-menu" onclick="event.stopPropagation()">
+      <div class="context-menu-header">
+        <div class="context-menu-header-title" data-i18n="addToPlaylist">Añadir a lista de reproducción</div>
+        <div class="context-menu-header-sub" id="plsel-sub"></div>
+      </div>
+      <div id="playlist-select-list"></div>
+    </div>
+  </div>
+
 </body>
 </html>

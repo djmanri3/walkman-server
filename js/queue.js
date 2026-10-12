@@ -56,6 +56,7 @@
       // Solo mostrar "Eliminar de la cola" cuando el menú sale de la Play Queue
       removeOpt.style.display = queueIdx >= 0 ? 'flex' : 'none';
       updateFavoriteMenuOption();
+      updateAddToPlaylistOption();
       overlay.classList.add('open');
     }
 
@@ -76,6 +77,17 @@
 
     function isArtistItem(item) {
       return !!item && item.Type === 'MusicArtist';
+    }
+
+    function updateAddToPlaylistOption() {
+      const opt = document.getElementById('ctx-addplaylist-option');
+      if (!opt) return;
+      const item = ctxMenuItem;
+      if (!item || item.Type !== 'Audio') {
+        opt.style.display = 'none';
+        return;
+      }
+      opt.style.display = 'flex';
     }
 
     // Si el elemento es un álbum, playlist o artista, devuelve sus canciones; si no, el propio elemento
@@ -310,3 +322,88 @@
       saveQueue();
     }
 
+
+
+    async function ctxAddToPlaylist() {
+      const item = ctxMenuItem;
+      if (!item || item.Type !== 'Audio') {
+        closeContextMenu();
+        return;
+      }
+      try {
+        const st = embyConfig.serverType;
+        if (st === 'plex') {
+          showToast('Añadir a listas no está soportado en Plex aún');
+          closeContextMenu();
+          return;
+        }
+        // Emby/Jellyfin: obtener playlists del usuario
+        const res = await fetch(`${embyConfig.host}/Users/${embyConfig.userId}/Items?IncludeItemTypes=Playlist&Recursive=true&Fields=Id,Name&api_key=${embyConfig.token}`);
+        if (!res.ok) throw new Error('no playlists');
+        const data = await res.json();
+        const pls = (data.Items || []).filter(p => p && p.Name);
+        if (pls.length === 0) {
+          showToast('No tienes listas de reproducción');
+          closeContextMenu();
+          return;
+        }
+        if (pls.length === 1) {
+          const target = pls[0];
+          await fetch(`${embyConfig.host}/Playlists/${target.Id}/Items?ids=${encodeURIComponent(item.Id)}&api_key=${embyConfig.token}`, { method: 'POST' });
+          try { localStorage.setItem('walkman_last_playlist', String(target.Id)); } catch (e) {}
+          showToast('Añadida a ' + target.Name);
+          closeContextMenu();
+          return;
+        }
+        // Mostrar selector de playlists
+        showPlaylistSelect(pls, item);
+        closeContextMenu();
+        return;
+      } catch (e) {
+        showToast('Error al añadir a la lista');
+        closeContextMenu();
+      }
+    }
+
+    let _plSelItem = null;
+
+    function showPlaylistSelect(playlists, item) {
+      _plSelItem = item;
+      const overlay = document.getElementById("playlist-select-overlay");
+      const list = document.getElementById("playlist-select-list");
+      const sub = document.getElementById("plsel-sub");
+      if (sub && item) sub.textContent = item.Name || "";
+      if (!list) return;
+      list.innerHTML = "";
+      playlists.forEach(function(p) {
+        const opt = document.createElement("div");
+        opt.className = "context-menu-option";
+        opt.textContent = p.Name || "Sin nombre";
+        opt.onclick = function() { addToSelectedPlaylist(p); };
+        list.appendChild(opt);
+      });
+      if (overlay) overlay.classList.add("open");
+    }
+
+    async function addToSelectedPlaylist(playlist) {
+      const item = _plSelItem;
+      if (!item || !playlist) { closePlaylistSelectMenu(); return; }
+      try {
+        const st = embyConfig.serverType;
+        if (st !== "plex") {
+          const url = embyConfig.host + "/Playlists/" + playlist.Id + "/Items?ids=" + encodeURIComponent(item.Id) + "&api_key=" + embyConfig.token;
+          await fetch(url, { method: "POST" });
+        }
+        try { localStorage.setItem("walkman_last_playlist", String(playlist.Id)); } catch (e) {}
+        showToast("Añadida a " + (playlist.Name || ""));
+      } catch (e) {
+        showToast("Error al añadir a la lista");
+      }
+      closePlaylistSelectMenu();
+    }
+
+    function closePlaylistSelectMenu() {
+      const overlay = document.getElementById("playlist-select-overlay");
+      if (overlay) overlay.classList.remove("open");
+      _plSelItem = null;
+    }

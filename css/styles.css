@@ -3056,3 +3056,10 @@
       .visualizer-controls { gap: 16px; margin-top: 2px; }
       .vis-progress-side { min-width: 80px; }
     }
+    #playlist-select-list {
+      max-height: 60vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 0;
+    }
