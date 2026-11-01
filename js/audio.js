@@ -25,13 +25,16 @@
     let analyserNode = null;
     let eqFilters = [];
     let clearBassFilter = null;
+    let openBassNode = null;
+    let outputGuardNode = null, outputBusNode = null, processingPreamp = null;
+    let openBassBackend = 'basic';
     let vptConvolver = null;
     let vptDryGain = null;
     let vptWetGain = null;
 
     function initAudioContext() {
       if (audioCtx) return;
-      if (!audioProcessingEnabled) return;
+      if (!audioProcessingEnabled) { setClearBassEngineStatus('cbEngineUnavailable'); return; }
 
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const isAndroid = /Android/.test(navigator.userAgent);
@@ -70,7 +73,9 @@
       vptWetGain.gain.value = 0.0;
 
       // Cadena Audio: Track -> Analyser -> EQ Bandas -> Clear Bass -> (Split Dry / Wet Convolver) -> Destination
-      let currentNode = trackSource;
+      processingPreamp = audioCtx.createGain();
+      trackSource.connect(processingPreamp);
+      let currentNode = processingPreamp;
       currentNode.connect(analyserNode);
       currentNode = analyserNode;
 
@@ -86,10 +91,125 @@
       vptConvolver.connect(vptWetGain);
       vptConvolver.__connected = true;
 
-      vptDryGain.connect(audioCtx.destination);
-      vptWetGain.connect(audioCtx.destination);
+      outputBusNode = audioCtx.createGain();
+      vptDryGain.connect(outputBusNode);
+      vptWetGain.connect(outputBusNode);
+      outputBusNode.connect(audioCtx.destination);
 
       applySavedAudioSettings();
+      updateProcessingHeadroom();
+      initOpenBass();
+    }
+
+    function setClearBassEngineStatus(key) {
+      const label = document.getElementById('cb-engine-status');
+      if (label) {
+        label.dataset.i18n = key;
+        label.textContent = t(key);
+      }
+    }
+
+    function updateProcessingHeadroom() {
+      if (!processingPreamp) return;
+      if (outputGuardNode) { processingPreamp.gain.value = 1; return; }
+      // Safe reserve while processors load, or if neither backend is available.
+      const eqBoost = eqFilters.reduce((sum, filter) => sum + Math.max(0, filter.gain.value), 0);
+      const bass = Number(document.getElementById('cb-slider').value) || 0;
+      const reserve = eqBoost + Math.max(0, bass * 1.5) + (currentVptIndex > 0 ? 12 : 0);
+      processingPreamp.gain.value = Math.pow(10, -reserve / 20) * 0.96;
+    }
+
+    function setClearBassLevel(value) {
+      const number = Number(value);
+      const level = Number.isFinite(number) ? Math.max(-10, Math.min(10, Math.round(number))) : 0;
+      if (openBassNode?.port) openBassNode.port.postMessage({ type: 'level', value: level });
+      else if (openBassNode?.openBassDsp) openBassNode.openBassDsp.setLevel(level);
+      if (clearBassFilter) clearBassFilter.gain.value = openBassNode ? 0 : level * 1.5;
+      updateProcessingHeadroom();
+    }
+
+    function makeCompatibilityNode(dsp) {
+      const node = audioCtx.createScriptProcessor(2048, 2, 2);
+      node.openBassDsp = dsp;
+      node.onaudioprocess = event => {
+        try {
+          const input = event.inputBuffer, output = event.outputBuffer;
+          dsp.process(input.getChannelData(0), input.numberOfChannels > 1 ? input.getChannelData(1) : undefined,
+            output.getChannelData(0), output.getChannelData(1));
+        } catch (error) {
+          for (let i = 0; i < event.outputBuffer.numberOfChannels; i++) event.outputBuffer.getChannelData(i).fill(0);
+          if (openBassNode === node || outputGuardNode === node) restoreBasicProcessing(error);
+        }
+      };
+      return node;
+    }
+
+    function restoreBasicProcessing(error) {
+      // Set the reserve before reconnecting the unguarded basic path.
+      const oldBass = openBassNode, oldGuard = outputGuardNode;
+      openBassNode = outputGuardNode = null; openBassBackend = 'basic';
+      setClearBassLevel(document.getElementById('cb-slider').value);
+      if (oldBass) { eqFilters[eqFilters.length - 1].disconnect(oldBass); oldBass.disconnect(); }
+      if (oldGuard) { outputBusNode.disconnect(oldGuard); oldGuard.disconnect(); }
+      eqFilters[eqFilters.length - 1].connect(clearBassFilter);
+      outputBusNode.connect(audioCtx.destination);
+      setClearBassEngineStatus('cbEngineFallback');
+      console.warn('Open Bass: using the basic path with reserved headroom', error);
+    }
+
+    function installProcessingNodes(bass, guard, backend) {
+      const lastBand = eqFilters[eqFilters.length - 1];
+      bass.connect(clearBassFilter); guard.connect(audioCtx.destination);
+      lastBand.disconnect(openBassNode || clearBassFilter);
+      outputBusNode.disconnect(outputGuardNode || audioCtx.destination);
+      if (openBassNode) openBassNode.disconnect();
+      if (outputGuardNode) outputGuardNode.disconnect();
+      lastBand.connect(bass); outputBusNode.connect(guard);
+      openBassNode = bass; outputGuardNode = guard; openBassBackend = backend;
+      setClearBassLevel(document.getElementById('cb-slider').value);
+      setClearBassEngineStatus(backend === 'compatible' ? 'cbEngineCompatible' : 'cbEngineOpen');
+    }
+
+    function installCompatibleProcessing() {
+      if (!globalThis.OpenBass || !audioCtx.createScriptProcessor) return false;
+      const level = Number(document.getElementById('cb-slider').value);
+      const bass = makeCompatibilityNode(new OpenBass.OpenBassDSP(audioCtx.sampleRate, level));
+      const guard = makeCompatibilityNode(new OpenBass.OutputLimiterDSP(audioCtx.sampleRate));
+      installProcessingNodes(bass, guard, 'compatible');
+      return true;
+    }
+
+    async function initOpenBass() {
+      // The same DSP also runs on plain HTTP through the compatibility backend.
+      // Install it immediately, then prefer AudioWorklet where available.
+      try { installCompatibleProcessing(); }
+      catch (error) { restoreBasicProcessing(error); }
+      if (!audioCtx.audioWorklet) {
+        if (!openBassNode) setClearBassEngineStatus('cbEngineFallback');
+        return;
+      }
+      if (!openBassNode) setClearBassEngineStatus('cbEngineLoading');
+      try {
+        const base = new URL('./js/', document.baseURI);
+        await audioCtx.audioWorklet.addModule(new URL('open-bass-worklet.js', base));
+        const options = { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit' };
+        const bass = new AudioWorkletNode(audioCtx, 'open-bass', {
+          ...options, processorOptions: { level: Number(document.getElementById('cb-slider').value) }
+        });
+        const guard = new AudioWorkletNode(audioCtx, 'open-bass', { ...options, processorOptions: { mode: 'limiter' } });
+        const recover = error => {
+          if (openBassNode !== bass && outputGuardNode !== guard) return;
+          try { if (installCompatibleProcessing()) return; }
+          catch (failure) { console.warn('Open Bass compatibility recovery failed', failure); }
+          restoreBasicProcessing(error);
+        };
+        bass.addEventListener('processorerror', recover);
+        guard.addEventListener('processorerror', recover);
+        installProcessingNodes(bass, guard, 'worklet');
+      } catch (error) {
+        if (!openBassNode) { updateProcessingHeadroom(); setClearBassEngineStatus('cbEngineFallback'); }
+        console.warn('AudioWorklet unavailable; retaining the compatible audio backend', error);
+      }
     }
 
     // --- FUNCIONES DE CONTROL DE VOLUMEN ---
@@ -159,6 +279,7 @@
 
     function applyVptProfile(profileIndex) {
       if (!audioCtx || !vptConvolver || !vptWetGain || !vptDryGain) return;
+      updateProcessingHeadroom();
 
       if (profileIndex === 0) {
         // Desactivado: desconectar convolver para ahorrar CPU
@@ -239,6 +360,7 @@
       currentVptIndex = index;
       renderVptCards();
       applyVptProfile(currentVptIndex);
+      updateProcessingHeadroom();
       saveAudioSettings();
     }
 
@@ -287,7 +409,7 @@
 
         if (audioSettings.cbValue !== undefined) {
           document.getElementById('cb-slider').value = audioSettings.cbValue;
-          if (clearBassFilter) clearBassFilter.gain.value = parseFloat(audioSettings.cbValue) * 1.5;
+          setClearBassLevel(audioSettings.cbValue);
         }
 
         if (audioSettings.vptIndex !== undefined) {
@@ -335,14 +457,13 @@
       if (eqFilters[index]) {
         eqFilters[index].gain.value = parseFloat(value);
       }
+      updateProcessingHeadroom();
       document.getElementById('eq-preset-select').value = 'Manual';
       saveAudioSettings();
     }
 
     function updateClearBass(value) {
-      if (clearBassFilter) {
-        clearBassFilter.gain.value = parseFloat(value) * 1.5;
-      }
+      setClearBassLevel(value);
       saveAudioSettings();
     }
 
@@ -362,6 +483,7 @@
         document.getElementById(`eq-band-${i}`).value = v;
         if (eqFilters[i]) eqFilters[i].gain.value = v;
       });
+      updateProcessingHeadroom();
       saveAudioSettings();
     }
 

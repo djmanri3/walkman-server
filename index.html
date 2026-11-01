@@ -350,13 +350,14 @@
 
       <!-- CLEAR BASS -->
       <div class="clear-bass-box">
-        <div class="clear-bass-logo">CLEAR<br>BASS</div>
+        <div class="clear-bass-logo">OPEN<br>BASS</div>
         <div class="clear-bass-slider-row">
           <span>-10</span>
           <input type="range" class="cb-h-slider" id="cb-slider" min="-10" max="10" value="0" oninput="updateClearBass(this.value)">
           <span>+10</span>
         </div>
       </div>
+      <div id="cb-engine-status" class="cb-engine-status" role="status" data-i18n="cbEngineInactive">Open Bass: pendiente de iniciar audio</div>
     </div>
 
     <!-- PESTAÑA 2: SONIDO DE AMBIENTE (VPT) -->
@@ -910,6 +911,7 @@
   <script src="js/i18n.js"></script>
   <script src="js/servers.js"></script>
   <script src="js/local.js"></script>
+  <script src="js/open-bass-core.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/visualizer.js"></script>
   <script src="js/effects.js"></script>

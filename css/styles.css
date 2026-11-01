@@ -3063,3 +3063,5 @@
       -webkit-overflow-scrolling: touch;
       padding: 4px 0;
     }
+
+    .cb-engine-status { font-size: 10px; color: #aaa; padding: 4px 8px 0; }
