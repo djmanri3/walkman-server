@@ -25,7 +25,7 @@
   <meta name="apple-touch-fullscreen" content="yes">
 
   <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://api.deezer.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: http: https:; media-src 'self' blob: http: https:; connect-src 'self' https://lrclib.net https://api.memory.translated.net https://plex.tv http: https:; frame-src 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://api.deezer.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: http: https:; media-src 'self' blob: http: https:; connect-src 'self' https://lrclib.net https://api.memory.translated.net https://plex.tv http: https:; frame-src 'none';">
 
   <!-- ColorThief para el color dinámico -->
   <script src="https://unpkg.com/colorthief@3/dist/umd/color-thief.global.js"></script>
@@ -452,6 +452,16 @@
     </div>
 
     <div class="vis-style-menu" id="vis-style-menu" onclick="event.stopPropagation()">
+      <div class="vis-style-title" data-i18n="visSonyOriginal">Sony Visualizer</div>
+      <div class="vis-style-option" data-vis="sony-0" onclick="setVisStyle('sony-0')"><span class="material-icons">auto_awesome</span> <span>Sony · Gate</span></div>
+      <div class="vis-style-option" data-vis="sony-1" onclick="setVisStyle('sony-1')"><span class="material-icons">auto_awesome</span> <span>Sony · Balloon</span></div>
+      <div class="vis-style-option" data-vis="sony-2" onclick="setVisStyle('sony-2')"><span class="material-icons">auto_awesome</span> <span>Sony · Glow</span></div>
+      <div class="vis-style-option" data-vis="sony-3" onclick="setVisStyle('sony-3')"><span class="material-icons">auto_awesome</span> <span>Sony · Animal</span></div>
+      <div class="vis-style-option" data-vis="sony-4" onclick="setVisStyle('sony-4')"><span class="material-icons">auto_awesome</span> <span>Sony · Albums</span></div>
+      <div class="vis-style-option" data-vis="sony-5" onclick="setVisStyle('sony-5')"><span class="material-icons">auto_awesome</span> <span>Sony · Graffiti</span></div>
+      <div class="vis-style-option" data-vis="sony-6" onclick="setVisStyle('sony-6')"><span class="material-icons">auto_awesome</span> <span>Sony · Ink</span></div>
+      <div class="vis-style-option" data-vis="sony-7" onclick="setVisStyle('sony-7')"><span class="material-icons">auto_awesome</span> <span>Sony · Random</span></div>
+
       <div class="vis-style-title" data-i18n="visStyle">Estilo del Visualizador</div>
       <div class="vis-style-option active" data-vis="rings" onclick="setVisStyle('rings')">
         <span class="material-icons">album</span> <span data-i18n="visRings">Anillos pulsantes</span>
@@ -913,6 +923,7 @@
   <script src="js/local.js"></script>
   <script src="js/open-bass-core.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/sony-visualizer.js?v=gate-rectangles-3"></script>
   <script src="js/visualizer.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/lyrics.js"></script>

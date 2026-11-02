@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v35';
+const CACHE_NAME = 'walkman-v39';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const SHELL_ASSETS = [
   './js/open-bass-core.js',
   './js/open-bass-worklet.js',
   './js/visualizer.js',
+  './js/sony-visualizer.js?v=gate-rectangles-3',
   './js/effects.js',
   './js/lyrics.js',
   './js/queue.js',

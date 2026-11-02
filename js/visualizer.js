@@ -24,6 +24,7 @@
 
     function setVisStyle(style) {
       visStyle = style;
+      SonyVisualizer.select(style);
       visStyleMenuOpen = false;
       document.getElementById('vis-style-menu').classList.remove('open');
       document.querySelectorAll('#vis-style-menu .vis-style-option').forEach(o => {
@@ -174,6 +175,11 @@
 
     function renderVisualizer() {
       if (!document.getElementById('visualizer-overlay').classList.contains('open')) return;
+
+      if (SonyVisualizer.render(performance.now())) {
+        visAnimationId = requestAnimationFrame(renderVisualizer);
+        return;
+      }
 
       ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -693,6 +699,7 @@
           o.classList.toggle('active', o.dataset.vis === visStyle);
         });
         resizeCanvas();
+        SonyVisualizer.select(visStyle);
         updateVisualizerOverlayData();
         renderVisualizer();
       } else {

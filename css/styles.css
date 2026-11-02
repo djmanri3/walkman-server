@@ -3065,3 +3065,6 @@
     }
 
     .cb-engine-status { font-size: 10px; color: #aaa; padding: 4px 8px 0; }
+
+/* Keep all original Sony and web visualizer styles reachable on small screens. */
+.vis-style-menu { max-height: 70vh; overflow-y: auto; }
