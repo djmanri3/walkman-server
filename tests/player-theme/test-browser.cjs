@@ -84,9 +84,25 @@ await command('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',wind
 await command('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
 assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),'classic');
 assert(await run('!audio.paused'));
+// The Hi-Res preference affects only the Playing cover, in either theme.
+await run("playlist[currentTrackIndex]._audioQuality={codec:'flac',sampleRate:96000};applyPlayingHiResState()");
+assert(await run("!document.getElementById('hires-badge').classList.contains('hidden')"));
+const libraryIcon=await run('hiresIconHtml()');
+await run("document.getElementById('playing-hires-btn').click()");
+assert(await run("document.getElementById('hires-badge').classList.contains('hidden')"));
+assert.equal(await run("document.getElementById('playing-hires-btn').getAttribute('aria-pressed')"),'false');
+assert((await run('hiresIconHtml()')).includes('list-hires-icon')&&libraryIcon.includes('list-hires-icon'));
+await run("setPlayingTheme('modern');applyPlayingHiResState();setPlayingTheme('classic')");
+assert(await run("document.getElementById('hires-badge').classList.contains('hidden')"));
+await run("togglePlayingHiRes();playlist[currentTrackIndex]._audioQuality={codec:'mp3',sampleRate:44100};applyPlayingHiResState()");
+assert(await run("document.getElementById('hires-badge').classList.contains('hidden')"),'Ordinary tracks should not show the badge');
+await run('togglePlayingHiRes()');
 await command('Page.reload');
 for(let i=0;i<100;i++){if(await run("document.querySelector('#view-playing')?.dataset.theme==='classic'"))break;await new Promise(r=>setTimeout(r,100));}
 assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),'classic');
+assert.equal(await run('isPlayingHiResEnabled()'),false,'Hi-Res preference should survive reload');
+assert.equal(await run("document.getElementById('playing-hires-btn').getAttribute('aria-pressed')"),'false');
+console.log('PASS Hi-Res cover toggle, ordinary tracks and saved preference');
 await run("applyPlayingTheme('invalid')");
 assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),'modern');
 console.log('PASS theme switching, playback, queue metadata, keyboard and saved preference');

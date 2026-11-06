@@ -465,6 +465,24 @@
       }
     }
 
+    function isPlayingHiResEnabled() {
+      return loadLS('walkman_playing_hires') !== 'off';
+    }
+
+    function applyPlayingHiResState() {
+      const enabled = isPlayingHiResEnabled();
+      const button = document.getElementById('playing-hires-btn');
+      button.classList.toggle('on', enabled);
+      button.setAttribute('aria-pressed', String(enabled));
+      document.getElementById('hires-badge').classList.toggle('hidden',
+        !enabled || !isHiResAudio(playlist[currentTrackIndex]));
+    }
+
+    function togglePlayingHiRes() {
+      saveLS('walkman_playing_hires', isPlayingHiResEnabled() ? 'off' : 'on');
+      applyPlayingHiResState();
+    }
+
     function isCardFlareEnabled() {
       return loadLS('walkman_card_flare') !== 'off';
     }

@@ -2,6 +2,7 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        playingHiResIcon: 'Hi-Res icon in Playing',
         playingTheme: 'Playing theme',
         cbEngineCompatible: "Open Bass: independent DSP (compatible mode)",
         cbEngineUnavailable: "Audio effects unavailable in this browser",
@@ -63,6 +64,7 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        playingHiResIcon: 'Icono Hi-Res en Reproduciendo',
         playingTheme: 'Tema de Reproduciendo',
         cbEngineCompatible: "Open Bass: DSP independiente (modo compatible)",
         cbEngineUnavailable: "Efectos de audio no disponibles en este navegador",
@@ -124,6 +126,7 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        playingHiResIcon: 'Icône Hi-Res sur la pochette',
         playingTheme: 'Thème de lecture',
         cbEngineCompatible: "Open Bass : DSP indépendant (mode compatible)",
         cbEngineUnavailable: "Effets audio indisponibles dans ce navigateur",
@@ -173,6 +176,7 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        playingHiResIcon: 'Hi-Res-Symbol in der Wiedergabe',
         playingTheme: 'Wiedergabe-Design',
         cbEngineCompatible: "Open Bass: eigener DSP (Kompatibilitätsmodus)",
         cbEngineUnavailable: "Audioeffekte in diesem Browser nicht verfügbar",
@@ -221,6 +225,7 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        playingHiResIcon: 'Icona Hi-Res in riproduzione',
         playingTheme: 'Tema di riproduzione',
         cbEngineCompatible: "Open Bass: DSP indipendente (modalità compatibile)",
         cbEngineUnavailable: "Effetti audio non disponibili in questo browser",
@@ -269,6 +274,7 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        playingHiResIcon: 'Ícone Hi-Res em reprodução',
         playingTheme: 'Tema de reprodução',
         cbEngineCompatible: "Open Bass: DSP independente (modo compatível)",
         cbEngineUnavailable: "Efeitos de áudio indisponíveis neste navegador",

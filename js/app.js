@@ -87,6 +87,7 @@
       initPlayingTheme();
       initFeaturedZoom();
       applyCardFlareState();
+      applyPlayingHiResState();
       applyFeaturedVisibility();
       initVolume();
       setupMediaSession();

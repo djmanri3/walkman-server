@@ -796,15 +796,7 @@
       document.getElementById('track-title').textContent = track.Name;
       document.getElementById('track-artist').textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artista Desconocido');
 
-      // Mostrar/ocultar insignia HI-RES en la carátula
-      const hiresBadge = document.getElementById('hires-badge');
-      if (hiresBadge) {
-        if (isHiResAudio(track)) {
-          hiresBadge.classList.remove('hidden');
-        } else {
-          hiresBadge.classList.add('hidden');
-        }
-      }
+      applyPlayingHiResState();
 
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
