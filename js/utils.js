@@ -98,3 +98,15 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+
+    // Only the static layout is HTML; server/local metadata is always text.
+    function renderMediaRow(element, imageUrl, title, subtitle, hiRes = false) {
+      element.innerHTML = '<img loading="lazy"><div class="list-item-info"><div class="list-item-title"></div><div class="list-item-sub"></div></div><button class="list-item-more"><span class="material-icons">more_vert</span></button>';
+      const image = element.querySelector('img');
+      image.onerror = () => { image.onerror = null; image.src = defaultPlaceholder; };
+      image.src = imageUrl;
+      const titleElement = element.querySelector('.list-item-title');
+      titleElement.textContent = title || '';
+      if (hiRes) titleElement.insertAdjacentHTML('beforeend', hiresIconHtml());
+      element.querySelector('.list-item-sub').textContent = subtitle || '';
+    }

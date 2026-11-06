@@ -214,14 +214,19 @@
         
         div.innerHTML = `
           <button class="queue-drag" data-idx="${idx}" title="Arrastrar para reordenar"><span class="material-icons">drag_handle</span></button>
-          <img loading="lazy" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}';">
+          <img loading="lazy">
           <div class="queue-item-info">
-            <div class="queue-item-title">${item.Name}</div>
-            <div class="queue-item-artist">${item.Artists ? item.Artists.join(', ') : 'Artista'}</div>
+            <div class="queue-item-title"></div>
+            <div class="queue-item-artist"></div>
           </div>
           <button class="list-item-more"><span class="material-icons">more_vert</span></button>
         `;
 
+        const image = div.querySelector('img');
+        image.onerror = () => { image.onerror = null; image.src = defaultPlaceholder; };
+        image.src = imgUrl;
+        div.querySelector('.queue-item-title').textContent = item.Name || '';
+        div.querySelector('.queue-item-artist').textContent = item.Artists ? item.Artists.join(', ') : 'Artista';
         div.onclick = () => {
           if (window.__queueDragMoved) { window.__queueDragMoved = false; return; }
           playTrack(idx, true);

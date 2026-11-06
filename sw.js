@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v40';
+const CACHE_NAME = 'walkman-v41';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -26,80 +26,80 @@ const SHELL_ASSETS = [
 
 const CACHE_OPEN_PROMISE = caches.open(CACHE_NAME);
 
-const BYPASS_PATTERNS = [
-  '/Audio/', '/Items/', '/Users/', '/Views',
-  '/library/parts/', '/library/sections/', '/search?',
-  'plex.tv/api/', 'plex.tv/devices/',
-  'emby.auth', 'Connect/Validate'
-];
+// Cache app resources only. Media-server responses and authenticated requests
+// always go straight to the network, regardless of the server's URL layout.
+const APP_BASE = new URL(self.registration.scope);
+const INDEX_URL = new URL('./index.html', APP_BASE).href;
+const APP_PATHS = new Set(SHELL_ASSETS.map(path => new URL(path, APP_BASE))
+  .filter(url => url.origin === APP_BASE.origin).map(url => url.pathname));
+APP_PATHS.add(new URL('./config.js', APP_BASE).pathname);
+const PUBLIC_EXTERNAL_URLS = new Set(SHELL_ASSETS.map(path => new URL(path, APP_BASE))
+  .filter(url => url.origin !== APP_BASE.origin).map(url => url.href));
+PUBLIC_EXTERNAL_URLS.add('https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js');
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    CACHE_OPEN_PROMISE.then((cache) => cache.addAll(SHELL_ASSETS))
-  );
+function isPrivateRequest(request, url) {
+  const sensitive = new Set(['token', 'access_token', 'auth_token', 'authtoken', 'auth', 'authorization', 'api_key', 'apikey', 'x-plex-token']);
+  return request.cache === 'no-store' || [...url.searchParams.keys()].some(key => sensitive.has(key.toLowerCase())) ||
+    ['Authorization', 'X-Emby-Token', 'X-Emby-Authorization', 'X-Plex-Token'].some(header => request.headers.has(header));
+}
+
+function isAppAsset(url) {
+  if (url.origin !== APP_BASE.origin || !url.pathname.startsWith(APP_BASE.pathname)) return false;
+  const path = url.pathname.slice(APP_BASE.pathname.length);
+  return APP_PATHS.has(url.pathname) ||
+    /^vendor\/sony-visualizer\/(?:visualizer\.(?:js|wasm|data)|visualizer-file\.js|manifest\.json)$/.test(path) ||
+    /^(?:icons|backgrounds)\/[^/]+\.(?:png|jpe?g|webp|svg|ico)$/i.test(path);
+}
+
+function isPublicExternalAsset(url) {
+  return PUBLIC_EXTERNAL_URLS.has(url.href) ||
+    (url.origin === 'https://fonts.gstatic.com' && /^\/s\/materialicons\/[^?#]+\.(?:woff2?|ttf)$/.test(url.pathname));
+}
+
+function saveResponse(event, request, response) {
+  const control = response.headers.get('Cache-Control') || '';
+  if (response.status === 200 && !response.redirected && !/\b(?:private|no-store)\b/i.test(control)) {
+    const copy = response.clone();
+    event.waitUntil(CACHE_OPEN_PROMISE.then(cache => cache.put(request, copy)).catch(() => {}));
+  }
+  return response;
+}
+
+self.addEventListener('install', event => {
+  event.waitUntil(CACHE_OPEN_PROMISE.then(cache => cache.addAll(SHELL_ASSETS)));
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(
+    keys.filter(key => key.startsWith('walkman-') && key !== CACHE_NAME).map(key => caches.delete(key))
+  )));
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (isPrivateRequest(request, url)) return;
 
-  const url = e.request.url;
-  if (BYPASS_PATTERNS.some((p) => url.includes(p))) return;
-
-  if (e.request.mode === 'navigate') {
-    // Revalidar siempre contra la red: evita que el navegador sirva un
-    // index.html viejo (cache del HTTP o del SW) tras cada desplegue.
-    e.respondWith(fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match('./index.html')));
+  if (request.mode === 'navigate') {
+    if (url.origin !== APP_BASE.origin ||
+        ![APP_BASE.pathname, APP_BASE.pathname.replace(/\/$/, ''), new URL(INDEX_URL).pathname].includes(url.pathname)) return;
+    event.respondWith(fetch(request, {cache: 'no-cache'})
+      .catch(() => caches.match(INDEX_URL).then(cached => cached || Response.error())));
     return;
   }
 
-  // Archivos de la app (JS, CSS, HTML): red primero. Con "cache first" se
-  // servía el JS viejo junto a un index.html nuevo, así que un despliegue
-  // tardaba dos arranques en verse. Sin conexión, la caché.
-  const origin = self.location.origin;
-  if (url.startsWith(origin)) {
-    e.respondWith(
-      fetch(e.request, { cache: 'no-cache' })
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            CACHE_OPEN_PROMISE.then((cache) => cache.put(e.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(e.request).then((cached) => cached || caches.match('./index.html')))
-    );
-    return;
+  if (isAppAsset(url)) {
+    event.respondWith(fetch(request, {cache: 'no-cache'})
+      .then(response => saveResponse(event, request, response))
+      .catch(() => caches.match(request).then(cached => cached || Response.error())));
+  } else if (isPublicExternalAsset(url)) {
+    event.respondWith(caches.match(request).then(cached => {
+      const refresh = fetch(request).then(response => saveResponse(event, request, response));
+      if (cached) { event.waitUntil(refresh.catch(() => {})); return cached; }
+      return refresh;
+    }));
   }
-
-  // Externos (CDN de fuentes y color-thief): caché primero y revalidar.
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(e.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            CACHE_OPEN_PROMISE.then((cache) => cache.put(e.request, networkResponse));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-
-      return fetch(e.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          CACHE_OPEN_PROMISE.then((cache) => cache.put(e.request, responseClone));
-        }
-        return networkResponse;
-      });
-    })
-  );
 });

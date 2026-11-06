@@ -37,7 +37,7 @@
         embyConfig.token = '';
         embyConfig.user = localRootName;
         saveServerSettings();
-        statusEl.innerHTML = `<div style="color:#4CAF50;">✓ ${localTracks.length} canciones encontradas en "${localRootName}"</div>`;
+        statusEl.innerHTML = `<div style="color:#4CAF50;">✓ ${localTracks.length} canciones encontradas en "${escapeHtml(localRootName)}"</div>`;
         localTracks.sort((a, b) => a.Name.localeCompare(b.Name));
         updateLocalCounts();
         switchServerType('local');
@@ -48,7 +48,7 @@
           statusEl.style.display = 'none';
           return;
         }
-        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${err.message}</div>`;
+        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${escapeHtml(err.message)}</div>`;
       }
     }
 
@@ -56,86 +56,99 @@
     // Soporta MP3 (APIC frame en ID3v2) y FLAC (METADATA_BLOCK_PICTURE).
     async function extractCoverManually(file) {
       try {
-        const buf = await file.arrayBuffer();
-        const bytes = new Uint8Array(buf);
         const ext = (file.name.split('.').pop() || '').toLowerCase();
-
-        if (ext === 'flac') {
-          // "fLaC" header + metadata blocks
-          let pos = 4;
-          while (pos + 4 <= bytes.length) {
-            const last = bytes[pos] & 0x80;
-            const type = bytes[pos] & 0x7f;
-            const len = ((bytes[pos+1] << 24) | (bytes[pos+2] << 16) | (bytes[pos+3] << 8) | bytes[pos+4]);
-            pos += 4;
-            if (type === 6) { // PICTURE
-              let p = pos + 4; // skip picture type(4)
-              const mimeLen = (bytes[p] << 24) | (bytes[p+1] << 16) | (bytes[p+2] << 8) | bytes[p+3];
-              p += 4;
-              const mime = new TextDecoder().decode(bytes.slice(p, p + mimeLen));
-              p += mimeLen;
-              const descLen = (bytes[p] << 24) | (bytes[p+1] << 16) | (bytes[p+2] << 8) | bytes[p+3];
-              p += 4 + descLen;
-              p += 4; // width
-              p += 4; // height
-              p += 4; // depth
-              p += 4; // colors
-              const dataLen = (bytes[p] << 24) | (bytes[p+1] << 16) | (bytes[p+2] << 8) | bytes[p+3];
-              p += 4;
-              const imgBytes = bytes.slice(p, p + dataLen);
-              if (imgBytes.length > 0) {
-                return URL.createObjectURL(new Blob([imgBytes], { type: mime || 'image/jpeg' }));
-              }
-            }
-            pos += len;
-            if (last) break;
+        if (ext === 'flac') return await extractFlacCover(file);
+        // Read only the ID3 tag, not the complete audio file.
+        const header = new Uint8Array(await file.slice(0, 10).arrayBuffer());
+        if (header.length < 10 || header[0] !== 0x49 || header[1] !== 0x44 || header[2] !== 0x33) return '';
+        if ([6, 7, 8, 9].some(i => header[i] & 0x80)) return '';
+        const length = ((header[6] & 0x7f) << 21) | ((header[7] & 0x7f) << 14) | ((header[8] & 0x7f) << 7) | (header[9] & 0x7f);
+        if (length > 32 * 1024 * 1024 || length + 10 > file.size) return '';
+        const bytes = new Uint8Array(await file.slice(0, length + 10).arrayBuffer());
+        // MP3 ID3v2.3/2.4: frame lengths are bounded by the declared tag.
+        const version = bytes[3];
+        let pos = 10;
+        const tagSize = ((bytes[6] & 0x7f) << 21) | ((bytes[7] & 0x7f) << 14) | ((bytes[8] & 0x7f) << 7) | (bytes[9] & 0x7f);
+        const end = Math.min(pos + tagSize, bytes.length);
+        while (pos + 10 <= end) {
+          const frameId = String.fromCharCode(bytes[pos], bytes[pos+1], bytes[pos+2], bytes[pos+3]);
+          if (frameId === '\x00\x00\x00\x00' || !/^[A-Z0-9]{4}$/.test(frameId)) break;
+          let size;
+          if (version === 4) {
+            size = ((bytes[pos+4] & 0x7f) << 21) | ((bytes[pos+5] & 0x7f) << 14) | ((bytes[pos+6] & 0x7f) << 7) | (bytes[pos+7] & 0x7f);
+          } else {
+            size = ((bytes[pos+4] << 24) | (bytes[pos+5] << 16) | (bytes[pos+6] << 8) | bytes[pos+7]) >>> 0;
           }
-        } else {
-          // MP3 ID3v2: "ID3" + version(2) + flags(1) + size(4 syncsafe)
-          if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
-            const version = bytes[3];
-            let pos = 10;
-            const tagSize = ((bytes[6] & 0x7f) << 21) | ((bytes[7] & 0x7f) << 14) | ((bytes[8] & 0x7f) << 7) | (bytes[9] & 0x7f);
-            const end = Math.min(pos + tagSize, bytes.length);
-            while (pos + 10 <= end) {
-              const frameId = String.fromCharCode(bytes[pos], bytes[pos+1], bytes[pos+2], bytes[pos+3]);
-              if (frameId === '\x00\x00\x00\x00' || !/^[A-Z0-9]{4}$/.test(frameId)) break;
-              let size;
-              if (version === 4) {
-                size = ((bytes[pos+4] & 0x7f) << 21) | ((bytes[pos+5] & 0x7f) << 14) | ((bytes[pos+6] & 0x7f) << 7) | (bytes[pos+7] & 0x7f);
-              } else {
-                size = (bytes[pos+4] << 24) | (bytes[pos+5] << 16) | (bytes[pos+6] << 8) | bytes[pos+7];
-              }
-              const frameData = pos + 10;
-              if (frameId === 'APIC' && frameData + size <= bytes.length) {
-                const enc = bytes[frameData];
-                let p = frameData + 1;
-                let mimeEnd = p;
-                while (mimeEnd < frameData + size && bytes[mimeEnd] !== 0) mimeEnd++;
-              const mime = new TextDecoder().decode(bytes.slice(p, mimeEnd));
-                p = mimeEnd + 1; // picture type
-                p++; // skip pic type
-                if (enc === 0 || enc === 3) {
-                  while (p < frameData + size && bytes[p] !== 0) p++;
-                  p++;
-                } else {
-                  while (p + 1 < frameData + size && !(bytes[p] === 0 && bytes[p+1] === 0)) p += 2;
-                  p += 2;
-                }
-                const imgBytes = bytes.slice(p, frameData + size);
-                if (imgBytes.length > 0) {
-                  return URL.createObjectURL(new Blob([imgBytes], { type: mime || 'image/jpeg' }));
-                }
-              }
-              pos = frameData + size;
+          const frameData = pos + 10;
+          if (frameData + size > end) return '';
+          if (frameId === 'APIC' && size > 0) {
+            const enc = bytes[frameData];
+            let p = frameData + 1;
+            let mimeEnd = p;
+            while (mimeEnd < frameData + size && bytes[mimeEnd] !== 0) mimeEnd++;
+            if (mimeEnd >= frameData + size) return '';
+            const mime = new TextDecoder().decode(bytes.slice(p, mimeEnd));
+            p = mimeEnd + 1; // picture type
+            p++; // skip pic type
+            if (enc === 0 || enc === 3) {
+              while (p < frameData + size && bytes[p] !== 0) p++;
+              p++;
+            } else {
+              while (p + 1 < frameData + size && !(bytes[p] === 0 && bytes[p+1] === 0)) p += 2;
+              p += 2;
+            }
+            const imgBytes = bytes.slice(p, frameData + size);
+            if (imgBytes.length > 0) {
+              return URL.createObjectURL(new Blob([imgBytes], { type: mime || 'image/jpeg' }));
             }
           }
+          pos = frameData + size;
         }
         return '';
       } catch (e) {
         console.warn('[WALKMAN] error extractCoverManually', e);
         return '';
       }
+    }
+
+    async function extractFlacCover(file) {
+      const signature = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+      if (signature.length !== 4 || signature.some((v, i) => v !== [102, 76, 97, 67][i])) return '';
+      let pos = 4;
+      // A corrupt file cannot keep the main thread walking endless empty blocks.
+      for (let blocks = 0; blocks < 4096 && pos + 4 <= file.size; blocks++) {
+        const header = new Uint8Array(await file.slice(pos, pos + 4).arrayBuffer());
+        if (header.length !== 4) return '';
+        const last = !!(header[0] & 0x80), type = header[0] & 0x7f;
+        const length = (header[1] << 16) | (header[2] << 8) | header[3];
+        pos += 4;
+        const end = pos + length;
+        if (end > file.size) return '';
+        if (type === 6) {
+          const bytes = new Uint8Array(await file.slice(pos, end).arrayBuffer());
+          const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          let cursor = 0;
+          const uint32 = () => {
+            if (cursor + 4 > bytes.length) throw new Error('Truncated FLAC picture');
+            const value = view.getUint32(cursor, false); cursor += 4; return value;
+          };
+          uint32(); // picture type
+          const mimeLength = uint32();
+          if (mimeLength > bytes.length - cursor) return '';
+          const mime = new TextDecoder().decode(bytes.subarray(cursor, cursor + mimeLength));
+          cursor += mimeLength;
+          const descriptionLength = uint32();
+          if (descriptionLength > bytes.length - cursor) return '';
+          cursor += descriptionLength;
+          for (let i = 0; i < 4; i++) uint32(); // width, height, depth, palette
+          const dataLength = uint32();
+          if (dataLength > bytes.length - cursor) return '';
+          if (dataLength) return URL.createObjectURL(new Blob([bytes.subarray(cursor, cursor + dataLength)], {type: mime || 'image/jpeg'}));
+        }
+        pos = end;
+        if (last) break;
+      }
+      return '';
     }
 
     function embeddedCoverUrl(file) {
@@ -258,7 +271,7 @@
         extractAudioQualityInBackground(localTracks);
       } catch (err) {
         hideLocalImportBanner();
-        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${err.message}</div>`;
+        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${escapeHtml(err.message)}</div>`;
       }
     }
 

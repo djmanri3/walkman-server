@@ -391,14 +391,7 @@
             div.className = 'list-item';
             const imgUrl = getEmbyImageUrl(item);
             
-            div.innerHTML = `
-              <img src="${imgUrl}">
-              <div class="list-item-info">
-                <div class="list-item-title">${item.Name}</div>
-                <div class="list-item-sub">${item.Type} • ${item.AlbumArtist || item.Artists ? (item.Artists || []).join(', ') : ''}</div>
-              </div>
-              <button class="list-item-more"><span class="material-icons">more_vert</span></button>
-            `;
+            renderMediaRow(div, imgUrl, item.Name, `${item.Type} • ${item.AlbumArtist || item.Artists ? (item.Artists || []).join(', ') : ''}`);
             const imgEl = div.querySelector('img');
             applyArtistImageFallback(imgEl, item);
 
@@ -537,15 +530,13 @@
       featuredSlides.forEach((slide, i) => {
         const div = document.createElement('div');
         div.className = 'featured-slide' + (i === 0 ? ' active' : '');
-        div.style.backgroundImage = `url('${slide.img}')`;
-        div.innerHTML = `
-          <div class="featured-slide-bg" style="background-image:url('${slide.img}')"></div>
-          <div class="featured-slide-art" style="background-image:url('${slide.img}')"></div>
-          <div class="featured-slide-overlay">
-            <div class="featured-slide-title">${slide.title}</div>
-            <div class="featured-slide-artist">${slide.artist}</div>
-          </div>
-        `;
+        div.innerHTML = '<div class="featured-slide-bg"></div><div class="featured-slide-art"></div><div class="featured-slide-overlay"><div class="featured-slide-title"></div><div class="featured-slide-artist"></div></div>';
+        const background = `url(${JSON.stringify(String(slide.img))})`;
+        div.style.backgroundImage = background;
+        div.querySelector('.featured-slide-bg').style.backgroundImage = background;
+        div.querySelector('.featured-slide-art').style.backgroundImage = background;
+        div.querySelector('.featured-slide-title').textContent = slide.title || '';
+        div.querySelector('.featured-slide-artist').textContent = slide.artist || '';
         container.appendChild(div);
       });
 
@@ -838,14 +829,7 @@
         div.className = 'list-item';
         const imgUrl = getEmbyImageUrl(item);
         
-        div.innerHTML = `
-          <img loading="lazy" src="${imgUrl}">
-          <div class="list-item-info">
-            <div class="list-item-title">${item.Name}${(item._hasHiRes || isHiResAudio(item)) ? hiresIconHtml() : ''}</div>
-            <div class="list-item-sub">${item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : catLabel)}</div>
-          </div>
-          <button class="list-item-more"><span class="material-icons">more_vert</span></button>
-        `;
+        renderMediaRow(div, imgUrl, item.Name, item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : catLabel), item._hasHiRes || isHiResAudio(item));
         const imgEl = div.querySelector('img');
         applyArtistImageFallback(imgEl, item);
 
@@ -931,14 +915,7 @@
         div.className = 'list-item';
         const imgUrl = getEmbyImageUrl(item);
 
-        div.innerHTML = `
-          <img loading="lazy" src="${imgUrl}">
-          <div class="list-item-info">
-            <div class="list-item-title">${item.Name}${(item._hasHiRes || isHiResAudio(item)) ? hiresIconHtml() : ''}</div>
-            <div class="list-item-sub">${item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : (item.Album || ''))}</div>
-          </div>
-          <button class="list-item-more"><span class="material-icons">more_vert</span></button>
-        `;
+        renderMediaRow(div, imgUrl, item.Name, item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : (item.Album || '')), item._hasHiRes || isHiResAudio(item));
         const imgEl = div.querySelector('img');
         applyArtistImageFallback(imgEl, item);
 
@@ -1026,14 +1003,7 @@
         div.className = 'list-item';
         const imgUrl = getEmbyImageUrl(track);
 
-        div.innerHTML = `
-          <img loading="lazy" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}';">
-          <div class="list-item-info">
-            <div class="list-item-title">${track.Name}${isHiResAudio(track) ? hiresIconHtml() : ''}</div>
-            <div class="list-item-sub">${track.Artists ? track.Artists.join(', ') : t('unknown')}</div>
-          </div>
-          <button class="list-item-more"><span class="material-icons">more_vert</span></button>
-        `;
+        renderMediaRow(div, imgUrl, track.Name, track.Artists ? track.Artists.join(', ') : t('unknown'), isHiResAudio(track));
 
         div.onclick = () => {
           playlist = [...tracks];
@@ -1215,12 +1185,20 @@
       const artist = item.Artists ? item.Artists.join(', ') : (item.AlbumArtist || t('unknown'));
       const album = item.Album || t('unknown');
       const quality = getAudioQualityText(item);
-      info.innerHTML = `<strong>${t('infoName')}:</strong> ${item.Name}<br><strong>${t('infoArtist')}:</strong> ${artist}<br><strong>${t('infoAlbum')}:</strong> ${album}<br><strong>${t('infoFile')}:</strong> ${fileName}`;
-      if (quality) {
-        info.innerHTML += `<br><strong>${t('audioQuality')}:</strong> ${quality}`;
-        if (isHiResAudio(item)) {
-          info.innerHTML += ' <span style="color:#e4a133;font-weight:bold;">★ HI-RES</span>';
-        }
+      info.replaceChildren();
+      const rows = [[t('infoName'), item.Name], [t('infoArtist'), artist],
+        [t('infoAlbum'), album], [t('infoFile'), fileName]];
+      if (quality) rows.push([t('audioQuality'), quality]);
+      rows.forEach(([label, value], index) => {
+        if (index) info.appendChild(document.createElement('br'));
+        const strong = document.createElement('strong');
+        strong.textContent = label + ':';
+        info.append(strong, document.createTextNode(' ' + (value || '')));
+      });
+      if (quality && isHiResAudio(item)) {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'color:#e4a133;font-weight:bold;';
+        badge.textContent = ' ★ HI-RES'; info.appendChild(badge);
       }
       info.style.display = 'block';
     }
