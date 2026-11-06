@@ -41,7 +41,7 @@ docker-compose up -d
 
 # Features
 - Native equaliser with 5 bands [not working on iPad and iPhone]
-- Add Clear bass feature [not working on iPad and iPhone]
+- Open Bass: an independently written bass effect using public DSP equations and runtime-calculated coefficients. Uses AudioWorklet on HTTPS/localhost and the same DSP in compatible mode over plain HTTP, with a final anti-clipping guard. [Design, validation and provenance](docs/open-bass.md). Audio effects remain disabled on iPad and iPhone.
 - Add equaliser space (VPT) with 3 profiles [not working on iPad and iPhone]
 - Add song visualizer
   - Anillos pulsantes

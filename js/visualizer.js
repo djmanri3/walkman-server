@@ -24,6 +24,7 @@
 
     function setVisStyle(style) {
       visStyle = style;
+      SonyVisualizer.select(style);
       visStyleMenuOpen = false;
       document.getElementById('vis-style-menu').classList.remove('open');
       document.querySelectorAll('#vis-style-menu .vis-style-option').forEach(o => {
@@ -112,8 +113,8 @@
         const n = 64;
         if (visBands.length !== n) {
           visBands = new Uint8Array(n);
-          visBinsNorm = new Float32Array(n);
         }
+        if (visBinsNorm.length !== n) visBinsNorm = new Float32Array(n);
         const now = audio && !audio.paused && audio.src ? performance.now() : 0;
         if (!now) {
           for (let i = 0; i < n; i++) { visBands[i] = 0; visBinsNorm[i] = 0; }
@@ -131,8 +132,10 @@
       const n = analyserNode.frequencyBinCount;
       if (visBands.length !== n) {
         visBands = new Uint8Array(n);
-        visBinsNorm = new Float32Array(n);
       }
+      // Beat Glow y los LED Xperia también pueden crear o redimensionar visBands.
+      // El búfer normalizado debe comprobar su propio tamaño por separado.
+      if (visBinsNorm.length !== n) visBinsNorm = new Float32Array(n);
       analyserNode.getByteFrequencyData(visBands);
       let sum = 0;
       for (let i = 0; i < n; i++) {
@@ -174,6 +177,11 @@
 
     function renderVisualizer() {
       if (!document.getElementById('visualizer-overlay').classList.contains('open')) return;
+
+      if (SonyVisualizer.render(performance.now())) {
+        visAnimationId = requestAnimationFrame(renderVisualizer);
+        return;
+      }
 
       ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -693,6 +701,7 @@
           o.classList.toggle('active', o.dataset.vis === visStyle);
         });
         resizeCanvas();
+        SonyVisualizer.select(visStyle);
         updateVisualizerOverlayData();
         renderVisualizer();
       } else {

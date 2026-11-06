@@ -1,0 +1,24 @@
+{
+  "engine": "Original UXVisualizerCore, same recovered engine as the ARM64 APK",
+  "toolchain": "Emscripten 4.0.19",
+  "adaptations": [
+    "WebGL fixed function shaders with original point-distance attenuation and sprite coordinates",
+    "Finite glyph/body worker jobs on separate engine stacks",
+    "Same AOSP Android 5.0.2_r1 CPU Skia backend, generic pixel routines",
+    "Current web track metadata/play state/position and RGBA artwork",
+    "Standalone file:// loader embeds the identical WASM and resource package without fetch/XHR",
+    "Preserve independent VBO binding, stride and offset for each ES1 vertex attribute; refresh mutable CPU arrays without rewriting their pointers",
+    "Sony Gate deterministically selects the original rectangular Regular/Bar assets instead of the original random Box/Circle choice"
+  ],
+  "assets": {
+    "visualizer.js": "e721e6e727dcd5e296933588db6cfe3b49827bc60b16b3d33de7594aab6948ad",
+    "visualizer.wasm": "6a7b0dd8183b7bc55c7dee9c93744c3f976d658af1f877382a98e365f61896c3",
+    "visualizer.data": "f324d3596f354eaa99a499867b3d7d43be1706c689aa88d563e67de02fb811b5",
+    "visualizer-file.js": "0174d45b7ada5766811ba8333e7e47c31851871661bfeda16996bb5d5f4954fc"
+  },
+  "graphics_revision": "gate-rectangles-3",
+  "gate_variant": [
+    "Box_Regular_01.png",
+    "Box_Bar_01.png"
+  ]
+}

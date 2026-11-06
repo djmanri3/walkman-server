@@ -2,6 +2,9 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        cbEngineCompatible: "Open Bass: independent DSP (compatible mode)",
+        cbEngineUnavailable: "Audio effects unavailable in this browser",
+        cbEngineOpen: "Open Bass: independent DSP", cbEngineFallback: "Open Bass: Web filter", cbEngineLoading: "Open Bass: Loading independent DSP…", cbEngineInactive: "Open Bass: Waiting for audio",
         settings: 'Settings', accentColor: 'Accent color', dynamic: 'Dynamic', custom: 'Custom',
         pickColor: 'Choose a color', walkmanBarSize: 'Walkman bar size', albumCarouselSize: 'Album carousel size',
         slideshow: 'Album slideshow', slideshowSize: 'Slideshow size', beatGlow: 'Beat glow',
@@ -11,6 +14,7 @@
         user: 'User', password: 'Password', connect: 'Connect', localLibrary: 'Device local library',
         localLibraryHint: 'Select a folder on your device/computer to scan audio files (mp3, flac, ogg, m4a, wav, opus).',
         chooseFolder: 'Choose music folder', selectMusicLibrary: 'Select the Music Library',
+        visSonyUpdate: 'The Sony effects are outdated. Close this tab and reopen the updated index.html.', visSonyOriginal: 'Sony Visualizer', visSonyLoading: 'Loading Sony effects…', visSonyError: 'Could not load this effect. Select another style or reload the page.',
         playing: 'Playing', myMusic: 'My music', visualizer: 'Visualizer', search: 'Search',
         myMusicHome: 'My Music', songs: 'Songs', albums: 'Albums', artists: 'Artists', playlists: 'Playlists',
         soundEnhancements: 'Sound Enhancements / EQ', serverSettings: 'Server Settings',
@@ -48,7 +52,7 @@
         followLyrics: 'Follow the song', customization: 'Customization', effects: 'Effects', soundControl: 'Sound control',
         cardFlare: 'Cover glow on track change',
         favorites: 'Favorites', favAlbums: 'Favorite albums', favSongs: 'Favorite songs',
-        addToFavorites: 'Add to favorites', removeFromFavorites: 'Remove from favorites',
+        addToFavorites: 'Add to favorites', removeFromFavorites: 'Remove from favorites', addToPlaylist: 'Add to playlist',
         addedToFavorites: 'Added to favorites', removedFromFavorites: 'Removed from favorites',
         noFavorites: 'No favorites yet. Add them with the ⋮ menu.',
         favError: 'Could not update favorites',
@@ -58,6 +62,9 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        cbEngineCompatible: "Open Bass: DSP independiente (modo compatible)",
+        cbEngineUnavailable: "Efectos de audio no disponibles en este navegador",
+        cbEngineOpen: "Open Bass: DSP independiente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: Cargando DSP independiente…", cbEngineInactive: "Open Bass: Pendiente de iniciar audio",
         settings: 'Ajustes', accentColor: 'Color de acento', dynamic: 'Dinámico', custom: 'Personalizado',
         pickColor: 'Elige un color', walkmanBarSize: 'Tamaño Barra Walkman', albumCarouselSize: 'Tamaño carrusel de álbumes',
         slideshow: 'Side show de álbumes', slideshowSize: 'Tamaño del side show', beatGlow: 'Resplandor al ritmo',
@@ -67,6 +74,7 @@
         user: 'Usuario', password: 'Contraseña', connect: 'Conectar', localLibrary: 'Biblioteca local del dispositivo',
         localLibraryHint: 'Selecciona una carpeta de tu dispositivo/computadora para escanear archivos de audio (mp3, flac, ogg, m4a, wav, opus).',
         chooseFolder: 'Elegir carpeta de música', selectMusicLibrary: 'Selecciona la Biblioteca Musical',
+        visSonyUpdate: 'Los efectos de Sony no se han actualizado. Cierra esta pestaña y vuelve a abrir el index.html actualizado.', visSonyOriginal: 'Sony Visualizer', visSonyLoading: 'Cargando efectos de Sony…', visSonyError: 'No se pudo cargar este efecto. Selecciona otro estilo o recarga la página.',
         playing: 'Reproduciendo', myMusic: 'Mi música', visualizer: 'Visualizador', search: 'Buscar',
         myMusicHome: 'Mi Música', songs: 'Canciones', albums: 'Álbumes', artists: 'Artistas', playlists: 'Listas de reproducción',
         soundEnhancements: 'Mejoras de Sonido / Ecualizador', serverSettings: 'Ajustes de Servidor',
@@ -104,7 +112,7 @@
         followLyrics: 'Seguir la canción', customization: 'Personalización', effects: 'Efectos', soundControl: 'Control del sonido',
         cardFlare: 'Brillo de carátula al cambiar de canción',
         favorites: 'Favoritos', favAlbums: 'Álbumes favoritos', favSongs: 'Canciones favoritas',
-        addToFavorites: 'Añadir a favoritos', removeFromFavorites: 'Quitar de favoritos',
+        addToFavorites: 'Añadir a favoritos', removeFromFavorites: 'Quitar de favoritos', addToPlaylist: 'Añadir a lista de reproducción',
         addedToFavorites: 'Añadida a favoritos', removedFromFavorites: 'Eliminada de favoritos',
         noFavorites: 'Aún no hay favoritos. Añádelos con el menú ⋮',
         favError: 'No se pudo actualizar el favorito',
@@ -114,6 +122,9 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        cbEngineCompatible: "Open Bass : DSP indépendant (mode compatible)",
+        cbEngineUnavailable: "Effets audio indisponibles dans ce navigateur",
+        cbEngineOpen: "Open Bass: DSP indépendant", cbEngineFallback: "Open Bass: Filtre web", cbEngineLoading: "Open Bass: Chargement du DSP indépendant…", cbEngineInactive: "Open Bass: En attente du son",
         settings: 'Réglages', accentColor: 'Couleur d\'accent', dynamic: 'Dynamique', custom: 'Personnalisé',
         beatGlow: 'Lueur au rythme', xpspLeds: 'LEDs Xperia SP', sensitivity: 'Sensibilité', low: 'Faible',
         medium: 'Moyenne', high: 'Élevée', changeLibrary: 'Changer la bibliothèque musicale',
@@ -149,7 +160,7 @@
         followLyrics: 'Suivre la chanson', customization: 'Personnalisation', effects: 'Effets', soundControl: 'Contrôle du son',
         cardFlare: 'Lueur de la pochette au changement de chanson',
         favorites: 'Favoris', favAlbums: 'Albums favoris', favSongs: 'Chansons préférées',
-        addToFavorites: 'Ajouter aux favoris', removeFromFavorites: 'Retirer des favoris',
+        addToFavorites: 'Ajouter aux favoris', removeFromFavorites: 'Retirer des favoris', addToPlaylist: 'Ajouter à la liste de lecture',
         addedToFavorites: 'Ajouté aux favoris', removedFromFavorites: 'Retiré des favoris',
         noFavorites: 'Aucun favori pour le moment. Ajoutez-les avec le menu ⋮',
         favError: 'Impossible de mettre à jour les favoris',
@@ -159,6 +170,9 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        cbEngineCompatible: "Open Bass: eigener DSP (Kompatibilitätsmodus)",
+        cbEngineUnavailable: "Audioeffekte in diesem Browser nicht verfügbar",
+        cbEngineOpen: "Open Bass: eigener DSP", cbEngineFallback: "Open Bass: Webfilter", cbEngineLoading: "Open Bass: eigener DSP wird geladen…", cbEngineInactive: "Open Bass: Warten auf Audio",
         settings: 'Einstellungen', accentColor: 'Akzentfarbe', dynamic: 'Dynamisch', custom: 'Benutzerdefiniert',
         beatGlow: 'Rhythmus-Glow', xpspLeds: 'Xperia SP LEDs', sensitivity: 'Empfindlichkeit', low: 'Niedrig',
         medium: 'Mittel', high: 'Hoch', changeLibrary: 'Musikbibliothek ändern', clearCache: 'Cache leeren', fullscreen: 'Vollbild',
@@ -193,7 +207,7 @@
         followLyrics: 'Dem Lied folgen', customization: 'Anpassung', effects: 'Effekte', soundControl: 'Tonsteuerung',
         cardFlare: 'Cover-Lichtwechsel beim Liedwechsel',
         favorites: 'Favoriten', favAlbums: 'Lieblingsalben', favSongs: 'Lieblingssongs',
-        addToFavorites: 'Zu Favoriten hinzufügen', removeFromFavorites: 'Aus Favoriten entfernen',
+        addToFavorites: 'Zu Favoriten hinzufügen', removeFromFavorites: 'Aus Favoriten entfernen', addToPlaylist: 'Zur Wiedergabeliste hinzufügen',
         addedToFavorites: 'Zu Favoriten hinzugefügt', removedFromFavorites: 'Aus Favoriten entfernt',
         noFavorites: 'Noch keine Favoriten. Hinzufügen über das ⋮-Menü',
         favError: 'Favoriten konnten nicht aktualisiert werden',
@@ -203,6 +217,9 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        cbEngineCompatible: "Open Bass: DSP indipendente (modalità compatibile)",
+        cbEngineUnavailable: "Effetti audio non disponibili in questo browser",
+        cbEngineOpen: "Open Bass: DSP indipendente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: Caricamento DSP indipendente…", cbEngineInactive: "Open Bass: In attesa dell’audio",
         settings: 'Impostazioni', accentColor: 'Colore accento', dynamic: 'Dinamico', custom: 'Personalizzato',
         beatGlow: 'Bagliore a ritmo', xpspLeds: 'LED Xperia SP', sensitivity: 'Sensibilità', low: 'Bassa',
         medium: 'Media', high: 'Alta', changeLibrary: 'Cambia libreria musicale', clearCache: 'Svuota cache', fullscreen: 'Schermo intero',
@@ -237,7 +254,7 @@
         followLyrics: 'Segui la canzone', customization: 'Personalizzazione', effects: 'Effetti', soundControl: 'Controllo del suono',
         cardFlare: 'Luce della copertina al cambio di canzone',
         favorites: 'Preferiti', favAlbums: 'Album preferiti', favSongs: 'Canzoni preferite',
-        addToFavorites: 'Aggiungi ai preferiti', removeFromFavorites: 'Rimuovi dai preferiti',
+        addToFavorites: 'Aggiungi ai preferiti', removeFromFavorites: 'Rimuovi dai preferiti', addToPlaylist: 'Aggiungi alla playlist',
         addedToFavorites: 'Aggiunto ai preferiti', removedFromFavorites: 'Rimosso dai preferiti',
         noFavorites: 'Ancora nessun preferito. Aggiungili dal menu ⋮',
         favError: 'Impossibile aggiornare i preferiti',
@@ -247,6 +264,9 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        cbEngineCompatible: "Open Bass: DSP independente (modo compatível)",
+        cbEngineUnavailable: "Efeitos de áudio indisponíveis neste navegador",
+        cbEngineOpen: "Open Bass: DSP independente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: A carregar DSP independente…", cbEngineInactive: "Open Bass: A aguardar áudio",
         settings: 'Configurações', accentColor: 'Cor de destaque', dynamic: 'Dinâmico', custom: 'Personalizado',
         beatGlow: 'Brilho no ritmo', xpspLeds: 'LEDs Xperia SP', sensitivity: 'Sensibilidade', low: 'Baixa',
         medium: 'Média', high: 'Alta', changeLibrary: 'Alterar biblioteca musical', clearCache: 'Limpar cache', fullscreen: 'Tela cheia',
@@ -281,7 +301,7 @@
         followLyrics: 'Seguir a música', customization: 'Personalização', effects: 'Efeitos', soundControl: 'Controle de som',
         cardFlare: 'Brilho da capa ao mudar de música',
         favorites: 'Favoritos', favAlbums: 'Álbuns favoritos', favSongs: 'Músicas favoritas',
-        addToFavorites: 'Adicionar aos favoritos', removeFromFavorites: 'Remover dos favoritos',
+        addToFavorites: 'Adicionar aos favoritos', removeFromFavorites: 'Remover dos favoritos', addToPlaylist: 'Adicionar à lista de reprodução',
         addedToFavorites: 'Adicionada aos favoritos', removedFromFavorites: 'Removida dos favoritos',
         noFavorites: 'Ainda não há favoritos. Adicione-os pelo menu ⋮',
         favError: 'Não foi possível atualizar os favoritos',
