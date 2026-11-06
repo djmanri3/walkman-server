@@ -3068,3 +3068,89 @@
 
 /* Keep all original Sony and web visualizer styles reachable on small screens. */
 .vis-style-menu { max-height: 70vh; overflow-y: auto; }
+
+/* Themes share the same player elements and playback state. */
+#view-playing .art-card { transition-property: transform, opacity, filter, box-shadow; }
+.playing-theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.playing-theme-option {
+  min-width: 0; overflow: hidden; text-align: left; cursor: pointer;
+  border: 2px solid #444; border-radius: 8px; background: #202024; color: #ddd;
+}
+.playing-theme-preview { display: block; width: 100%; height: auto; background: #171717; }
+.playing-theme-caption { display: flex; align-items: center; justify-content: space-between; padding: 10px; font-size: 14px; }
+.theme-check { font-size: 18px; visibility: hidden; }
+.playing-theme-option[aria-pressed="true"] { border-color: var(--accent-color); color: #fff; }
+.playing-theme-option[aria-pressed="true"] .theme-check { visibility: visible; color: var(--accent-color); }
+.playing-theme-option:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.classic-only { display: none; }
+
+#view-playing[data-theme="classic"] {
+  --album-size: min(calc(clamp(210px, 36vw, 500px) * var(--carousel-size)), 38vw, calc(100dvh - 145px));
+  gap: 0 clamp(24px, 4vw, 56px);
+  padding: 30px clamp(20px, 4vw, 60px);
+  align-content: center; align-items: stretch; justify-content: center;
+  grid-template-columns: calc(var(--album-size) * 1.34) minmax(0, 780px);
+  grid-template-rows: auto auto;
+}
+#view-playing[data-theme="classic"].active { display: grid; }
+#view-playing[data-theme="classic"] .carousel-wrapper { grid-column: 1; grid-row: 1 / 3; align-self: center; min-width: 0; }
+#view-playing[data-theme="classic"] .carousel-container { height: calc(var(--album-size) + 30px); justify-content: flex-start; margin: 0; }
+#view-playing[data-theme="classic"] .art-card { left: 0; transform-origin: left center; }
+#view-playing[data-theme="classic"] .art-card.prev { transform: translateX(calc(var(--album-size) * .34)) scale(.86); opacity: .85; filter: brightness(.8); }
+#view-playing[data-theme="classic"] .art-card.next { transform: translateX(calc(var(--album-size) * .62)) scale(.72); z-index: 1; opacity: .7; filter: brightness(.6); }
+#view-playing[data-theme="classic"] .lyrics-view { margin-left: 0; }
+#view-playing[data-theme="classic"] .track-header-wrapper { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 28px; align-items: flex-start; }
+#view-playing[data-theme="classic"] .track-info { border: 0; padding: 0; }
+#view-playing[data-theme="classic"] .track-title { font-size: 40px; border-left: 3px solid var(--accent-color); padding-left: 10px; margin-bottom: 12px; }
+#view-playing[data-theme="classic"] .track-artist { font-size: 24px; }
+#view-playing[data-theme="classic"] .track-album { display: block; font-size: 18px; color: #aaa; margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-playing[data-theme="classic"] .top-btns { gap: 6px; }
+#view-playing[data-theme="classic"] .queue-btn-top { width: 46px; height: 46px; border: 0; background: transparent; box-shadow: none; }
+#view-playing[data-theme="classic"] .queue-btn-top span { font-size: 28px; color: #fff; }
+#view-playing[data-theme="classic"] .controls-wrapper {
+  grid-column: 2; grid-row: 2; align-self: start; max-width: none; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, .4fr); gap: 38px 24px;
+}
+#view-playing[data-theme="classic"] .controls { grid-column: 1; grid-row: 1; justify-content: flex-start; gap: 28px; margin: 0; padding-left: 12px; }
+#view-playing[data-theme="classic"] .control-btn { width: 64px; height: 64px; border-width: 1px; border-color: #fff; background: transparent; }
+#view-playing[data-theme="classic"] .control-btn.play { width: 80px; height: 80px; }
+#view-playing[data-theme="classic"] .control-btn span { font-size: 38px; color: #fff; }
+#view-playing[data-theme="classic"] .mode-btn { color: #fff; }
+#view-playing[data-theme="classic"] .mode-btn span { font-size: 34px; }
+#view-playing[data-theme="classic"] .mode-btn.active::after {
+  content: ''; position: absolute; bottom: -4px; left: calc(50% - 2px);
+  width: 4px; height: 4px; border-radius: 50%; background: #fff;
+}
+#view-playing[data-theme="classic"] .mode-btn .badge-one { background: #fff; color: #111; font-size: 9px; }
+#view-playing[data-theme="classic"] .extra-controls-right { position: static; grid-column: 2; grid-row: 1; justify-content: center; gap: 18px; }
+#view-playing[data-theme="classic"] .progress-container { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px 0; color: #ccc; font-size: 14px; }
+#view-playing[data-theme="classic"] #progress-bar { grid-row: 1; grid-column: 1 / 4; width: 100%; min-width: 0; }
+#view-playing[data-theme="classic"] #time-current { grid-row: 2; grid-column: 1; }
+#view-playing[data-theme="classic"] #time-total { grid-row: 2; grid-column: 3; text-align: right; }
+#view-playing[data-theme="classic"] .playing-queue-position { display: block; grid-row: 2; grid-column: 2; text-align: center; }
+#view-playing[data-theme="classic"] .volume-container { grid-column: 2; grid-row: 2; align-self: start; margin: 0; gap: 4px; color: #fff; }
+#view-playing[data-theme="classic"] .volume-bar { width: 100%; min-width: 0; opacity: 1; visibility: visible; }
+#view-playing[data-theme="classic"] .volume-container span { font-size: 24px; }
+
+@media (max-width: 680px) and (orientation: portrait) {
+  #view-playing[data-theme="classic"] {
+    --album-size: min(calc(70vw * var(--carousel-size)), calc((100vw - 48px) / 1.34), 38dvh);
+    grid-template-columns: minmax(0, 440px); grid-template-rows: auto auto auto;
+    gap: 20px; padding: 20px 24px; align-content: safe center;
+  }
+  #view-playing[data-theme="classic"] .carousel-wrapper { grid-column: 1; grid-row: 1; }
+  #view-playing[data-theme="classic"] .carousel-container { width: calc(var(--album-size) * 1.34); margin: auto; }
+  #view-playing[data-theme="classic"] .track-header-wrapper { grid-column: 1; grid-row: 2; margin: 0; }
+  #view-playing[data-theme="classic"] .controls-wrapper { grid-column: 1; grid-row: 3; gap: 20px 12px; }
+  #view-playing[data-theme="classic"] .controls { gap: 14px; padding: 0; }
+  #view-playing[data-theme="classic"] .control-btn { width: 56px; height: 56px; }
+  #view-playing[data-theme="classic"] .control-btn.play { width: 72px; height: 72px; }
+  #view-playing[data-theme="classic"] .track-title { font-size: 30px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  #view-playing[data-theme="classic"] { padding: 12px 20px; gap: 0 28px; }
+  #view-playing[data-theme="classic"] .track-header-wrapper { margin-bottom: 20px; }
+  #view-playing[data-theme="classic"] .controls-wrapper { gap: 18px 16px; }
+  #view-playing[data-theme="classic"] .track-title { font-size: 30px; margin-bottom: 8px; }
+  #view-playing[data-theme="classic"] .track-artist { font-size: 20px; }
+}

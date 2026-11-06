@@ -2,6 +2,7 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        playingTheme: 'Playing theme',
         cbEngineCompatible: "Open Bass: independent DSP (compatible mode)",
         cbEngineUnavailable: "Audio effects unavailable in this browser",
         cbEngineOpen: "Open Bass: independent DSP", cbEngineFallback: "Open Bass: Web filter", cbEngineLoading: "Open Bass: Loading independent DSP…", cbEngineInactive: "Open Bass: Waiting for audio",
@@ -62,6 +63,7 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        playingTheme: 'Tema de Reproduciendo',
         cbEngineCompatible: "Open Bass: DSP independiente (modo compatible)",
         cbEngineUnavailable: "Efectos de audio no disponibles en este navegador",
         cbEngineOpen: "Open Bass: DSP independiente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: Cargando DSP independiente…", cbEngineInactive: "Open Bass: Pendiente de iniciar audio",
@@ -122,6 +124,7 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        playingTheme: 'Thème de lecture',
         cbEngineCompatible: "Open Bass : DSP indépendant (mode compatible)",
         cbEngineUnavailable: "Effets audio indisponibles dans ce navigateur",
         cbEngineOpen: "Open Bass: DSP indépendant", cbEngineFallback: "Open Bass: Filtre web", cbEngineLoading: "Open Bass: Chargement du DSP indépendant…", cbEngineInactive: "Open Bass: En attente du son",
@@ -170,6 +173,7 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        playingTheme: 'Wiedergabe-Design',
         cbEngineCompatible: "Open Bass: eigener DSP (Kompatibilitätsmodus)",
         cbEngineUnavailable: "Audioeffekte in diesem Browser nicht verfügbar",
         cbEngineOpen: "Open Bass: eigener DSP", cbEngineFallback: "Open Bass: Webfilter", cbEngineLoading: "Open Bass: eigener DSP wird geladen…", cbEngineInactive: "Open Bass: Warten auf Audio",
@@ -217,6 +221,7 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        playingTheme: 'Tema di riproduzione',
         cbEngineCompatible: "Open Bass: DSP indipendente (modalità compatibile)",
         cbEngineUnavailable: "Effetti audio non disponibili in questo browser",
         cbEngineOpen: "Open Bass: DSP indipendente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: Caricamento DSP indipendente…", cbEngineInactive: "Open Bass: In attesa dell’audio",
@@ -264,6 +269,7 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        playingTheme: 'Tema de reprodução',
         cbEngineCompatible: "Open Bass: DSP independente (modo compatível)",
         cbEngineUnavailable: "Efeitos de áudio indisponíveis neste navegador",
         cbEngineOpen: "Open Bass: DSP independente", cbEngineFallback: "Open Bass: Filtro web", cbEngineLoading: "Open Bass: A carregar DSP independente…", cbEngineInactive: "Open Bass: A aguardar áudio",

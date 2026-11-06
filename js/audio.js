@@ -671,6 +671,10 @@
 
       function applyImages() {
         setCardImg(imgCurrentEl, newUrl);
+        if (document.getElementById('view-playing').dataset.theme === 'classic') {
+          refreshCarouselImages();
+          return;
+        }
         if (prevUrl) {
           setCardImg(imgPrevEl, prevUrl);
           cardPrev.style.display = '';
@@ -702,7 +706,7 @@
         lastSeenPlaylistVersion = playlistVersion;
       }
 
-      const canAnimate = !skipAnimation && trackHasLoaded && prevIndex !== index;
+      const canAnimate = document.getElementById('view-playing').dataset.theme !== 'classic' && !skipAnimation && trackHasLoaded && prevIndex !== index;
 
       if (canAnimate) {
         const goingForward = index > prevIndex;
@@ -788,6 +792,7 @@
         trackArtist.classList.remove('transitioning');
       }, 400);
 
+      updatePlayingThemeData();
       document.getElementById('track-title').textContent = track.Name;
       document.getElementById('track-artist').textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artista Desconocido');
 

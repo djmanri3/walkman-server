@@ -282,6 +282,31 @@
       applyZoom(saved);
     }
 
+    function applyPlayingTheme(theme) {
+      const selected = theme === 'classic' ? 'classic' : 'modern';
+      document.getElementById('view-playing').dataset.theme = selected;
+      document.querySelectorAll('[data-playing-theme]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.playingTheme === selected));
+      });
+      refreshCarouselImages();
+    }
+
+    function setPlayingTheme(theme) {
+      applyPlayingTheme(theme);
+      saveLS('walkman_playing_theme', theme === 'classic' ? 'classic' : 'modern');
+    }
+
+    function initPlayingTheme() {
+      applyPlayingTheme(loadLS('walkman_playing_theme'));
+    }
+
+    function updatePlayingThemeData() {
+      const track = playlist[currentTrackIndex];
+      document.getElementById('track-album').textContent = track ? (track.Album || '') : '';
+      document.getElementById('playing-queue-position').textContent =
+        `${track ? currentTrackIndex + 1 : 0}/${playlist.length}`;
+    }
+
     function applyCarouselZoom(z) {
       const num = Math.max(55, Math.min(175, Number(z) || 100));
       try { document.documentElement.style.setProperty('--carousel-size', String(num / 100)); } catch (e) {}
@@ -1312,26 +1337,30 @@
       el.style.display = 'none';
     }
 
+    function playCarouselSide(side) {
+      if (document.getElementById('view-playing').dataset.theme === 'classic') {
+        const index = currentTrackIndex + side;
+        if (playlist[index]) playTrack(index);
+      } else if (side === 1) {
+        prevTrack();
+      } else {
+        nextTrack();
+      }
+    }
+
     function refreshCarouselImages() {
-      const imgCurrentEl = document.getElementById('img-current');
-      const imgPrevEl = document.getElementById('img-prev');
-      const imgNextEl = document.getElementById('img-next');
-      const cardPrev = document.getElementById('card-prev');
-      const cardNext = document.getElementById('card-next');
-
-      if (currentTrackIndex > 0 && playlist[currentTrackIndex - 1]) {
-        setCardImg(imgPrevEl, getEmbyImageUrl(playlist[currentTrackIndex - 1]));
-        cardPrev.style.display = '';
-      } else {
-        cardPrev.style.display = 'none';
-      }
-
-      if (currentTrackIndex < playlist.length - 1 && playlist[currentTrackIndex + 1]) {
-        setCardImg(imgNextEl, getEmbyImageUrl(playlist[currentTrackIndex + 1]));
-        cardNext.style.display = '';
-      } else {
-        cardNext.style.display = 'none';
-      }
+      updatePlayingThemeData();
+      const classic = document.getElementById('view-playing').dataset.theme === 'classic';
+      // Classic stacks the next two queued tracks behind the current artwork.
+      const indexes = classic
+        ? [currentTrackIndex + 1, currentTrackIndex + 2]
+        : [currentTrackIndex - 1, currentTrackIndex + 1];
+      ['prev', 'next'].forEach((side, i) => {
+        const track = playlist[indexes[i]];
+        const card = document.getElementById('card-' + side);
+        card.style.display = track ? '' : 'none';
+        if (track) setCardImg(document.getElementById('img-' + side), getEmbyImageUrl(track));
+      });
     }
 
 
