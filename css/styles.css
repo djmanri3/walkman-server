@@ -2731,68 +2731,48 @@
     }
 
     /* LEDs estilo Xperia SP (barra de iluminación que late con la música) */
+    /* Xperia SP's bottom light bar, with three soft upward glows. */
     .xpsp-led-strip {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 0; right: 0; bottom: 0;
+      height: clamp(10px, 1.4vw, 16px);
       display: none;
-      justify-content: space-between;
-      gap: 0;
-      padding: 0;
+      justify-content: space-around;
       z-index: 50;
       pointer-events: none;
     }
-
-    /* Cada LED es un haz de luz vertical que sube desde abajo y se desvanece hacia arriba */
     .xpsp-led {
-      flex: 1 1 0;
-      min-width: 0;
-      height: 160px;
-      border-radius: 0;
-      background: transparent;
+      flex: 0 0 32%;
+      height: 100%;
       position: relative;
-      z-index: 2;
-    }
-    .xpsp-led.on {
-      background: linear-gradient(to top,
-        var(--xpsp-beam, rgba(170, 0, 255, 0.7)) 0%,
-        rgba(255, 255, 255, 0) 100%);
-      /* Blur dinámico: crece y se encoge al ritmo de la señal */
-      filter: blur(var(--xpsp-blur, 6px));
-    }
-
-    /* Los LEDs de los extremos llevan los bordes pegados a la pantalla
-       redondeados para simular un LED físico */
-    .xpsp-led:first-child {
-      border-top-left-radius: 14px;
-      border-bottom-left-radius: 14px;
-    }
-
-    .xpsp-led:last-child {
-      border-top-right-radius: 14px;
-      border-bottom-right-radius: 14px;
-    }
-
-    /* Resplandor que conecta los LEDs encendidos entre sí: blur y grosor
-       dinámicos para que el resplandor respire con la música */
-    .xpsp-led-strip::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--xpsp-glow-h, 4px);
-      background: var(--xpsp-glow, transparent);
-      filter: blur(var(--xpsp-glow-b, 8px));
       opacity: 0;
-      transition: opacity 0.08s linear;
-      z-index: 1;
+      background: radial-gradient(ellipse at 50% 70%,
+        #fff 0%, rgba(var(--xpsp-light, 225, 166, 255), .95) 9%, rgba(var(--xpsp-rgb, 170, 0, 255), .8) 25%,
+        rgba(var(--xpsp-rgb, 170, 0, 255), .35) 50%, transparent 76%);
     }
-
-    .xpsp-led-strip.on::before {
-      opacity: 1;
+    .xpsp-led::before {
+      content: ''; position: absolute;
+      inset: clamp(-190px, -22vh, -90px) -12% -4px;
+      background: radial-gradient(ellipse at 50% 100%,
+        rgba(var(--xpsp-rgb, 170, 0, 255), .65) 0%,
+        rgba(var(--xpsp-rgb, 170, 0, 255), .28) 38%, transparent 82%);
+      filter: blur(16px);
     }
+    .xpsp-led::after {
+      content: ''; position: absolute;
+      left: 35%; right: 35%; bottom: 1px; height: 3px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(var(--xpsp-core, 247, 230, 255), .95), rgba(var(--xpsp-light, 225, 166, 255), .4) 45%, transparent 75%);
+      filter: blur(1px);
+    }
+    .xpsp-led-strip::before {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 0 0 12px 12px;
+      background: linear-gradient(to top, rgba(var(--xpsp-rgb, 170, 0, 255), .65), rgba(var(--xpsp-light, 225, 166, 255), .2) 55%, transparent);
+      box-shadow: 0 -2px 12px rgba(var(--xpsp-rgb, 170, 0, 255), .25);
+      opacity: 0;
+    }
+    .xpsp-led-strip.on::before { opacity: var(--xpsp-level, 0); }
 
     /* Cambiar Biblioteca (desplegable independiente) */
     .library-picker {
