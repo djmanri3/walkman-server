@@ -433,6 +433,7 @@
     }
 
     .art-card {
+      touch-action: pan-y pinch-zoom;
       position: absolute;
       width: var(--album-size);
       height: var(--album-size);
@@ -3134,3 +3135,8 @@
   #view-playing[data-theme="classic"] .track-title { font-size: 30px; margin-bottom: 8px; }
   #view-playing[data-theme="classic"] .track-artist { font-size: 20px; }
 }
+
+/* Drag previews sit over the real queue; the track changes after settling. */
+.album-swipe-layer { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.carousel-container.album-swiping > .art-card { visibility: hidden; }
+.album-swipe-layer .swipe-card { will-change: transform, opacity; }

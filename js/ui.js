@@ -284,6 +284,7 @@
 
     function applyPlayingTheme(theme) {
       const selected = theme === 'classic' ? 'classic' : 'modern';
+      document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.querySelectorAll('[data-playing-theme]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.playingTheme === selected));
@@ -1353,6 +1354,184 @@
       const el = document.getElementById('github-popup-overlay');
       el.classList.remove('open');
       el.style.display = 'none';
+    }
+
+    function initAlbumSwipe() {
+      const carousel = document.querySelector('#view-playing .carousel-container');
+      const cards = [...carousel.querySelectorAll(':scope > .art-card')];
+      let gesture = null, motion = null, frame = null;
+      let suppressClickUntil = 0;
+
+      function clearMotion() {
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        if (motion) motion.layer.remove();
+        motion = null;
+        carousel.classList.remove('album-swiping');
+      }
+      function cancel() { gesture = null; clearMotion(); }
+      carousel.cancelAlbumSwipe = cancel;
+      window.addEventListener('resize', cancel);
+
+      function copyCard(source, layer, left, top, width, height) {
+        const copy = source.cloneNode(true);
+        [copy, ...copy.querySelectorAll('*')].forEach(el => {
+          el.removeAttribute('id'); el.removeAttribute('onclick');
+        });
+        copy.className = 'art-card swipe-card';
+        copy.style.cssText = `left:${left}px;top:${top}px;width:${width}px;height:${height}px;transform:none;transition:none;animation:none;visibility:visible;pointer-events:none;`;
+        layer.appendChild(copy);
+        return copy;
+      }
+      function beginMotion(g, direction) {
+        const current = document.getElementById('card-current');
+        current.classList.remove('card-pop');
+        const rect = current.getBoundingClientRect(), root = carousel.getBoundingClientRect();
+        const zoom = rect.width / current.offsetWidth;
+        const width = rect.width / zoom, height = rect.height / zoom;
+        const left = (rect.left - root.left) / zoom, top = (rect.top - root.top) / zoom;
+        const layer = document.createElement('div');
+        layer.className = 'album-swipe-layer'; layer.setAttribute('aria-hidden', 'true');
+        carousel.appendChild(layer);
+        const classic = document.getElementById('view-playing').dataset.theme === 'classic';
+        const index = direction < 0
+          ? (g.index + 1 < playlist.length ? g.index + 1 : (repeatMode === 1 ? 0 : g.index))
+          : Math.max(0, g.index - 1);
+        const incomingCard = classic ? (direction < 0 ? cards[0] : null) : (direction < 0 ? cards[2] : cards[0]);
+        const backgrounds = [];
+        // Move each queued cover once, keeping the remaining stack behind it.
+        cards.filter(card => card !== current && card !== incomingCard && getComputedStyle(card).display !== 'none').forEach(card => {
+          const r = card.getBoundingClientRect(), style = getComputedStyle(card);
+          const copy = copyCard(card, layer, (r.left-root.left)/zoom, (r.top-root.top)/zoom, r.width/zoom, r.height/zoom);
+          copy.style.opacity = style.opacity; copy.style.filter = style.filter; copy.style.zIndex = '1';
+          backgrounds.push({copy, side:card.id, opacity:Number(style.opacity)});
+        });
+        const outgoing = copyCard(current, layer, left, top, width, height);
+        const incoming = copyCard(current, layer, left, top, width, height);
+        const track = playlist[index];
+        incoming.querySelector('img').src = getEmbyImageUrl(track);
+        const badge = incoming.querySelector('.hires-badge');
+        if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(track));
+        outgoing.style.zIndex = direction < 0 ? '4' : '2';
+        incoming.style.zIndex = direction < 0 ? '3' : '4';
+        outgoing.style.transformOrigin = incoming.style.transformOrigin = classic ? 'left center' : 'center';
+        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, backgrounds, progress: 0 };
+        if (!classic) {
+          motion.modernCards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
+          backgrounds.forEach(({copy}) => {
+            Object.assign(copy.style, {left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
+            motion.modernCards.push({copy,slot:direction});
+          });
+          const outerIndex = index-direction;
+          if (index!==g.index && playlist[outerIndex]) {
+            const copy = copyCard(current,layer,left,top,width,height);
+            copy.querySelector('img').src = getEmbyImageUrl(playlist[outerIndex]);
+            const badge = copy.querySelector('.hires-badge');
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(playlist[outerIndex]));
+            motion.modernCards.push({copy,slot:-direction*2});
+          }
+        }
+        carousel.classList.add('album-swiping');
+      }
+      function draw(progress) {
+        const m = motion;
+        m.progress = progress;
+        if (!m.classic) {
+          m.modernCards.forEach(({copy,slot}) => {
+            const position = slot+m.direction*progress;
+            const distance = Math.abs(position);
+            const scale = 1-0.18*Math.min(2,distance);
+            // The cover nearest the center stays opaque, so the artwork
+            // behind it does not bleed through while the front order swaps.
+            let opacity = distance<=1 ? Math.min(1,1.5-distance) : Math.max(0,(2-distance)*0.5);
+            if (copy===m.incoming && m.index===m.source) opacity = 0;
+            if (copy===m.outgoing && m.index!==m.source-m.direction) opacity *= 1-progress;
+            copy.style.transformOrigin = 'center';
+            copy.style.transform = `translateX(${position*m.width*0.58}px) scale(${scale})`;
+            copy.style.opacity = String(opacity);
+            copy.style.filter = `brightness(${1-0.3*Math.min(1,distance)})`;
+            copy.style.zIndex = String(10+Math.round((2-distance)*100));
+            const badge = copy.querySelector('.hires-badge');
+            if (badge) badge.style.opacity = String(Math.max(0,1-distance));
+          });
+          return;
+        }
+        const start = m.classic && m.direction < 0 ? 0.34 : 0.65;
+        const scale = m.classic ? 0.86 : 0.82;
+        const outgoingDistance = m.direction > 0 && m.classic ? 0.34 : 0.95;
+        m.outgoing.style.transform = `translateX(${m.direction*progress*m.width*outgoingDistance}px) scale(${1-progress*(1-scale)}) rotate(${m.direction<0?-progress*4:0}deg)`;
+        m.outgoing.style.opacity = String(m.direction<0 ? Math.max(0,1-Math.max(0,progress-0.65)/0.35) : 1-progress*0.15);
+        m.incoming.style.transform = `translateX(${-m.direction*start*m.width*(1-progress)}px) scale(${scale+(1-scale)*progress})`;
+        m.incoming.style.opacity = String(m.direction<0 ? 1 : progress);
+        m.incoming.style.filter = `brightness(${0.75+progress*0.25})`;
+        if (m.index === m.source) m.incoming.style.opacity = '0';
+        if (m.classic) m.backgrounds.forEach(({copy,side,opacity}) => {
+          if (m.direction<0) {
+            copy.style.transform = `translateX(${-0.28*m.width*progress}px) scale(${1+(0.86/0.72-1)*progress})`;
+            copy.style.opacity = String(opacity+(0.85-opacity)*progress);
+          } else if (side==='card-prev') {
+            copy.style.transform = `translateX(${0.28*m.width*progress}px) scale(${1+(0.72/0.86-1)*progress})`;
+          } else copy.style.opacity = String(opacity*(1-progress));
+        });
+      }
+      function settle(commit) {
+        if (!motion) return;
+        commit = commit && motion.index !== motion.source;
+        const m = motion, from = m.progress, to = commit ? 1 : 0;
+        const started = performance.now(), duration = commit ? 260 : 200;
+        function tick(now) {
+          if (currentTrackIndex !== m.source) { cancel(); return; }
+          const t = Math.min(1, (now-started)/duration);
+          draw(from+(to-from)*(1-Math.pow(1-t,3)));
+          if (t < 1) { frame = requestAnimationFrame(tick); return; }
+          // Swap real artwork underneath the final frame, avoiding a second pop.
+          if (commit && m.index !== m.source) playTrack(m.index, true);
+          clearMotion();
+        }
+        frame = requestAnimationFrame(tick);
+      }
+      carousel.addEventListener('pointerdown', event => {
+        if (!event.isPrimary) { cancel(); return; }
+        if (event.button !== 0 || frame !== null) return;
+        const card = event.target.closest('.art-card');
+        if (!card || !playlist[currentTrackIndex]) return;
+        suppressClickUntil = 0;
+        gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, index: currentTrackIndex,
+          threshold: Math.max(40, Math.min(90, card.getBoundingClientRect().width * 0.15)) };
+        card.setPointerCapture(event.pointerId);
+      });
+      carousel.addEventListener('pointermove', event => {
+        if (!gesture || event.pointerId !== gesture.id) return;
+        const dx = event.clientX-gesture.x, dy = event.clientY-gesture.y;
+        if (currentTrackIndex !== gesture.index || (Math.abs(dy)>12 && Math.abs(dy)>Math.abs(dx))) {
+          gesture = null; settle(false); return;
+        }
+        if (Math.abs(dx) < 8 && !motion) return;
+        const direction = dx < 0 ? -1 : 1;
+        if (motion && motion.direction !== direction) clearMotion();
+        if (!motion) beginMotion(gesture, direction);
+        const distance = Math.abs(dx) / motion.zoom;
+        draw(Math.min(motion.index===motion.source?0.12:0.95, distance/(motion.width*(motion.classic?0.85:0.58))));
+      });
+      carousel.addEventListener('pointerup', event => {
+        if (!gesture || event.pointerId !== gesture.id) return;
+        const { x, y, threshold } = gesture;
+        gesture = null;
+        const dx = event.clientX-x, dy = event.clientY-y;
+        const commit = Math.abs(dx)>=threshold && Math.abs(dx)>=Math.abs(dy)*1.35;
+        if (!motion && commit) beginMotion({index:currentTrackIndex}, dx<0?-1:1);
+        if (motion) {
+          suppressClickUntil = performance.now()+600;
+          settle(commit);
+        }
+      });
+      const abortGesture = () => { if (gesture) { gesture = null; settle(false); } };
+      carousel.addEventListener('pointercancel', abortGesture);
+      carousel.addEventListener('lostpointercapture', abortGesture);
+      carousel.addEventListener('click', event => {
+        if (performance.now()>=suppressClickUntil) return;
+        suppressClickUntil = 0; event.preventDefault(); event.stopImmediatePropagation();
+      }, true);
     }
 
     function playCarouselSide(side) {

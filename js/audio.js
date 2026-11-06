@@ -691,7 +691,7 @@
 
       // Pequeño "pop" de la carátula al cambiar de canción
       function triggerCardPop() {
-        if (!isCardFlareEnabled()) return;
+        if (!isCardFlareEnabled() || document.querySelector('.carousel-container.album-swiping')) return;
         cardCurrent.classList.remove('card-pop');
         void cardCurrent.offsetWidth;
         cardCurrent.classList.add('card-pop');
