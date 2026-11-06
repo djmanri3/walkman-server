@@ -113,8 +113,8 @@
         const n = 64;
         if (visBands.length !== n) {
           visBands = new Uint8Array(n);
-          visBinsNorm = new Float32Array(n);
         }
+        if (visBinsNorm.length !== n) visBinsNorm = new Float32Array(n);
         const now = audio && !audio.paused && audio.src ? performance.now() : 0;
         if (!now) {
           for (let i = 0; i < n; i++) { visBands[i] = 0; visBinsNorm[i] = 0; }
@@ -132,8 +132,10 @@
       const n = analyserNode.frequencyBinCount;
       if (visBands.length !== n) {
         visBands = new Uint8Array(n);
-        visBinsNorm = new Float32Array(n);
       }
+      // Beat Glow y los LED Xperia también pueden crear o redimensionar visBands.
+      // El búfer normalizado debe comprobar su propio tamaño por separado.
+      if (visBinsNorm.length !== n) visBinsNorm = new Float32Array(n);
       analyserNode.getByteFrequencyData(visBands);
       let sum = 0;
       for (let i = 0; i < n; i++) {
