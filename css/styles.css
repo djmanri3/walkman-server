@@ -87,6 +87,8 @@
     }
 
     .top-nav {
+      grid-area: tabs;
+      justify-self: center;
       display: flex;
       gap: 20px;
       font-size: 15px;
@@ -118,6 +120,8 @@
     }
 
     .header-icons {
+      grid-area: actions;
+      justify-self: end;
       display: flex;
       gap: 16px;
       color: #ccc;
@@ -134,6 +138,8 @@
     }
 
     #app-logo {
+      grid-area: logo;
+      justify-self: start;
       font-weight: bold;
       letter-spacing: 1px;
       cursor: default;
@@ -3144,3 +3150,12 @@
 .app-version { display: flex; gap: 6px; color: #aaa; font-size: 12px; }
 .settings-menu > .app-version { justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); }
 .github-popup-card .app-version { justify-content: center; margin: -6px 0 18px; }
+
+/* Center desktop navigation independently of the side controls. */
+@media (min-width: 769px) {
+  header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: "logo tabs actions";
+  }
+}
