@@ -91,6 +91,20 @@ docker-compose up -d
 - Add hi-res icon when music is hi-res
 - Application security improved
 
+### Version 3.0
+- Add icon when song is Hi-Res audio (can be disable on settings)
+- Favorites on My music tab added
+- Added can add song to playlist
+- Add independent Open Bass DSP with HTTP support and output limiting
+- Add more visualizer effects
+- Add new Classic theme
+- Refine Xperia SP light bar with paired pulses and adaptive album color
+- Add interactive album swipe animations for Modern and Classic themes
+- Harden metadata rendering, cover parsing and service worker caching
+- Add show app version in settings and Walkman easter egg ;)
+- Center desktop navigation (Playing and My music text) while preserving mobile header layout
+- Animate overflowing Playing titles in Modern and Classic themes
+
 
 # Bugs
 - Tell me :)
@@ -98,16 +112,24 @@ docker-compose up -d
 # Screenshots
 
 ## Player
-<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player.png?raw=true" />
+### Theme Modern
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Modern.png?raw=true" />
+
+### Theme Classic
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Classic.png?raw=true" />
 
 ### Settings
-<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Lyris.png?raw=true" />
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Settings.png?raw=true" />
 
 ## Player search
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Playing_search.png?raw=true" />
 
-## lyrics
-<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris.png?raw=true" />
+## Lyrics
+### Theme Modern
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Modern.png?raw=true" />
+
+### Theme Classic
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Classic.png?raw=true" />
 
 ## Ecualizer
 ### Clear bass
