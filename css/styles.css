@@ -205,6 +205,30 @@
       text-overflow: ellipsis;
     }
 
+    .track-title-text {
+      display: inline-block;
+      max-width: 100%;
+      vertical-align: top;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-title.title-overflow { text-overflow: clip; }
+    .title-overflow .track-title-text {
+      max-width: none;
+      overflow: visible;
+      animation: playingTitleScroll var(--title-duration) linear infinite alternate;
+    }
+
+    @keyframes playingTitleScroll {
+      0%, 15% { transform: translateX(0); }
+      85%, 100% { transform: translateX(var(--title-travel)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .title-overflow .track-title-text { animation: none; max-width: 100%; overflow: hidden; }
+    }
+
     .track-artist {
       font-size: 15px;
       color: #ccc;

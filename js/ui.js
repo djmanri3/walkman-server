@@ -282,6 +282,37 @@
       applyZoom(saved);
     }
 
+    function initPlayingTitleMarquee() {
+      const title = document.getElementById('track-title');
+      const text = document.getElementById('track-title-text');
+      let frame = 0;
+      let previous = '';
+      const schedule = () => {
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          const style = getComputedStyle(title);
+          const available = title.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+          const distance = Math.max(0, text.scrollWidth - available);
+          const signature = JSON.stringify([text.textContent, available, distance]);
+          if (signature === previous) return;
+          previous = signature;
+          title.classList.remove('title-overflow');
+          title.title = text.textContent;
+          if (available <= 0 || distance <= 1) return;
+          // Keep a constant reading speed, with a pause at each end.
+          title.style.setProperty('--title-travel', `${-distance}px`);
+          title.style.setProperty('--title-duration', `${Math.max(6, distance / 35 + 4)}s`);
+          void text.offsetWidth;
+          title.classList.add('title-overflow');
+        });
+      };
+      new ResizeObserver(schedule).observe(title);
+      new MutationObserver(schedule).observe(text, { childList: true, characterData: true, subtree: true });
+      document.fonts.ready.then(schedule);
+      schedule();
+    }
+
     function applyPlayingTheme(theme) {
       const selected = theme === 'classic' ? 'classic' : 'modern';
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
