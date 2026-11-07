@@ -192,7 +192,17 @@
 
 
     function toggleQueueDrawer() {
-      document.getElementById('queue-drawer').classList.toggle('open');
+      const drawer = document.getElementById('queue-drawer');
+      if (!drawer.classList.toggle('open')) return;
+      requestAnimationFrame(() => {
+        if (!drawer.classList.contains('open')) return;
+        const container = document.getElementById('queue-list-container');
+        const current = container.querySelector('.queue-item.active');
+        if (!current) return;
+        // Scroll this list only, keeping the Playing view in place.
+        container.scrollTop = Math.max(0, current.offsetTop - container.offsetTop -
+          (container.clientHeight - current.offsetHeight) / 2);
+      });
     }
 
     function renderQueueList() {
