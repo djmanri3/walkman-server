@@ -116,6 +116,7 @@
       <span class="material-icons">code</span>
       GitHub: djmanri3/walkman-server
     </a>
+    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>3.0</span></div>
   </div>
 
 
@@ -127,6 +128,38 @@
       <span class="submenu-title" data-i18n="customization">Personalización</span>
     </div>
     
+    <div class="settings-group">
+      <div class="settings-group-label" id="playing-theme-label" data-i18n="playingTheme">Tema de Reproduciendo</div>
+      <div class="playing-theme-options" role="group" aria-labelledby="playing-theme-label">
+        <button type="button" class="playing-theme-option" data-playing-theme="modern" aria-pressed="true" onclick="setPlayingTheme('modern')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <rect x="25" y="23" width="44" height="44" rx="3" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <rect x="91" y="23" width="44" height="44" rx="3" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <rect x="52" y="14" width="56" height="56" rx="4" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <path d="M84 29v22a6 6 0 1 1-4-5V33l12-3v7l-8 2" fill="white"/>
+            <g fill="none" stroke="white" stroke-width="1.5"><circle cx="60" cy="82" r="5"/><circle cx="80" cy="82" r="7"/><circle cx="100" cy="82" r="5"/></g>
+            <path d="m78 78 6 4-6 4z" fill="white"/>
+            <path d="M47 97h66" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="68" cy="97" r="2.5" fill="white"/>
+          </svg>
+          <span class="playing-theme-caption"><span>Modern</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
+        <button type="button" class="playing-theme-option" data-playing-theme="classic" aria-pressed="false" onclick="setPlayingTheme('classic')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <rect x="29" y="31" width="44" height="44" rx="3" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <rect x="22" y="26" width="47" height="54" rx="3" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <rect x="12" y="20" width="50" height="64" rx="4" fill="#171717" stroke="white" stroke-width="1.5"/>
+            <path d="M41 37v23a6 6 0 1 1-4-5V41l12-3v7l-8 2" fill="white"/>
+            <path d="M85 27h50" stroke="white" stroke-width="4" stroke-linecap="round"/>
+            <path d="M85 38h35m-35 8h23" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <g fill="none" stroke="white" stroke-width="1.5"><circle cx="88" cy="63" r="5"/><circle cx="106" cy="63" r="7"/><circle cx="124" cy="63" r="5"/></g>
+            <path d="m104 59 6 4-6 4z" fill="white"/>
+            <path d="M83 82h37m10 0h15" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="95" cy="82" r="2.5" fill="white"/>
+          </svg>
+          <span class="playing-theme-caption"><span>Classic</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
+      </div>
+    </div>
+
     <div class="settings-group">
       <div class="settings-group-label" data-i18n="accentColor">Color de acento</div>
       <div class="accent-options">
@@ -179,6 +212,13 @@
           <div class="accent-option" data-fz="175" onclick="setFeaturedZoom(this.dataset.fz)">175%</div>
         </div>
       </div>
+    </div>
+
+    <div class="settings-group">
+      <button type="button" class="settings-btn" id="playing-hires-btn" onclick="togglePlayingHiRes()" aria-pressed="true">
+        <span class="material-icons" aria-hidden="true">high_quality</span>
+        <span data-i18n="playingHiResIcon">Icono Hi-Res en Reproduciendo</span>
+      </button>
     </div>
 
     <div class="settings-group">
@@ -523,6 +563,7 @@
       <div class="track-info">
         <div class="track-title" id="track-title" data-i18n="selectTrack">Selecciona una canción</div>
         <div class="track-artist" id="track-artist">Emby Server</div>
+        <div class="track-album classic-only" id="track-album"></div>
       </div>
 
       <div class="top-btns">
@@ -538,11 +579,11 @@
     <!-- CARRUSEL DE PORTADAS -->
     <div class="carousel-wrapper">
       <div class="carousel-container">
-        <div class="art-card prev" id="card-prev" onclick="prevTrack()">
-          <img id="img-prev" src="" />
+        <div class="art-card prev" id="card-prev" onclick="playCarouselSide(1)">
+          <img draggable="false" id="img-prev" src="" />
         </div>
         <div class="art-card current" id="card-current" onclick="openAlbumActionsMenu()">
-          <img id="img-current" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 24 24' fill='%23666666'><rect width='24' height='24' fill='%23222222'/><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' fill='%23888888'/></svg>" crossorigin="anonymous" />
+          <img draggable="false" id="img-current" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 24 24' fill='%23666666'><rect width='24' height='24' fill='%23222222'/><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' fill='%23888888'/></svg>" crossorigin="anonymous" />
           <span class="hires-badge hidden" id="hires-badge" role="img" aria-label="Hi-Res Audio">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48.425 48.425" preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -571,8 +612,8 @@
           </svg>
         </span>
         </div>
-        <div class="art-card next" id="card-next" onclick="nextTrack()">
-          <img id="img-next" src="" />
+        <div class="art-card next" id="card-next" onclick="playCarouselSide(2)">
+          <img draggable="false" id="img-next" src="" />
         </div>
 
         <!-- VISTA: LETRAS (Lyrics) — overlay absoluto dentro del carrusel.
@@ -654,6 +695,7 @@
         <span id="time-current">00:00</span>
         <input type="range" id="progress-bar" class="progress-bar" value="0" max="100" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)" aria-label="Progreso de la canción">
         <span id="time-total">00:00</span>
+        <span class="classic-only playing-queue-position" id="playing-queue-position">0/0</span>
       </div>
 
             <!-- CONTROL DE VOLUMEN -->
@@ -843,6 +885,7 @@
       <div style="font-size: 36px; margin-bottom: 8px;">🎵</div>
       <div style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px;">Walkman Server</div>
       <div style="font-size: 12px; color: #aaa; margin-bottom: 18px;">by djmanri3</div>
+      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>3.0</span></div>
       <a href="https://github.com/djmanri3/walkman-server/tree/main" target="_blank" rel="noopener" style="display: inline-block; background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver en GitHub</a>
   </div>
     </div>

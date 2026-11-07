@@ -6,7 +6,7 @@
       document.addEventListener('keydown', (e) => {
         const tag = (e.target && e.target.tagName || '').toLowerCase();
         const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
-        if (typing) return; // no interceptar mientras se escribe
+        if (typing || tag === 'button') return; // no interceptar mientras se escribe
 
         switch (e.key) {
           case ' ': case 'Spacebar':
@@ -84,8 +84,11 @@
       syncLangSelectors();
       initZoom();
       initCarouselZoom();
+      initPlayingTheme();
+      initAlbumSwipe();
       initFeaturedZoom();
       applyCardFlareState();
+      applyPlayingHiResState();
       applyFeaturedVisibility();
       initVolume();
       setupMediaSession();

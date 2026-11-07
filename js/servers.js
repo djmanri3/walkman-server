@@ -224,7 +224,7 @@
         statusEl.innerHTML = `
           <div class="plex-spinner"></div>
           <div>Código de autorización Plex:</div>
-          <div id="plex-code" style="font-size:1.2em;font-weight:bold;margin:10px 0;min-height:24px;cursor:pointer;user-select:all;">${pinData.code}</div>
+          <div id="plex-code" style="font-size:1.2em;font-weight:bold;margin:10px 0;min-height:24px;cursor:pointer;user-select:all;">${escapeHtml(pinData.code)}</div>
           <div style="margin-top:4px;font-size:0.8em;color:#666;">Clic para copiar</div>
           <div style="margin-top:8px;">Autoriza en: <a href="https://www.plex.tv/link" target="_blank" rel="noopener">www.plex.tv/link</a></div>
           <div id="copy-message" style="margin-top:4px;display:none;color:#4CAF50;font-size:0.9em;">¡Copiado!</div>
@@ -294,7 +294,7 @@
       } catch (err) {
         const mixed = host.indexOf('http://') === 0 && location.protocol === 'https:'
           && /Failed to fetch|Mixed Content|net::ERR/i.test(String(err && err.message || ''));
-        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${err.message}</div>` +
+        statusEl.innerHTML = `<div style="color:#ff5555;">Error: ${escapeHtml(err.message)}</div>` +
           (mixed ? `<div style="color:#eab308;font-size:12px;margin-top:8px;">El navegador bloquea Plex por HTTP desde esta página HTTPS (contenido mixto). Para permitirlo: pulsa el candado de la barra de direcciones → Configuración del sitio → "Contenido no seguro" → Permitir, y vuelve a conectar. Alternativa: expón tu Plex por HTTPS (puerto 32443) y usa esa URL.</div>` : '');
       }
     }

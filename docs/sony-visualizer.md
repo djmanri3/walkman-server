@@ -68,3 +68,21 @@ The adapter and runtime URLs include `gate-rectangles-3`. The initialized engine
 SONY_TEST_FILE=1 node tests/sony-visualizer/test-gate.cjs
 node tests/sony-visualizer/test-gate.cjs
 ```
+
+## Changing tracks while an effect is open
+
+The adapter reapplies the selected scene before replacing its music data, including when the effect name stays the same. The recovered scenes retain per-song resources; replacing music without this scene reset could leave stale references and stop rendering after repeated track changes. Artwork is prepared before that reset, then metadata and the complete cover collection are installed together before the first native frame. While images are loading, the last complete frame stays visible. Failed or timed-out image reads are skipped; if no image is readable, the engine uses its original fallback. This resets the scene inside the existing runtime and does not reload WebAssembly or change the player's audio route.
+
+The track-change regression uses different titles and cover images, checks continued drawing and playback, and exercises all seven scenes plus Random. It supports HTTP and direct file opening:
+
+```sh
+node tests/sony-visualizer/test-track-changes.cjs
+SONY_TEST_FILE=1 node tests/sony-visualizer/test-track-changes.cjs
+```
+
+The Albums regression verifies the actual uploaded textures for three distinct covers after repeated track changes, rather than accepting any non-black output:
+
+```sh
+node tests/sony-visualizer/test-albums.cjs
+SONY_TEST_FILE=1 node tests/sony-visualizer/test-albums.cjs
+```

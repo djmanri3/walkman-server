@@ -14,7 +14,7 @@ window.SonyVisualizer = (() => {
   status.style.cssText = 'position:absolute;inset:25% 10% auto;text-align:center;color:white;pointer-events:none;display:none';
   root.appendChild(status);
   let engine, loading, active = false, chosen = '', applied = '', song = '', generation = 0;
-  let lastFrame = 0, lastPlay = null, failed = false;
+  let lastFrame = 0, lastPlay = null, failed = false, pending = '';
   const images = new Map();
   const message = (key) => typeof t === 'function' ? t(key) : key;
   function check(code) { if (code !== 0) throw new Error('Sony Visualizer operation failed'); }
@@ -59,60 +59,83 @@ window.SonyVisualizer = (() => {
     if (images.has(url)) return images.get(url);
     const task = new Promise(resolve => {
       const image = new Image(); image.crossOrigin = 'anonymous';
+      const finish = value => {
+        clearTimeout(timeout); image.onload = image.onerror = null; resolve(value);
+      };
+      // A missing or unreadable server cover must not block a scene forever.
+      const timeout = setTimeout(() => finish(null), 5000);
       image.onload = () => {
         try {
           const bitmap = document.createElement('canvas'); bitmap.width = bitmap.height = 128;
           const ctx = bitmap.getContext('2d'); ctx.drawImage(image, 0, 0, 128, 128);
-          resolve(ctx.getImageData(0, 0, 128, 128).data);
-        } catch { resolve(null); }
+          finish(ctx.getImageData(0, 0, 128, 128).data);
+        } catch { finish(null); }
       };
-      image.onerror = () => resolve(null); image.src = url;
+      image.onerror = () => finish(null); image.src = url;
     });
     images.set(url, task);
     if (images.size > 24) images.delete(images.keys().next().value);
     return task;
   }
-  async function artwork(track, id) {
+  async function artwork(track) {
     // Reuse the same artwork URLs as the web player, including local covers.
     const tracks = [track, ...playlist].filter(Boolean);
     const urls = [...new Set(tracks.map(getEmbyImageUrl))].slice(0, 12);
-    const pixels = (await Promise.all(urls.map(readImage))).filter(Boolean);
-    if (id !== generation || !engine || !pixels.length) return;
+    return (await Promise.all(urls.map(readImage))).filter(Boolean);
+  }
+  function uploadArtwork(pixels) {
+    if (!pixels.length) return;
     const ptr = engine._malloc(128 * 128 * 4);
     try { pixels.forEach((data, index) => {
       engine.HEAPU8.set(data, ptr); check(engine._ux_cover(ptr, index, pixels.length));
-    }); } catch (cause) { error(cause); } finally { engine._free(ptr); }
+    }); } finally { engine._free(ptr); }
   }
+  const trackKey = track => JSON.stringify([track?.Id, track?.Name, track?.Album, track?.Artists, track?.coverUrl, audio.duration]);
   function sync() {
-    if (!engine || failed) return;
+    if (!engine || failed) return false;
     const track = playlist[currentTrackIndex];
-    const key = JSON.stringify([track?.Id, track?.Name, track?.Album, track?.Artists, track?.coverUrl, audio.duration]);
+    const key = trackKey(track);
     if (applied !== chosen || song !== key) {
-      if (applied !== chosen || chosen === 'sony-7') {
-        const theme = chosen === 'sony-7' ? Math.floor(Math.random() * 7) : Number(chosen.slice(5));
-        check(engine._ux_theme(theme)); applied = chosen;
+      const update = JSON.stringify([chosen, key]);
+      if (pending !== update) {
+        pending = update;
+        const style = chosen, id = ++generation;
+        artwork(track).then(pixels => {
+          if (id !== generation || !active || !engine || failed || chosen !== style ||
+              trackKey(playlist[currentTrackIndex]) !== key) return;
+          // Reset retained per-song resources, then install metadata and every
+          // cover together. Albums requests its collection on the first frame.
+          const theme = style === 'sony-7' ? Math.floor(Math.random() * 7) : Number(style.slice(5));
+          check(engine._ux_theme(theme));
+          check(engine.ccall('ux_music', 'number', ['string','string','string','number'], [
+            track?.Name || '', track?.Artists?.join(', ') || track?.AlbumArtist || '', track?.Album || '',
+            Number.isFinite(audio.duration) && audio.duration > 0 ? Math.round(audio.duration * 1000) : Math.max(180000, (track?.RunTimeTicks || 0) / 10000)
+          ]));
+          uploadArtwork(pixels);
+          applied = style; song = key; lastPlay = null;
+          status.style.display = 'none';
+        }).catch(cause => { if (id === generation) error(cause); })
+          .finally(() => { if (id === generation) pending = ''; });
       }
-      check(engine.ccall('ux_music', 'number', ['string','string','string','number'], [
-        track?.Name || '', track?.Artists?.join(', ') || track?.AlbumArtist || '', track?.Album || '',
-        Number.isFinite(audio.duration) && audio.duration > 0 ? Math.round(audio.duration * 1000) : Math.max(180000, (track?.RunTimeTicks || 0) / 10000)
-      ]));
-      song = key; lastPlay = null;
-      artwork(track, ++generation);
+      // Keep the last complete image while preparing the next scene. Do not
+      // let the native engine consume a temporary empty artwork collection.
+      return false;
     }
     const playing = !audio.paused && !audio.ended;
     if (lastPlay !== playing) { check(engine._ux_play(playing ? 1 : 0)); lastPlay = playing; }
+    return true;
   }
   function select(style) {
     active = /^sony-[0-7]$/.test(style); chosen = style;
     canvas.style.display = active ? '' : 'none';
     document.getElementById('visualizer-canvas').style.visibility = active ? 'hidden' : '';
     status.style.display = active && (failed || !engine) ? '' : 'none';
-    if (active) load().then(() => { if (active) { sync(); status.style.display = failed ? '' : 'none'; } }).catch(error);
+    if (active) load().then(() => { if (active) { sync(); status.style.display = failed || !song ? '' : 'none'; } }).catch(error);
   }
   function render(now) {
     if (!active) return false;
     if (engine && !failed) {
-      try { resize(); sync(); if (now - lastFrame >= 33) {
+      try { resize(); if (!sync()) return true; if (now - lastFrame >= 33) {
         check(engine._ux_frame(Math.max(0, Math.round((audio.currentTime || 0) * 1000)))); lastFrame = now;
       } } catch (cause) { error(cause); }
     }

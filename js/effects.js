@@ -400,7 +400,8 @@
     let xpspLedPulse = 0;
     let xpspLedAvg = 0;
     let xpspLedSens = 2;
-    let xpspLedHeightFrame = 0;
+    let xpspLedLastTime = 0;
+    const xpspLedLevels = new Float32Array(3);
     const XPSP_LED_COUNT = 3;
 
     function getXpspLeds() {
@@ -441,7 +442,7 @@
       const strip = document.getElementById('xpsp-led-strip');
       if (strip) {
         strip.style.display = xpspLedEnabled ? 'flex' : 'none';
-        strip.classList.toggle('on', xpspLedEnabled);
+        strip.classList.toggle('on', xpspLedEnabled && xpspLedLevels.some(level => level > 0.01));
       }
     }
 
@@ -451,134 +452,93 @@
       applyXpspLedUI();
       if (xpspLedEnabled) {
         buildXpspLedStrip();
-        xpspLedPulse = 0; xpspLedAvg = 0;
+        resetXpspLedLevels();
         try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
         if (!xpspLedAnimId) xpspLedLoop();
       } else {
-        const els = xpspLedEls;
-        const strip = document.getElementById('xpsp-led-strip');
-        if (strip) strip.classList.remove('on');
-        for (let i = 0; i < els.length; i++) {
-          els[i].classList.remove('on');
-        }
+        if (xpspLedAnimId !== null) cancelAnimationFrame(xpspLedAnimId);
         xpspLedAnimId = null;
+        resetXpspLedLevels();
+        paintXpspLeds();
       }
     }
 
-    // Devuelve el color de acento de la carátula actual como {r,g,b}
-    function getXpspLedColor() {
-      const c = visAlbumColor;
-      if (c && typeof c.r === 'number') return c;
-      return { r: 170, g: 0, b: 255 };
+    function resetXpspLedLevels() {
+      xpspLedPulse = 0;
+      xpspLedAvg = 0;
+      xpspLedLastTime = 0;
+      xpspLedLevels.fill(0);
+    }
+
+    // Approximation of the supplied Xperia SP video: a persistent center glow
+    // and paired side flashes on musical attacks, rather than one band per LED.
+    // Timing uses elapsed seconds so 60 Hz and 120 Hz screens pulse alike.
+    function updateXpspLedLevels(bands, dt, binHz) {
+      let bass = 0, body = 0, bassCount = 0, bodyCount = 0;
+      for (let i = 1; i < bands.length; i++) {
+        const hz = i * binHz;
+        if (hz >= 50 && hz < 250) { bass += bands[i] / 255; bassCount++; }
+        else if (hz >= 250 && hz < 1800) { body += bands[i] / 255; bodyCount++; }
+      }
+      bass /= bassCount || 1;
+      body /= bodyCount || 1;
+      const energy = bass * 0.35 + body * 0.65;
+      const silent = Math.max(bass, body) < 0.015;
+      xpspLedAvg += (energy - xpspLedAvg) * (1 - Math.exp(-dt / 0.3));
+      // Compare attacks with the recent musical level, instead of keeping the
+      // whole strip bright for as long as a bass note or vocal is sustained.
+      const rise = Math.max(0, energy - xpspLedAvg - 0.012);
+      const attack = Math.min(1, rise / Math.max(0.06, xpspLedAvg * 0.35));
+      xpspLedPulse = silent ? 0 : Math.max(attack, xpspLedPulse * Math.exp(-dt / 0.16));
+      const gain = [0.7, 1, 1.5][xpspLedSens - 1] || 1;
+      const side = energy * 0.04 + xpspLedPulse * 0.95;
+      const center = 0.14 + energy * 0.3 + xpspLedPulse * 0.65;
+      const targets = [side, center, side];
+      for (let i = 0; i < 3; i++) {
+        const target = silent ? 0 : Math.min(1, targets[i] * gain);
+        const tau = silent ? 0.09 : (target > xpspLedLevels[i] ? 0.02 : (i === 1 ? 0.16 : 0.11));
+        xpspLedLevels[i] += (target - xpspLedLevels[i]) * (1 - Math.exp(-dt / tau));
+        if (xpspLedLevels[i] < 0.001) xpspLedLevels[i] = 0;
+      }
+    }
+
+    function paintXpspLeds() {
+      const strip = document.getElementById('xpsp-led-strip');
+      if (!strip) return;
+      const color = visAlbumColor || { r: 170, g: 0, b: 255 };
+      const rgb = [color.r, color.g, color.b].join(', ');
+      if (strip.dataset.ledColor !== rgb) {
+        strip.dataset.ledColor = rgb;
+        strip.style.setProperty('--xpsp-rgb', rgb);
+        strip.style.setProperty('--xpsp-light', [color.r, color.g, color.b].map(v => Math.round(v * 0.35 + 255 * 0.65)).join(', '));
+        strip.style.setProperty('--xpsp-core', [color.r, color.g, color.b].map(v => Math.round(v * 0.1 + 255 * 0.9)).join(', '));
+      }
+      const peak = Math.max(...xpspLedLevels);
+      strip.classList.toggle('on', peak > 0.01);
+      strip.style.setProperty('--xpsp-level', peak.toFixed(3));
+      xpspLedEls.forEach((led, i) => {
+        led.style.opacity = xpspLedLevels[i].toFixed(3);
+      });
     }
 
     function xpspLedLoop() {
       if (!xpspLedEnabled) { xpspLedAnimId = null; return; }
       try {
         if (!analyserNode && audio) initAudioContext();
-        if (analyserNode && audioCtx && audioCtx.state === 'suspended') {
-          try { audioCtx.resume(); } catch (e) {}
-        }
-      } catch (e) {}
-
-      // Ajusta la altura de los haces para que lleguen justo debajo de la barra
-      // de progreso, recalculando periódicamente para seguir al reproductor.
-      // Solo tiene sentido mientras hay audio sonando (los haces están visibles).
-      if (audio && !audio.paused && --xpspLedHeightFrame <= 0) {
-        xpspLedHeightFrame = 15;
-        const prog = document.querySelector('.progress-container');
-        let h = 160;
-        if (prog) {
-          const rect = prog.getBoundingClientRect();
-          h = Math.max(0, Math.floor(window.innerHeight - rect.top));
-        }
-        const els = xpspLedEls;
-        const hn = els.length;
-        for (let i = 0; i < hn; i++) els[i].style.height = h + 'px';
-      }
-
-      const els = xpspLedEls;
-      const n = els.length;
-      const strip = document.getElementById('xpsp-led-strip');
-      // Animar con el audio si está sonando; si no, mantener apagados
-      if (analyserNode && n > 0 && audio && !audio.paused) {
-        try {
+        if (analyserNode && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        const now = performance.now();
+        const dt = xpspLedLastTime ? Math.min(0.1, Math.max(0.001, (now - xpspLedLastTime) / 1000)) : 1 / 60;
+        xpspLedLastTime = now;
+        if (analyserNode && audio && !audio.paused && !audio.ended && analyserNode.frequencyBinCount > 0) {
           const bin = analyserNode.frequencyBinCount;
-          if (bin > 0) {
-            if (!visBands || visBands.length !== bin) visBands = new Uint8Array(bin);
-            analyserNode.getByteFrequencyData(visBands);
-            // Energía de frecuencias bajas (bajo / ritmo): solo los primeros bins,
-            // que es donde vive el bombo y el bajo real de la canción.
-            // fftSize=256 -> cada bin ~172Hz; 10 bins cubren ~0-1.7kHz.
-            const low = Math.min(10, bin);
-            // Frecuencias medias: del final de los graves hasta ~40 bins (~0-7kHz),
-            // donde están la voz, guitarras y melodía; colaboran en el brillo.
-            const mid = Math.min(40, bin);
-            const midBins = mid - low;
-            // Un solo recorrido para sumar graves, medias y el espectro completo
-            let sumLow = 0, sumMid = 0, sumAll = 0;
-            for (let i = 0; i < bin; i++) {
-              const v = visBands[i];
-              sumAll += v;
-              if (i < low) sumLow += v;
-              else if (i < mid) sumMid += v;
-            }
-            const bassEnergy = low > 0 ? (sumLow / low) / 255 : 0;
-            const midEnergy = midBins > 0 ? (sumMid / midBins) / 255 : 0;
-            // Proporción de graves frente al espectro completo: hace que los LEDs
-            // brillen según el contenido de bajos, no según el volumen total.
-            const totalAvg = bin > 0 ? (sumAll / bin) / 255 || 0 : 0;
-            const bassRatio = totalAvg > 0.03
-              ? Math.min(1.6, bassEnergy / Math.max(0.04, totalAvg))
-              : bassEnergy;
-
-            xpspLedAvg = xpspLedAvg * 0.92 + bassRatio * 0.08;
-            const diff = bassRatio - xpspLedAvg;
-            // Sensibilidad por defecto Media; valores más altos = kick más agresivo
-            const kSens = [2.6, 4.6, 7.0][xpspLedSens - 1] || 4.6;
-            xpspLedPulse = xpspLedPulse * 0.80 + Math.max(0, diff) * kSens;
-
-            const color = getXpspLedColor();
-            // El pulso del kick domina (fluctúa con cada golpe); graves y medias
-            // solo aportan una base tenue para que se nota el contraste.
-            let level = xpspLedPulse * 1.7
-              + bassEnergy * 0.18
-              + midEnergy * 0.2;
-            // Gate: apaga por completo en silencio
-            if (totalAvg < 0.05) {
-              level = 0;
-            }
-            // La sensibilidad actúa como "ganancia del ritmo": hace que los
-            // golpes tenues se vean con más (Alta) o con menos (Baja) claridad.
-            // Sin tocar nada, Media (factor 1) no cambia el resultado.
-            const sensGain = [0.55, 0.8, 1.25, 1.7][xpspLedSens - 1] || 0.8;
-            level = level * (sensGain) + xpspLedPulse * (0.5 * (sensGain - 1));
-            level = Math.min(1, level);
-
-            // Color del haz: base tenue pero con picos claros.
-            const beamRgba = `rgba(${color.r},${color.g},${color.b},${0.16 + level * 0.74})`;
-            for (let i = 0; i < n; i++) {
-              els[i].classList.add('on');
-            }
-            // Blur/grosor/resplandor dinámicos: crecen con el pulso.
-            if (strip) {
-              const glowOn = level >= 0.1;
-              strip.classList.toggle('on', glowOn);
-              strip.style.setProperty('--xpsp-beam', beamRgba);
-              strip.style.setProperty('--xpsp-blur', (2 + level * 12) + 'px');
-              strip.style.setProperty('--xpsp-glow-b', (4 + level * 12) + 'px');
-              strip.style.setProperty('--xpsp-glow-h', (2 + level * 7) + 'px');
-              strip.style.setProperty('--xpsp-glow',
-                glowOn ? `rgba(${color.r},${color.g},${color.b},${0.1 + level * 0.55})` : 'transparent');
-            }
-          }
-        } catch (e) {}
-      } else {
-        if (strip) strip.classList.remove('on');
-        for (let i = 0; i < n; i++) {
-          els[i].classList.remove('on');
+          if (visBands.length !== bin) visBands = new Uint8Array(bin);
+          analyserNode.getByteFrequencyData(visBands);
+          updateXpspLedLevels(visBands, dt, audioCtx.sampleRate / analyserNode.fftSize);
+        } else {
+          resetXpspLedLevels();
         }
-      }
+      } catch (e) { resetXpspLedLevels(); }
+      paintXpspLeds();
       xpspLedAnimId = requestAnimationFrame(xpspLedLoop);
     }
 

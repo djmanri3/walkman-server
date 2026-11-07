@@ -671,6 +671,10 @@
 
       function applyImages() {
         setCardImg(imgCurrentEl, newUrl);
+        if (document.getElementById('view-playing').dataset.theme === 'classic') {
+          refreshCarouselImages();
+          return;
+        }
         if (prevUrl) {
           setCardImg(imgPrevEl, prevUrl);
           cardPrev.style.display = '';
@@ -687,7 +691,7 @@
 
       // Pequeño "pop" de la carátula al cambiar de canción
       function triggerCardPop() {
-        if (!isCardFlareEnabled()) return;
+        if (!isCardFlareEnabled() || document.querySelector('.carousel-container.album-swiping')) return;
         cardCurrent.classList.remove('card-pop');
         void cardCurrent.offsetWidth;
         cardCurrent.classList.add('card-pop');
@@ -702,7 +706,7 @@
         lastSeenPlaylistVersion = playlistVersion;
       }
 
-      const canAnimate = !skipAnimation && trackHasLoaded && prevIndex !== index;
+      const canAnimate = document.getElementById('view-playing').dataset.theme !== 'classic' && !skipAnimation && trackHasLoaded && prevIndex !== index;
 
       if (canAnimate) {
         const goingForward = index > prevIndex;
@@ -788,18 +792,11 @@
         trackArtist.classList.remove('transitioning');
       }, 400);
 
+      updatePlayingThemeData();
       document.getElementById('track-title').textContent = track.Name;
       document.getElementById('track-artist').textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artista Desconocido');
 
-      // Mostrar/ocultar insignia HI-RES en la carátula
-      const hiresBadge = document.getElementById('hires-badge');
-      if (hiresBadge) {
-        if (isHiResAudio(track)) {
-          hiresBadge.classList.remove('hidden');
-        } else {
-          hiresBadge.classList.add('hidden');
-        }
-      }
+      applyPlayingHiResState();
 
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
