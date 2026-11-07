@@ -85,6 +85,7 @@
       initZoom();
       initCarouselZoom();
       initPlayingTheme();
+      initPlayingTitleMarquee();
       initAlbumSwipe();
       initFeaturedZoom();
       applyCardFlareState();

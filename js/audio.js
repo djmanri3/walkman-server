@@ -793,7 +793,7 @@
       }, 400);
 
       updatePlayingThemeData();
-      document.getElementById('track-title').textContent = track.Name;
+      document.getElementById('track-title-text').textContent = track.Name;
       document.getElementById('track-artist').textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artista Desconocido');
 
       applyPlayingHiResState();
