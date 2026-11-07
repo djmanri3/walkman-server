@@ -2,6 +2,7 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        appVersion: 'Version',
         playingHiResIcon: 'Hi-Res icon in Playing',
         playingTheme: 'Playing theme',
         cbEngineCompatible: "Open Bass: independent DSP (compatible mode)",
@@ -64,6 +65,7 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        appVersion: 'Versión',
         playingHiResIcon: 'Icono Hi-Res en Reproduciendo',
         playingTheme: 'Tema de Reproduciendo',
         cbEngineCompatible: "Open Bass: DSP independiente (modo compatible)",
@@ -126,6 +128,7 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        appVersion: 'Version',
         playingHiResIcon: 'Icône Hi-Res sur la pochette',
         playingTheme: 'Thème de lecture',
         cbEngineCompatible: "Open Bass : DSP indépendant (mode compatible)",
@@ -176,6 +179,7 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        appVersion: 'Version',
         playingHiResIcon: 'Hi-Res-Symbol in der Wiedergabe',
         playingTheme: 'Wiedergabe-Design',
         cbEngineCompatible: "Open Bass: eigener DSP (Kompatibilitätsmodus)",
@@ -225,6 +229,7 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        appVersion: 'Versione',
         playingHiResIcon: 'Icona Hi-Res in riproduzione',
         playingTheme: 'Tema di riproduzione',
         cbEngineCompatible: "Open Bass: DSP indipendente (modalità compatibile)",
@@ -274,6 +279,7 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        appVersion: 'Versão',
         playingHiResIcon: 'Ícone Hi-Res em reprodução',
         playingTheme: 'Tema de reprodução',
         cbEngineCompatible: "Open Bass: DSP independente (modo compatível)",

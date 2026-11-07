@@ -3140,3 +3140,7 @@
 .album-swipe-layer { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
 .carousel-container.album-swiping > .art-card { visibility: hidden; }
 .album-swipe-layer .swipe-card { will-change: transform, opacity; }
+
+.app-version { display: flex; gap: 6px; color: #aaa; font-size: 12px; }
+.settings-menu > .app-version { justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); }
+.github-popup-card .app-version { justify-content: center; margin: -6px 0 18px; }
