@@ -12,6 +12,7 @@ COPY ./vendor /usr/share/nginx/html/vendor
 COPY ./manifest.json /usr/share/nginx/html
 COPY ./sw.js /usr/share/nginx/html
 COPY ./icons /usr/share/nginx/html/icons
+COPY ./images /usr/share/nginx/html/images
 COPY ./backgrounds /usr/share/nginx/html/backgrounds
 COPY ./config.js.template /usr/share/nginx/html/config.js.template
 COPY ./docker-entrypoint.sh /docker-entrypoint-walkman.sh

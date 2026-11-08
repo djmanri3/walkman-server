@@ -1,0 +1,32 @@
+{
+  "generator": "Built-in image_gen",
+  "scope": "Modern and Classic My music category previews only",
+  "reference": "Android My music screen captured through ADB",
+  "assets": [
+    {
+      "category": "songs",
+      "file": "songs.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: one standalone square music-category preview image, full bleed. The reference is an Android My music screenshot: use only the subject and palette of the specified category tile as visual inspiration, not the whole screenshot. Make a slightly modified original variation with a fresh camera angle/composition while retaining its recognizable theme. Polished early-2010s music-player imagery, restrained contrast, subtly cinematic lighting. Keep the bottom 20 percent naturally dark and quiet for separate HTML labels. NO lettering, words, numbers, logos, watermark, borders, UI, category labels or overlaid interface icons. Output a SINGLE square asset, not a collage. Category: Songs, the first tile in the reference. Show luminous blue and cyan audio equalizer bars formed from small rectangular light cells against deep black, viewed nearly front-on with a very slight perspective. Vary the bar heights and arrangement from the reference. Crisp recognizable equalizer geometry, subtle glow, saturated blue highlights without purple or rainbow colors. Digital music visualization rendered as a premium bitmap."
+    },
+    {
+      "category": "albums",
+      "file": "albums.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: one standalone square music-category preview image, full bleed. The reference is an Android My music screenshot: use only the subject and palette of the specified category tile as visual inspiration, not the whole screenshot. Make a slightly modified original variation with a fresh camera angle/composition while retaining its recognizable theme. Polished early-2010s music-player imagery, restrained contrast, subtly cinematic lighting. Keep the bottom 20 percent naturally dark and quiet for separate HTML labels. NO lettering, words, numbers, logos, watermark, borders, UI, category labels or overlaid interface icons. Output a SINGLE square asset, not a collage. Category: Albums, the second tile in the reference. Photograph a tightly packed row of vintage vinyl album sleeves in a record crate, with a black vinyl disc partially pulled out at the top and a subtle dark green label. Slightly different close-up angle from above, deep black background and subdued sleeve colors, visible sleeve edges, moody natural side lighting. No readable cover text or brand names."
+    },
+    {
+      "category": "artists",
+      "file": "artists.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: one standalone square music-category preview image, full bleed. The reference is an Android My music screenshot: use only the subject and palette of the specified category tile as visual inspiration, not the whole screenshot. Make a slightly modified original variation with a fresh camera angle/composition while retaining its recognizable theme. Polished early-2010s music-player imagery, restrained contrast, subtly cinematic lighting. Keep the bottom 20 percent naturally dark and quiet for separate HTML labels. NO lettering, words, numbers, logos, watermark, borders, UI, category labels or overlaid interface icons. Output a SINGLE square asset, not a collage. Category: Artists, the third tile in the reference. Close-up photograph of a silver vintage broadcast stage microphone rising from the lower foreground, with blurred magenta-purple and blue stage lights behind it. Shift the microphone slightly to the right of center and use a new three-quarter angle. Rich purple concert atmosphere, realistic metallic grille texture, soft bokeh, no performer or brand marks."
+    },
+    {
+      "category": "playlists",
+      "file": "playlists.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: one standalone square music-category preview image, full bleed. The reference is an Android My music screenshot: use only the subject and palette of the specified category tile as visual inspiration, not the whole screenshot. Make a slightly modified original variation with a fresh camera angle/composition while retaining its recognizable theme. Polished early-2010s music-player imagery, restrained contrast, subtly cinematic lighting. Keep the bottom 20 percent naturally dark and quiet for separate HTML labels. NO lettering, words, numbers, logos, watermark, borders, UI, category labels or overlaid interface icons. Output a SINGLE square asset, not a collage. Category: Playlists, the fourth tile in the reference. Photograph of a golden-lit vinyl record on a turntable with a pale gold center label and a black tonearm/stylus entering from the upper right, a slightly different elevated angle and crop. Warm amber and champagne reflections on the grooves, realistic analog equipment, no readable label text. Keep a clear golden-disc silhouette at thumbnail size."
+    },
+    {
+      "category": "favorites",
+      "file": "favorites.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: one standalone square music-category preview image, full bleed. The reference is an Android My music screenshot: use only the subject and palette of the specified category tile as visual inspiration, not the whole screenshot. Make a slightly modified original variation with a fresh camera angle/composition while retaining its recognizable theme. Polished early-2010s music-player imagery, restrained contrast, subtly cinematic lighting. Keep the bottom 20 percent naturally dark and quiet for separate HTML labels. NO lettering, words, numbers, logos, watermark, borders, UI, category labels or overlaid interface icons. Output a SINGLE square asset, not a collage. Category: Favorites, inspired by the golden starred turntable tile on the second row of the reference. A close-up photograph of a warm golden vinyl record and a dark tonearm, distinct from the Playlists asset, with a subtle five-point star-shaped golden light reflection across part of the record. Use a new diagonal angle and elegant warm glow. The star is part of the lighting/reflection, not a floating interface icon. No text or logos."
+    }
+  ]
+}

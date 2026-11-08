@@ -78,16 +78,17 @@
     async function handleImageFallback(el, item) {
       if (!el) return;
       el.onerror = null;
-      if (!item) { el.src = defaultPlaceholder; return; }
+      if (!item) { handleArtworkError(el); return; }
       if (item.Type !== 'MusicArtist' || el.dataset.extTried) {
-        el.src = defaultPlaceholder;
+        handleArtworkError(el);
         return;
       }
       el.dataset.extTried = '1';
       el.referrerPolicy = 'no-referrer';
       const name = String(item.Name || item.AlbumArtist || '').trim();
       const url = await fetchExternalArtistImage(name);
-      el.src = url || defaultPlaceholder;
+      if (url) { el.onerror = () => handleArtworkError(el); el.src = url; }
+      else handleArtworkError(el);
     }
 
     function hasServerImage(item) {
@@ -108,7 +109,7 @@
     function applyArtistImageFallback(imgEl, item) {
       if (!imgEl || !item) return;
       if (item.Type !== 'MusicArtist') {
-        imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = defaultPlaceholder; };
+        imgEl.onerror = () => handleArtworkError(imgEl);
         return;
       }
       if (hasServerImage(item)) {
@@ -120,7 +121,7 @@
       fetchExternalArtistImage(name).then(url => {
         if (url && imgEl) {
           imgEl.dataset.extTried = '1';
-          imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = defaultPlaceholder; };
+          imgEl.onerror = () => handleArtworkError(imgEl);
           imgEl.src = url;
         }
       }).catch(() => {});
@@ -152,6 +153,33 @@
       }
     }
 
+    function paintAlbumBackground(color) {
+      const bg = $('bg-container');
+      const playing = $('view-playing');
+      const { r, g, b } = color;
+      if (playing.dataset.theme !== 'z1') {
+        bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
+        return;
+      }
+      // The original Xperia background spreads the artwork hue across the
+      // whole screen, with a broad glow and tinted edges rather than black.
+      const red = r / 255, green = g / 255, blue = b / 255;
+      const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+      const delta = max - min, light = (max + min) / 2;
+      let hue = 0, saturation = 0;
+      if (delta > 0) {
+        hue = max === red ? ((green - blue) / delta + 6) % 6
+          : max === green ? (blue - red) / delta + 2 : (red - green) / delta + 4;
+        hue *= 60;
+        saturation = delta / (1 - Math.abs(2 * light - 1));
+      }
+      saturation = saturation < .04 ? 0 : Math.min(.68, Math.max(.35, saturation * 1.4));
+      const glow = 22 + max * 8;
+      const tone = brightness => `hsl(${hue.toFixed(1)}, ${(saturation * 100).toFixed(1)}%, ${brightness.toFixed(1)}%)`;
+      bg.style.setProperty('--z1-beat-color', tone(glow + 30));
+      bg.style.background = `radial-gradient(ellipse farthest-corner at 50% 45%, ${tone(glow)} 0%, ${tone(glow * .85)} 55%, ${tone(glow * .55)} 100%)`;
+    }
+
     // Color Thief
     const imgCurrent = document.getElementById('img-current');
     imgCurrent.addEventListener('load', function() {
@@ -164,8 +192,7 @@
           visAlbumColor = { r: r, g: g, b: b };
 
           // El fondo SIEMPRE se adapta al color de la carátula, independientemente del modo
-          $('bg-container').style.background = 
-            `radial-gradient(circle at 50% 60%, ${colorHex} 0%, #050505 85%)`;
+          paintAlbumBackground(visAlbumColor);
           
           // Solo el color de acento depende del modo
           if (accentMode === 'dynamic') {
@@ -236,6 +263,42 @@
     let beatGlowAnimId = null;
     let beatGlowPulse = 0;
     let beatGlowAvg = 0;
+    let z1BeatAvg = 0, z1BeatPulse = 0, z1BeatLevel = 0, z1BeatLastTime = 0, z1BeatRms = 0;
+    let z1BeatWaveform = null;
+
+    function resetZ1BeatEnvelope() {
+      z1BeatAvg = z1BeatPulse = z1BeatLevel = z1BeatLastTime = z1BeatRms = 0;
+    }
+
+    function updateZ1BeatEnvelope(bands, dt, binHz, rms = null) {
+      dt = Math.max(.001, Math.min(.1, dt));
+      let bass = 0, body = 0, bassCount = 0, bodyCount = 0;
+      if (bands) for (let i = 1; i < bands.length; i++) {
+        const hz = i * binHz;
+        if (hz >= 50 && hz < 250) { bass += bands[i] / 255; bassCount++; }
+        else if (hz >= 250 && hz < 900) { body += bands[i] / 255; bodyCount++; }
+      }
+      bass /= bassCount || 1; body /= bodyCount || 1;
+      const spectral = bass * .82 + body * .18;
+      const hasRms = Number.isFinite(rms) && rms >= 0;
+      if (hasRms) z1BeatRms += (rms - z1BeatRms) * (1 - Math.exp(-dt / .04));
+      // Waveform amplitude retains beat dynamics that byte FFT magnitudes
+      // compress. Do not clip it before detecting changes in loud music.
+      const energy = hasRms ? spectral * .4 + z1BeatRms * 2.4 : spectral;
+      z1BeatAvg += (energy - z1BeatAvg) * (1 - Math.exp(-dt / .45));
+      // Mastered music often has only small level changes between beats.
+      // Normalize those changes against the current level, rather than
+      // requiring another jump as large as starting playback from silence.
+      const rise = Math.max(0, energy - z1BeatAvg - .002);
+      const attack = Math.min(1, rise / Math.max(.018, z1BeatAvg * .055));
+      z1BeatPulse = Math.max(z1BeatPulse * Math.exp(-dt / .22), attack);
+      const gain = [.75, 1, 1.25][beatGlowSens - 1] || 1;
+      const target = energy < .015 ? 0 : Math.min(.72, z1BeatPulse * .58 * gain + energy * .045);
+      const tau = target > z1BeatLevel ? .065 : .3;
+      z1BeatLevel += (target - z1BeatLevel) * (1 - Math.exp(-dt / tau));
+      if (z1BeatLevel < .0005) z1BeatLevel = 0;
+      return z1BeatLevel;
+    }
 
     function getBeatGlow() {
       return loadLS('walkman_beatglow') === 'on';
@@ -319,18 +382,21 @@
       applyBeatGlowUI();
       if (beatGlowEnabled) {
         beatGlowPulse = 0; beatGlowAvg = 0;
+        resetBeatGlowBackground();
         try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
         const bg = document.getElementById('bg-container');
         if (bg) bg.style.transition = 'background 90ms linear';
         if (!beatGlowAnimId) beatGlowLoop();
       } else {
+        if (beatGlowAnimId !== null) cancelAnimationFrame(beatGlowAnimId);
+        beatGlowAnimId = null;
         const bg = document.getElementById('bg-container');
         if (bg) bg.style.transition = 'background 1.5s ease-in-out';
         resetBeatGlowBackground();
       }
     }
 
-    function beatGlowLoop() {
+    function beatGlowLoop(now = performance.now()) {
       if (!beatGlowEnabled) { beatGlowAnimId = null; return; }
       try {
         if (!analyserNode && audio) initAudioContext();
@@ -339,9 +405,31 @@
         }
       } catch (e) {}
 
-      // Sin audio reproduciéndose (pausa o sin pista): no repintar nada,
-      // solo mantener el reloj RAF para reanudar en cuanto suene.
-      if (analyserNode && audio && !audio.paused) {
+      if ($('view-playing').dataset.theme === 'z1') {
+        const dt = z1BeatLastTime ? (now - z1BeatLastTime) / 1000 : 1 / 60;
+        z1BeatLastTime = now;
+        let bands = null, binHz = 1, rms = null;
+        if (analyserNode && audio && !audio.paused) {
+          try {
+            const bin = analyserNode.frequencyBinCount;
+            if (!visBands || visBands.length !== bin) visBands = new Uint8Array(bin);
+            analyserNode.getByteFrequencyData(visBands);
+            bands = visBands;
+            binHz = audioCtx.sampleRate / analyserNode.fftSize;
+            if (typeof analyserNode.getFloatTimeDomainData === 'function') {
+              if (!z1BeatWaveform || z1BeatWaveform.length !== analyserNode.fftSize) z1BeatWaveform = new Float32Array(analyserNode.fftSize);
+              analyserNode.getFloatTimeDomainData(z1BeatWaveform);
+              let power = 0;
+              for (const sample of z1BeatWaveform) power += sample * sample;
+              rms = Math.sqrt(power / z1BeatWaveform.length);
+            }
+          } catch (e) {}
+        }
+        // Only opacity changes on beats: the artwork hue and base gradient
+        // remain stable, including on pause, silence and high-energy tracks.
+        const level = updateZ1BeatEnvelope(bands, dt, binHz, rms);
+        $('bg-container').style.setProperty('--z1-beat-level', level.toFixed(3));
+      } else if (analyserNode && audio && !audio.paused) {
         try {
           const bin = analyserNode.frequencyBinCount;
           if (bin > 0) {
@@ -365,7 +453,7 @@
             const b = Math.min(255, Math.floor(c.b * level));
             const bg = document.getElementById('bg-container');
             if (bg) {
-              bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
+              paintAlbumBackground({ r, g, b });
             }
           }
         } catch (e) {}
@@ -374,10 +462,12 @@
     }
 
     function resetBeatGlowBackground() {
+      resetZ1BeatEnvelope();
       const c = visAlbumColor || { r: 120, g: 120, b: 120 };
       const bg = document.getElementById('bg-container');
       if (bg) {
-        bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${c.r},${c.g},${c.b}) 0%, #050505 85%)`;
+        bg.style.setProperty('--z1-beat-level', '0');
+        paintAlbumBackground(c);
       }
     }
 

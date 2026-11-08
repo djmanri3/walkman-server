@@ -233,7 +233,7 @@
         `;
 
         const image = div.querySelector('img');
-        image.onerror = () => { image.onerror = null; image.src = defaultPlaceholder; };
+        image.onerror = () => handleArtworkError(image);
         image.src = imgUrl;
         div.querySelector('.queue-item-title').textContent = item.Name || '';
         div.querySelector('.queue-item-artist').textContent = item.Artists ? item.Artists.join(', ') : 'Artista';
@@ -255,7 +255,10 @@
     }
 
     function setCardImg(imgEl, src) {
-      imgEl.onerror = () => { imgEl.src = defaultPlaceholder; };
+      // Local file artwork cannot be loaded with a CORS request.
+      if (src && new URL(src, document.baseURI).protocol === 'file:') imgEl.removeAttribute('crossorigin');
+      else if (imgEl.id === 'img-current') imgEl.crossOrigin = 'anonymous';
+      imgEl.onerror = () => handleArtworkError(imgEl);
       imgEl.src = src;
     }
 

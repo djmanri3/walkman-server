@@ -104,7 +104,9 @@ docker-compose up -d
 - Add show app version in settings and Walkman easter egg ;)
 - Center desktop navigation (Playing and My music text) while preserving mobile header layout
 - Animate overflowing Playing titles in Modern and Classic themes
-
+- Add images to describe type librarys on My music tab
+- Add default image when music haven't album cover
+- Add new Z1 theme change all of UI Playing and My Music tab
 
 # Bugs
 - Tell me :)
@@ -117,6 +119,9 @@ docker-compose up -d
 
 ### Theme Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Classic.png?raw=true" />
+
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Z1.png?raw=true" />
 
 ### Settings
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Settings.png?raw=true" />
@@ -131,6 +136,9 @@ docker-compose up -d
 ### Theme Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Classic.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Z1.png?raw=true" />
+
 ## Ecualizer
 ### Clear bass
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Ecualizer_clear_bass.png?raw=true" />
@@ -142,21 +150,42 @@ docker-compose up -d
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Visualizer.png?raw=true" />
 
 ## Library
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Library.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Library_Z1.png?raw=true" />
+
 ### Songs
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Songs.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Songs_Z1.png?raw=true" />
+
 ### Artists
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Artists.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Artists_Z1.png?raw=true" />
+
 ### Albums
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Z1.png?raw=true" />
+
 ### Playlist
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Playlist.png?raw=true" />
 
+### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Playlist_Z1.png?raw=true" />
+
 ### Inside of playlists
+### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Inside_playlist.png?raw=true" />
 
 ### Connect to server or local

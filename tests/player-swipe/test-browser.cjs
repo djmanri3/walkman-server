@@ -73,10 +73,11 @@ async function drag(dx,dy=0,{cancel=false,start,verifyMotion=false}={}) {
  await command('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});
  await wait(700);
 }
-for(const theme of ['modern','classic']) {
+for(const theme of ['modern','classic','z1']) {
  await run(`setPlayingTheme('${theme}');playTrack(0)`);await wait(700);
  await drag(-110,0,{verifyMotion:true});
  assert.equal(await run('currentTrackIndex'),1,theme+' left swipe must advance exactly once');
+ if(theme==='z1') assert(await run("document.getElementById('img-prev').src===playlist[2].coverUrl&&document.getElementById('card-next').style.display==='none'"),'Z1 swipe must keep only upcoming artwork');
  assert.equal(await run("document.getElementById('album-actions-overlay').classList.contains('open')"),false,'Swipe also opened the album menu');
  await drag(110,0,{verifyMotion:true});assert.equal(await run('currentTrackIndex'),0,theme+' right swipe must go back');
  await drag(0,-70);assert.equal(await run('currentTrackIndex'),0,'Vertical scrolling changed songs');
@@ -95,6 +96,14 @@ for(const theme of ['modern','classic']) {
  assert.equal(await run("document.querySelectorAll('.album-swipe-layer').length"),0,'Preview not cleaned up');
  console.log('PASS',theme,'touch swipes, vertical scroll, cancel, tap and side-cover click suppression');
 }
+await run("(async()=>{playlist.push({...playlist[2],Id:'fourth-song',Name:'Fourth song',coverUrl:playlist[1].coverUrl});playTrack(1);await audio.play()})()");
+assert(await run("document.getElementById('img-prev').src===playlist[2].coverUrl&&document.getElementById('img-next').src===playlist[3].coverUrl"),'Z1 must exclude the previous track in the middle of the queue');
+assert(await run("(()=>{const a=document.getElementById('card-current').getBoundingClientRect(),b=document.getElementById('card-prev').getBoundingClientRect(),c=document.getElementById('card-next').getBoundingClientRect();return b.left>a.left&&b.right>a.right&&c.right>b.right})()"),'Z1 upcoming covers must form a visible stack to the right');
+await run("(async()=>{document.getElementById('card-next').click();await audio.play()})()");
+assert.equal(await run('currentTrackIndex'),3);
+assert(await run("document.getElementById('card-prev').style.display==='none'&&document.getElementById('card-next').style.display==='none'"),'Z1 must hide missing covers at the queue end');
+await run("(async()=>{playlist.pop();playTrack(0);await audio.play()})()");
+console.log('PASS Z1 two upcoming covers, perspective stack, click targets and end-of-queue cleanup');
 await run('repeatMode=0;playTrack(0)');await wait(700);
 await drag(110);assert.equal(await run('currentTrackIndex'),0,'Previous swipe exceeded queue start');
 await run('playTrack(2)');await wait(700);

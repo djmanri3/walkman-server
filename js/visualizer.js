@@ -721,6 +721,7 @@
       if (track) {
         titleEl.textContent = track.Name || 'Song';
         artistEl.textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artist');
+        thumbEl.onerror = () => handleArtworkError(thumbEl);
         thumbEl.src = getEmbyImageUrl(track);
         ytEl.textContent = track.Path || `youtube.com/watch?v=PJniSb91tvo`;
         ytEl.href = `https://www.youtube.com/results?search_query=${encodeURIComponent((track.Artists ? track.Artists.join(' ') : '') + ' ' + track.Name)}`;

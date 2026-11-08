@@ -85,6 +85,7 @@
       initZoom();
       initCarouselZoom();
       initPlayingTheme();
+      initZ1Interface();
       initPlayingTitleMarquee();
       initAlbumSwipe();
       initFeaturedZoom();

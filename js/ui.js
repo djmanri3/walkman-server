@@ -204,6 +204,10 @@
         document.getElementById('nav-playing').setAttribute('aria-selected', 'false');
         document.getElementById('view-music').classList.add('active');
       }
+      updateZ1Layout();
+      updateZ1MiniPlayer();
+      closeZ1HeaderMenu();
+      resetBeatGlowBackground();
     }
 
     // Color promedio de la carátula (refleja fielmente cualquier tono, incl. verde)
@@ -268,6 +272,7 @@
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.zoom) === num);
       });
+      updateZ1Layout();
     }
 
     function setZoom(z) {
@@ -314,18 +319,25 @@
     }
 
     function applyPlayingTheme(theme) {
-      const selected = theme === 'classic' ? 'classic' : 'modern';
+      const selected = ['modern', 'classic', 'z1'].includes(theme) ? theme : 'modern';
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
+      document.body.dataset.theme = selected;
+      document.getElementById('app-logo').textContent = 'WALKMAN';
+      closeZ1HeaderMenu();
       document.querySelectorAll('[data-playing-theme]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.playingTheme === selected));
       });
       refreshCarouselImages();
+      updateZ1Layout();
+      updateZ1MiniPlayer();
+      fitHeader();
+      resetBeatGlowBackground();
     }
 
     function setPlayingTheme(theme) {
       applyPlayingTheme(theme);
-      saveLS('walkman_playing_theme', theme === 'classic' ? 'classic' : 'modern');
+      saveLS('walkman_playing_theme', document.getElementById('view-playing').dataset.theme);
     }
 
     function initPlayingTheme() {
@@ -337,7 +349,71 @@
       document.getElementById('track-album').textContent = track ? (track.Album || '') : '';
       document.getElementById('playing-queue-position').textContent =
         `${track ? currentTrackIndex + 1 : 0}/${playlist.length}`;
+      updateZ1MiniPlayer();
     }
+
+    function closeZ1HeaderMenu() {
+      document.querySelector('header').classList.remove('z1-actions-open');
+      document.querySelector('.z1-header-more').setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleZ1HeaderMenu() {
+      const open = document.querySelector('header').classList.toggle('z1-actions-open');
+      document.querySelector('.z1-header-more').setAttribute('aria-expanded', String(open));
+    }
+
+    function updateZ1MiniPlayer() {
+      const track = playlist[currentTrackIndex];
+      document.body.classList.toggle('z1-playing', document.body.dataset.theme === 'z1' && document.getElementById('view-playing').classList.contains('active'));
+      const visible = document.body.dataset.theme === 'z1' && !!track && document.getElementById('view-music').classList.contains('active');
+      const mini = document.getElementById('z1-mini-player');
+      mini.hidden = !visible;
+      document.body.classList.toggle('z1-has-mini', visible);
+      updateZ1MiniProgress();
+      if (!track) return;
+      document.getElementById('z1-mini-title').textContent = track.Name || '';
+      document.getElementById('z1-mini-artist').textContent = (track.Artists || []).join(', ') || track.AlbumArtist || '';
+      const img = document.getElementById('z1-mini-cover');
+      const url = getEmbyImageUrl(track);
+      if (img.getAttribute('src') !== url) setCardImg(img, url);
+      document.getElementById('z1-mini-play-icon').textContent = audio.paused ? 'play_arrow' : 'pause';
+    }
+
+    function updateZ1MiniProgress() {
+      const slider = document.getElementById('z1-mini-progress');
+      const seekable = !!playlist[currentTrackIndex] && Number.isFinite(audio.duration) && audio.duration > 0;
+      const progress = seekable ? Math.min(100, Math.max(0, audio.currentTime / audio.duration * 100)) : 0;
+      slider.disabled = !seekable;
+      slider.value = progress;
+      slider.style.setProperty('--mini-progress', `${progress}%`);
+      slider.setAttribute('aria-valuetext', `${formatTime(seekable ? audio.currentTime : 0)} / ${formatTime(seekable ? audio.duration : 0)}`);
+    }
+
+    function initZ1Interface() {
+      ['play', 'pause', 'ended', 'loadedmetadata', 'emptied'].forEach(event => audio.addEventListener(event, updateZ1MiniPlayer));
+      ['timeupdate', 'durationchange', 'seeking'].forEach(event => audio.addEventListener(event, () => {
+        if (!document.getElementById('z1-mini-player').hidden) updateZ1MiniProgress();
+      }));
+      document.addEventListener('click', event => {
+        if (!event.target.closest('header')) closeZ1HeaderMenu();
+      });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape') closeZ1HeaderMenu(); });
+      updateZ1MiniPlayer();
+    }
+
+    function updateZ1Layout() {
+      const view = document.getElementById('view-playing');
+      view.classList.remove('z1-stacked');
+      if (view.dataset.theme !== 'z1' || !view.classList.contains('active')) return;
+      if (!window.matchMedia('(min-aspect-ratio: 6/5)').matches) return;
+      const style = getComputedStyle(view);
+      const available = view.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const cover = document.getElementById('card-current').offsetWidth;
+      const play = view.querySelector('.control-btn.play').offsetWidth;
+      const controls = Math.max(280, play / 1.3 * 3.3 + 86);
+      view.classList.toggle('z1-stacked', cover * 1.32 + parseFloat(style.columnGap) + controls > available);
+    }
+    window.addEventListener('resize', updateZ1Layout);
 
     function applyCarouselZoom(z) {
       const num = Math.max(55, Math.min(175, Number(z) || 100));
@@ -346,6 +422,7 @@
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.czoom) === num);
       });
+      updateZ1Layout();
     }
 
     function setCarouselZoom(z) {
@@ -1403,10 +1480,11 @@
         layer.className = 'album-swipe-layer'; layer.setAttribute('aria-hidden', 'true');
         carousel.appendChild(layer);
         const classic = document.getElementById('view-playing').dataset.theme === 'classic';
+        const z1 = document.getElementById('view-playing').dataset.theme === 'z1';
         const index = direction < 0
           ? (g.index + 1 < playlist.length ? g.index + 1 : (repeatMode === 1 ? 0 : g.index))
           : Math.max(0, g.index - 1);
-        const incomingCard = classic ? (direction < 0 ? cards[0] : null) : (direction < 0 ? cards[2] : cards[0]);
+        const incomingCard = classic || z1 ? (direction < 0 ? cards[0] : null) : (direction < 0 ? cards[2] : cards[0]);
         const backgrounds = [];
         // Move each queued cover once, keeping the remaining stack behind it.
         cards.filter(card => card !== current && card !== incomingCard && getComputedStyle(card).display !== 'none').forEach(card => {
@@ -1424,8 +1502,23 @@
         outgoing.style.zIndex = direction < 0 ? '4' : '2';
         incoming.style.zIndex = direction < 0 ? '3' : '4';
         outgoing.style.transformOrigin = incoming.style.transformOrigin = classic ? 'left center' : 'center';
-        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, backgrounds, progress: 0 };
-        if (!classic) {
+        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, z1, backgrounds, progress: 0 };
+        if (z1) {
+          motion.z1Cards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
+          backgrounds.forEach(({copy,side}) => {
+            Object.assign(copy.style, {left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
+            motion.z1Cards.push({copy,slot:side==='card-prev'?1:2});
+          });
+          // The third queued cover enters the back of the stack on advance.
+          const outerTrack = direction < 0 && index !== g.index ? playlist[g.index + 3] : null;
+          if (outerTrack) {
+            const copy = copyCard(current,layer,left,top,width,height);
+            copy.querySelector('img').src = getEmbyImageUrl(outerTrack);
+            const badge = copy.querySelector('.hires-badge');
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(outerTrack));
+            motion.z1Cards.push({copy,slot:3});
+          }
+        } else if (!classic) {
           motion.modernCards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
           backgrounds.forEach(({copy}) => {
             Object.assign(copy.style, {left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
@@ -1445,6 +1538,33 @@
       function draw(progress) {
         const m = motion;
         m.progress = progress;
+        if (m.z1) {
+          const slots = [
+            {x:0,scale:1,angle:0,light:1,opacity:1},
+            {x:.36,scale:.66,angle:-32,light:.88,opacity:1},
+            {x:.57,scale:.5,angle:-38,light:.75,opacity:1},
+            {x:.78,scale:.38,angle:-45,light:.65,opacity:0}
+          ];
+          m.z1Cards.forEach(({copy,slot}) => {
+            const position = slot + m.direction * progress;
+            let state;
+            if (position < 0) {
+              const t = Math.min(1, -position);
+              state = {x:-.85*t,scale:1-.15*t,angle:10*t,light:1,opacity:1-Math.max(0,t-.6)/.4};
+            } else {
+              const i = Math.min(2, Math.floor(position)), t = Math.min(1, position-i);
+              state = Object.fromEntries(Object.keys(slots[0]).map(key => [key, slots[i][key]+(slots[i+1][key]-slots[i][key])*t]));
+            }
+            copy.style.transformOrigin = 'center';
+            copy.style.transform = `translateX(${state.x*m.width}px) perspective(${m.width*3}px) rotateY(${state.angle}deg) scale(${state.scale})`;
+            copy.style.opacity = String(copy===m.incoming&&m.index===m.source?0:state.opacity);
+            copy.style.filter = `brightness(${state.light})`;
+            copy.style.zIndex = String(100-Math.round(Math.abs(position)*20));
+            const badge = copy.querySelector('.hires-badge');
+            if (badge) badge.style.opacity = String(Math.max(0,1-Math.abs(position)));
+          });
+          return;
+        }
         if (!m.classic) {
           m.modernCards.forEach(({copy,slot}) => {
             const position = slot+m.direction*progress;
@@ -1520,7 +1640,7 @@
         if (motion && motion.direction !== direction) clearMotion();
         if (!motion) beginMotion(gesture, direction);
         const distance = Math.abs(dx) / motion.zoom;
-        draw(Math.min(motion.index===motion.source?0.12:0.95, distance/(motion.width*(motion.classic?0.85:0.58))));
+        draw(Math.min(motion.index===motion.source?0.12:0.95, distance/(motion.width*(motion.classic||motion.z1?0.85:0.58))));
       });
       carousel.addEventListener('pointerup', event => {
         if (!gesture || event.pointerId !== gesture.id) return;
@@ -1544,7 +1664,7 @@
     }
 
     function playCarouselSide(side) {
-      if (document.getElementById('view-playing').dataset.theme === 'classic') {
+      if (['classic', 'z1'].includes(document.getElementById('view-playing').dataset.theme)) {
         const index = currentTrackIndex + side;
         if (playlist[index]) playTrack(index);
       } else if (side === 1) {
@@ -1556,9 +1676,9 @@
 
     function refreshCarouselImages() {
       updatePlayingThemeData();
-      const classic = document.getElementById('view-playing').dataset.theme === 'classic';
-      // Classic stacks the next two queued tracks behind the current artwork.
-      const indexes = classic
+      const queued = ['classic', 'z1'].includes(document.getElementById('view-playing').dataset.theme);
+      // Classic and Z1 stack the next two queued tracks behind the current artwork.
+      const indexes = queued
         ? [currentTrackIndex + 1, currentTrackIndex + 2]
         : [currentTrackIndex - 1, currentTrackIndex + 1];
       ['prev', 'next'].forEach((side, i) => {
@@ -1576,6 +1696,7 @@
       const header = document.querySelector('header');
       const appLogo = document.getElementById('app-logo');
       if (!header || !appLogo) return;
+      if (document.body.dataset.theme === 'z1') { appLogo.style.display = ''; return; }
 
       const isMobile = window.innerWidth <= 768;
       if (!isMobile) {
@@ -1592,7 +1713,7 @@
       if (forceHide) return;
 
       // Medir el ancho natural de cada hijo del header (sin que se encojan en flexbox)
-      const children = [...header.children].map(el => ({
+      const children = [...header.children].filter(el => getComputedStyle(el).display !== 'none').map(el => ({
         el,
         flex: el.style.flex || '',
         minWidth: el.style.minWidth || ''
