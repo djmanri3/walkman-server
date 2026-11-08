@@ -46,16 +46,20 @@
   <!-- Header Xperia -->
   <header>
     <div id="app-logo" onclick="walkmanTap()" role="button" tabindex="0" aria-label="WALKMAN">WALKMAN</div>
+    <button class="z1-header-back" type="button" onclick="switchTab('music')" aria-label="Volver a My music"><span class="material-icons">chevron_left</span></button>
     <div class="top-nav" role="tablist">
       <div id="nav-playing" class="active" onclick="switchTab('playing')" data-i18n="playing" role="tab" aria-selected="true" tabindex="0">Playing</div>
       <div id="nav-music" onclick="switchTab('music')" data-i18n="myMusic" role="tab" aria-selected="false" tabindex="0">My music</div>
     </div>
     <div class="header-icons">
       <span class="material-icons" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
+      <div class="header-secondary-actions" onclick="closeZ1HeaderMenu()">
       <span class="material-icons" onclick="toggleVisualizerView()" title="Visualizador" data-i18n-title="visualizer" role="button" tabindex="0" aria-label="Visualizador">blur_on</span>
       <span class="material-icons" id="eq-btn" onclick="toggleEqualizer()" title="Mejoras de Sonido / Ecualizador" data-i18n-title="soundEnhancements" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Mejoras de Sonido / Ecualizador">equalizer</span>
       <span class="material-icons" onclick="showServerModal()" title="Ajustes de Servidor" data-i18n-title="serverSettings" role="button" tabindex="0" aria-label="Ajustes de Servidor">storage</span>
       <span class="material-icons" id="settings-btn" onclick="toggleSettingsMenu()" title="Ajustes" data-i18n-title="settings" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Ajustes">settings</span>
+      </div>
+      <button class="z1-header-more" type="button" onclick="toggleZ1HeaderMenu()" aria-label="Más opciones" aria-expanded="false" aria-haspopup="true"><span class="material-icons">more_vert</span></button>
     </div>
   </header>
 
@@ -730,31 +734,31 @@
         <span class="featured-refresh material-icons" title="Recargar side show" data-i18n-title="refreshSlideshow" onclick="refreshFeatured()">refresh</span>
       </div>
       <div class="grid-menu" id="home-grid">
-        <div class="grid-card" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadCategory('Songs')">
+        <div class="grid-card" data-category="songs" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadCategory('Songs')">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="songs">Songs</div>
             <div class="grid-card-sub" id="count-songs">--</div>
           </div>
         </div>
-        <div class="grid-card" style="background-image: linear-gradient(135deg, #232526, #414345);" onclick="loadCategory('Albums')">
+        <div class="grid-card" data-category="albums" style="background-image: linear-gradient(135deg, #232526, #414345);" onclick="loadCategory('Albums')">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="albums">Albums</div>
             <div class="grid-card-sub" id="count-albums">--</div>
           </div>
         </div>
-        <div class="grid-card" style="background-image: linear-gradient(135deg, #833ab4, #fd1d1d);" onclick="loadCategory('Artists')">
+        <div class="grid-card" data-category="artists" style="background-image: linear-gradient(135deg, #833ab4, #fd1d1d);" onclick="loadCategory('Artists')">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="artists">Artists</div>
             <div class="grid-card-sub" id="count-artists">--</div>
           </div>
         </div>
-        <div class="grid-card" style="background-image: linear-gradient(135deg, #ffe000, #799f0c);" onclick="loadCategory('Playlists')">
+        <div class="grid-card" data-category="playlists" style="background-image: linear-gradient(135deg, #ffe000, #799f0c);" onclick="loadCategory('Playlists')">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="playlists">Playlists</div>
             <div class="grid-card-sub" id="count-playlists">--</div>
           </div>
         </div>
-        <div class="grid-card" style="background-image: linear-gradient(135deg, #f43f5e, #7c3aed);" onclick="showFavoritesMenu()">
+        <div class="grid-card" data-category="favorites" style="background-image: linear-gradient(135deg, #f43f5e, #7c3aed);" onclick="showFavoritesMenu()">
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="favorites">Favorites</div>
             <div class="grid-card-sub" id="count-favorites">--</div>
@@ -816,6 +820,19 @@
 
   </div>
     </div>
+
+  <div class="z1-mini-player" id="z1-mini-player" hidden>
+    <input id="z1-mini-progress" class="z1-mini-progress" type="range" min="0" max="100" step="0.1" value="0" disabled aria-label="Progreso de la canción" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)">
+    <button class="z1-mini-track" type="button" onclick="switchTab('playing')" aria-label="Reproduciendo">
+      <img id="z1-mini-cover" alt="">
+      <span class="z1-mini-info"><span id="z1-mini-title"></span><span id="z1-mini-artist"></span></span>
+    </button>
+    <div class="z1-mini-controls">
+      <button type="button" onclick="prevTrack()" aria-label="Canción anterior"><span class="material-icons">skip_previous</span></button>
+      <button class="z1-mini-play" type="button" onclick="togglePlay()" aria-label="Reproducir / Pausar"><span class="material-icons" id="z1-mini-play-icon">play_arrow</span></button>
+      <button type="button" onclick="nextTrack()" aria-label="Canción siguiente"><span class="material-icons">skip_next</span></button>
+    </div>
+  </div>
 
   <!-- MODAL CONEXIÓN SERVIDOR -->
   <div id="emby-modal" class="modal" data-type="emby" onclick="closeServerModal()">

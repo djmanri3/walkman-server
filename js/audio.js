@@ -671,7 +671,7 @@
 
       function applyImages() {
         setCardImg(imgCurrentEl, newUrl);
-        if (document.getElementById('view-playing').dataset.theme === 'classic') {
+        if (['classic', 'z1'].includes(document.getElementById('view-playing').dataset.theme)) {
           refreshCarouselImages();
           return;
         }

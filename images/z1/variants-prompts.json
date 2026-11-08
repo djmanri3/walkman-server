@@ -1,0 +1,35 @@
+{
+  "generator": "Built-in image_gen",
+  "assets": [
+    {
+      "category": "artists",
+      "file": "artists-variant.png",
+      "reference": "artists.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: a SINGLE square 1024x1024 photographic category tile for the Z1 music player, full bleed, not a UI mockup or collage. The input is a style/subject reference only. Create a new original variation, not a duplicate. Match the understated early-2010s music photography feel, subtle film grain, realistic materials and soft tonal contrast. Keep the bottom 15 percent calm/darker for an HTML category label which will be added separately. Absolutely NO text, lettering, watermark, logo, border or UI. Subject: an anonymous guitarist performing live in silhouette, shown in a new three-quarter camera angle, lifting one hand toward the audience beside a microphone. Black-and-white concert photography, backlit stage haze and one broad beam of light, deep charcoal blacks and silver highlights. Keep the performance silhouette strong at thumbnail size. Do not depict an identifiable celebrity."
+    },
+    {
+      "category": "songs",
+      "file": "songs-variant.png",
+      "reference": "songs.jpg",
+      "prompt": "Use case: photorealistic-natural. Asset type: a SINGLE square 1024x1024 photographic category tile for the Z1 music player, full bleed, not a UI mockup or collage. The input is a style/subject reference only. Create a new original variation, not a duplicate. Match the understated early-2010s music photography feel, subtle film grain, realistic materials and soft tonal contrast. Keep the bottom 15 percent calm/darker for an HTML category label which will be added separately. Absolutely NO text, lettering, watermark, logo, border or UI. Subject: close-up macro photograph of a black printed treble clef and music staff on warm ivory textured paper. Use a different oblique angle and crop from the reference, crisp foreground ink with gentle depth-of-field falloff into the upper right. Restrained cream and black palette, tangible paper fibers. Make it read immediately as sheet music at small size."
+    },
+    {
+      "category": "albums",
+      "file": "albums-variant.png",
+      "reference": "albums.jpg",
+      "prompt": "Use case: photorealistic-natural. Asset type: a SINGLE square 1024x1024 photographic category tile for the Z1 music player, full bleed, not a UI mockup or collage. The input is a style/subject reference only. Create a new original variation, not a duplicate. Match the understated early-2010s music photography feel, subtle film grain, realistic materials and soft tonal contrast. Keep the bottom 15 percent calm/darker for an HTML category label which will be added separately. Absolutely NO text, lettering, watermark, logo, border or UI. Subject: silver-and-black over-ear headphones resting on a short stack of vintage vinyl record sleeves against dark walnut wood. New arrangement and camera angle, headphone earcups angled toward the viewer, record sleeves slightly staggered, warm side lighting and rich but restrained brown/silver/charcoal palette. Photographic still life, no readable album titles or brand marks."
+    },
+    {
+      "category": "playlists",
+      "file": "playlists-variant.png",
+      "reference": "playlists.jpg",
+      "prompt": "Use case: photorealistic-natural. Asset type: a SINGLE square 1024x1024 photographic category tile for the Z1 music player, full bleed, not a UI mockup or collage. The input is a style/subject reference only. Create a new original variation, not a duplicate. Match the understated early-2010s music photography feel, subtle film grain, realistic materials and soft tonal contrast. Keep the bottom 15 percent calm/darker for an HTML category label which will be added separately. Absolutely NO text, lettering, watermark, logo, border or UI. Subject: close-up photograph of a spinning black vinyl record with a tonearm and cartridge, viewed from a different slightly elevated diagonal angle. Warm champagne/golden afternoon light, shallow depth of field, precise realistic concentric grooves, a subtle reflection on the disc. Analog hi-fi photography with muted gold and black tones, no readable labels."
+    },
+    {
+      "category": "favorites",
+      "file": "favorites-variant.png",
+      "reference": "albums.jpg",
+      "prompt": "Use case: photorealistic-natural. Asset type: a SINGLE square 1024x1024 photographic category tile for the Z1 music player, full bleed, not a UI mockup or collage. The input is a style/subject reference only. Create a new original variation, not a duplicate. Match the understated early-2010s music photography feel, subtle film grain, realistic materials and soft tonal contrast. Keep the bottom 15 percent calm/darker for an HTML category label which will be added separately. Absolutely NO text, lettering, watermark, logo, border or UI. Subject: a carefully selected small collection of vinyl records in a dark wooden record crate, with folded silver-and-black headphones resting beside and partly atop the records. Distinct composition from the Albums tile: closer and more intimate, records leaning diagonally, warm amber light, soft walnut background. Allow a quiet area near the upper center for a small white heart icon added by HTML later. Do NOT draw the heart yourself. Restrained warm brown, cream, silver and charcoal colors."
+    }
+  ]
+}

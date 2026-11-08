@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v41';
+const CACHE_NAME = 'walkman-v42';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -20,6 +20,11 @@ const SHELL_ASSETS = [
   './js/app.js',
   './manifest.json',
   './icons/Walkman.png',
+  './images/z1/artists-variant.png',
+  './images/z1/songs-variant.png',
+  './images/z1/albums-variant.png',
+  './images/z1/playlists-variant.png',
+  './images/z1/favorites-variant.png',
   'https://unpkg.com/colorthief@3/dist/umd/color-thief.global.js',
   'https://fonts.googleapis.com/icon?family=Material+Icons'
 ];

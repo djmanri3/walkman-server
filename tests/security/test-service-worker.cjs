@@ -31,7 +31,7 @@ async function dispatch(url,{headers={},method='GET',navigate=false,cacheMode='d
  for(const header of ['Authorization','X-Emby-Token','X-Emby-Authorization','X-Plex-Token'])assert.equal(await dispatch('js/ui.js',{headers:{[header]:'fake'}}),null);
  assert.equal(await dispatch('js/ui.js',{method:'POST'}),null);
  assert.equal(await dispatch('js/ui.js',{cacheMode:'no-store'}),null);
- for(const url of ['js/ui.js','css/styles.css','config.js','vendor/sony-visualizer/visualizer.wasm?v=gate-rectangles-3','vendor/sony-visualizer/visualizer.data?v=gate-rectangles-3','icons/Walkman.png']){
+ for(const url of ['js/ui.js','css/styles.css','config.js','vendor/sony-visualizer/visualizer.wasm?v=gate-rectangles-3','vendor/sony-visualizer/visualizer.data?v=gate-rectangles-3','icons/Walkman.png','images/z1/artists-variant.png','images/z1/songs-variant.png','images/z1/albums-variant.png','images/z1/playlists-variant.png','images/z1/favorites-variant.png']){
   assert.equal(await (await dispatch(url)).text(),'network');
   offline=true;assert.equal(await (await dispatch(url)).text(),'network','Static asset missing offline');offline=false;
  }
@@ -40,7 +40,7 @@ async function dispatch(url,{headers={},method='GET',navigate=false,cacheMode='d
   await dispatch(url);assert.equal(await caches.match(new URL(url,scope).href),undefined);nextHeaders={};
  }
  redirected=true;await dispatch('js/audio.js?redirected=1');assert.equal(await caches.match(scope+'js/audio.js?redirected=1'),undefined);redirected=false;
- await (await caches.open('walkman-v41')).put(scope+'index.html',new Response('offline index'));
+ await (await caches.open('walkman-v42')).put(scope+'index.html',new Response('offline index'));
  offline=true;assert.equal(await (await dispatch('./',{navigate:true})).text(),'offline index');
  const missing=await dispatch('vendor/sony-visualizer/visualizer.js?uncached=1');assert.equal(missing.type,'error','WASM/script fallback must not return HTML');
  assert.equal(await dispatch('jellyfin/UserFavoriteItems',{navigate:true}),null);

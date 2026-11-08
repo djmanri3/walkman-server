@@ -80,6 +80,10 @@ assert(await run("document.querySelector('#img-prev').src===playlist[0].coverUrl
 await screenshot('modern');
 // Z1 keeps the shared player while using a portrait Xperia layout.
 await run("setPlayingTheme('z1');playTrack(0)");
+assert(await run("document.querySelector('#img-prev').src===playlist[1].coverUrl&&document.querySelector('#img-next').src===playlist[2].coverUrl"),'Z1 must show the next two queued covers');
+await run("(async()=>{document.getElementById('card-next').click();await audio.play()})()");
+assert.equal(await run('currentTrackIndex'),2,'The far Z1 cover must play the second next song');
+await run("(async()=>{playTrack(0);await audio.play()})()");
 for (const [width,height] of [[1341,772],[390,844],[844,390]]) {
  await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
  await new Promise(r=>setTimeout(r,700));
@@ -118,6 +122,7 @@ for (const [width,height] of [[1341,772],[390,844],[844,390]]) {
  }
  await screenshot('z1-large-'+width);
  await run("setCarouselZoom(100);document.getElementById('view-playing').scrollTop=0");
+ await new Promise(r=>setTimeout(r,650));
  await screenshot('z1-'+width);
 }
 assert.equal(await run("getComputedStyle(document.querySelector('#view-playing .control-btn')).borderTopColor"),'rgb(255, 255, 255)');
@@ -129,11 +134,11 @@ const z1Background=await run("document.getElementById('bg-container').style.back
 assert(z1Background.includes('50% 45%') && z1Background.includes('100%'),'Z1 should tint the whole background');
 assert(!z1Background.includes('rgb(5, 5, 5)'),'Z1 edges should retain the artwork hue');
 await run("switchTab('music')");
-assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('circle'));
+assert.equal(await run("document.getElementById('bg-container').style.backgroundImage"),z1Background);
 await run("switchTab('playing')");
 assert.equal(await run("document.getElementById('bg-container').style.backgroundImage"),z1Background);
 await run("setAccentMode('custom')");
-await run("document.getElementById('card-next').click()");await new Promise(r=>setTimeout(r,800));
+await run("document.getElementById('card-prev').click()");await new Promise(r=>setTimeout(r,800));
 assert.equal(await run('currentTrackIndex'),1);
 assert.notEqual(await run("document.getElementById('bg-container').style.backgroundImage"),z1Background);
 assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('50% 45%'));
@@ -142,8 +147,66 @@ await run("paintAlbumBackground({r:30,g:96,b:100})");
 assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('50% 45%'));
 await screenshot('z1-background-teal');
 await run("resetBeatGlowBackground();setAccentMode('dynamic')");
-assert(await run("document.querySelector('#img-prev').src===playlist[0].coverUrl&&document.querySelector('#img-next').src===playlist[2].coverUrl"));
-console.log('PASS Z1 layouts, white controls, artwork navigation and adaptive background');
+assert(await run("document.querySelector('#img-prev').src===playlist[2].coverUrl&&document.getElementById('card-next').style.display==='none'"));
+console.log('PASS Z1 layouts, white controls, upcoming artwork navigation and adaptive background');
+// The complete Z1 interface uses the Android home, overflow menu and mini player.
+await run("embyConfig.serverType='local';localTracks=playlist.map(track=>({...track,Type:'Audio'}));switchTab('music');backToCategories()");
+await run("featuredSlides=playlist.map(track=>({img:track.coverUrl,title:track.Name,artist:track.Artists.join(', ')}));featuredIndex=0;buildFeaturedSlides()");
+assert.equal(await run("document.getElementById('app-logo').textContent"),'WALKMAN');
+assert.equal(await run("getComputedStyle(document.getElementById('app-logo'),'::before').content"),'none');
+assert.equal(await run("getComputedStyle(document.querySelector('.top-nav')).display"),'none');
+assert.equal(await run("getComputedStyle(document.querySelector('.z1-header-back')).display"),'none');
+await run("document.querySelector('.z1-mini-track').click()");
+assert.notEqual(await run("getComputedStyle(document.querySelector('.z1-header-back')).display"),'none');
+await run("document.querySelector('.z1-header-back').click()");
+assert(await run("document.getElementById('view-music').classList.contains('active')"));
+await run("document.querySelector('.featured-arrow-next').click()");
+assert.equal(await run('featuredIndex'),1);
+assert.equal(await run("document.querySelector('.featured-slide.active .featured-slide-title').textContent"),'Second song');
+assert.equal(await run('currentTrackIndex'),1,'Slideshow navigation must not change playback');
+for(const [width,height] of [[1341,772],[390,844],[844,390]]) {
+ await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
+ await new Promise(r=>setTimeout(r,250));
+ const ui=await run(`(()=>{
+  const logo=document.getElementById('app-logo').getBoundingClientRect();
+  const mini=document.getElementById('z1-mini-player').getBoundingClientRect();
+  return {logoLeft:logo.left,logoRight:logo.right,logoDisplay:getComputedStyle(document.getElementById('app-logo')).display,miniBottom:mini.bottom,miniWidth:mini.width,hero:getComputedStyle(document.getElementById('featured-slideshow')).display,scroll:document.body.scrollWidth};
+ })()`);
+ assert.equal(ui.hero,'block');assert.notEqual(ui.logoDisplay,'none');
+ assert(ui.logoLeft>=0&&ui.logoRight<=width&&ui.miniWidth<=width&&ui.miniBottom<=height+1&&ui.scroll<=width+1,'Z1 interface overflows at '+width);
+ assert.equal(await run("document.getElementById('z1-mini-title').textContent"),'Second song');
+ await screenshot('z1-home-'+width);
+}
+assert(await run("(async()=>{for(const url of ['images/z1/artists-variant.png','images/z1/songs-variant.png','images/z1/albums-variant.png','images/z1/playlists-variant.png','images/z1/favorites-variant.png']){const image=new Image();image.src=url;await image.decode()}return true})()"));
+await run("audio.currentTime=3;updateZ1MiniProgress()");
+assert(Math.abs((await run("Number(document.getElementById('z1-mini-progress').value)"))-30)<1,'Mini progress is not synchronized');
+assert.equal(await run("document.getElementById('z1-mini-progress').disabled"),false);
+await run("document.getElementById('z1-mini-progress').value=60;document.getElementById('z1-mini-progress').dispatchEvent(new Event('input',{bubbles:true}))");
+assert(Math.abs((await run('audio.currentTime'))-6)<.3,'Mini progress did not seek');
+await run('audio.currentTime=0');
+await run("document.querySelector('.z1-header-more').click()");
+assert.equal(await run("document.querySelector('.z1-header-more').getAttribute('aria-expanded')"),'true');
+await run("document.getElementById('eq-btn').click()");
+assert(await run("document.getElementById('eq-dropdown').classList.contains('open')"));
+assert.equal(await run("document.querySelector('.z1-header-more').getAttribute('aria-expanded')"),'false');
+await run("closeEqualizer();loadCategory('Songs')");
+assert((await run("document.querySelectorAll('#items-container .list-item').length"))>=3);
+await screenshot('z1-library');
+await run("document.querySelector('.z1-mini-play').click()");
+await new Promise(r=>setTimeout(r,100));
+assert(await run('audio.paused'));assert.equal(await run("document.getElementById('z1-mini-play-icon').textContent"),'play_arrow');
+await run("document.querySelector('.z1-mini-play').click()");await new Promise(r=>setTimeout(r,100));
+assert(await run('!audio.paused'));assert.equal(await run("document.getElementById('z1-mini-play-icon').textContent"),'pause');
+await run("(async()=>{document.querySelector('.z1-mini-controls button:last-child').click();await audio.play()})()");
+assert.equal(await run('currentTrackIndex'),2);assert.equal(await run("document.getElementById('z1-mini-title').textContent"),'Third song');
+await run("(async()=>{document.querySelector('.z1-mini-controls button:first-child').click();await audio.play()})()");assert.equal(await run('currentTrackIndex'),1);
+await run("setPlayingTheme('modern')");assert(await run("document.getElementById('z1-mini-player').hidden"));
+assert.equal(await run("getComputedStyle(document.querySelector('.header-secondary-actions')).display"),'contents');
+assert.equal(await run("getComputedStyle(document.querySelector('.top-nav')).display"),'flex');
+assert.equal(await run("getComputedStyle(document.querySelector('.z1-header-back')).display"),'none');
+await run("setPlayingTheme('z1');document.querySelector('.z1-mini-track').click()");
+assert(await run("document.getElementById('view-playing').classList.contains('active')&&document.getElementById('z1-mini-player').hidden"));
+console.log('PASS Z1 global theme, original artwork, local library, overflow actions and mini-player playback');
 // A focused theme button must use native Space activation, without toggling playback.
 await run("toggleSettingsMenu();openSettingsSection('customization');document.querySelector('[data-playing-theme=classic]').focus()");
 await command('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
