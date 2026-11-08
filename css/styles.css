@@ -3303,6 +3303,39 @@
 .settings-menu > .app-version { justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); }
 .github-popup-card .app-version { justify-content: center; margin: -6px 0 18px; }
 
+/* Android-inspired category previews belong only to Modern and Classic. */
+body:is([data-theme="modern"], [data-theme="classic"]) :is(#home-grid, #fav-view) .grid-card {
+  background-image: var(--music-preview-image) !important;
+  background-size: cover; background-position: center;
+  border: 1px solid rgba(255,255,255,.16);
+}
+body:is([data-theme="modern"], [data-theme="classic"]) #home-grid .grid-card { height: 150px; }
+body:is([data-theme="modern"], [data-theme="classic"]) :is(#home-grid, #fav-view) .grid-card::before {
+  background: linear-gradient(180deg, rgba(0,0,0,.02) 25%, rgba(0,0,0,.2) 55%, rgba(0,0,0,.85) 100%);
+}
+body:is([data-theme="modern"], [data-theme="classic"]) :is(#home-grid, #fav-view) .grid-card-content { padding-right: 28px; }
+body:is([data-theme="modern"], [data-theme="classic"]) :is(#home-grid, #fav-view) .grid-card::after {
+  content: var(--music-preview-icon); position: absolute; right: 10px; bottom: 10px; z-index: 2;
+  font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 23px; line-height: 1;
+  font-feature-settings: 'liga'; color: rgba(255,255,255,.85); pointer-events: none;
+}
+body:is([data-theme="modern"], [data-theme="classic"]) :is([data-category="songs"], [data-preview-category="songs"]) {
+  --music-preview-image: url('../images/music-previews/songs.png'); --music-preview-icon: 'music_note';
+}
+body:is([data-theme="modern"], [data-theme="classic"]) :is([data-category="albums"], [data-preview-category="albums"]) {
+  --music-preview-image: url('../images/music-previews/albums.png'); --music-preview-icon: 'album';
+}
+body:is([data-theme="modern"], [data-theme="classic"]) [data-category="artists"] {
+  --music-preview-image: url('../images/music-previews/artists.png'); --music-preview-icon: 'person';
+}
+body:is([data-theme="modern"], [data-theme="classic"]) [data-category="playlists"] {
+  --music-preview-image: url('../images/music-previews/playlists.png'); --music-preview-icon: 'queue_music';
+}
+body:is([data-theme="modern"], [data-theme="classic"]) [data-category="favorites"] {
+  --music-preview-image: url('../images/music-previews/favorites.png'); --music-preview-icon: 'favorite';
+  background-position: center 25% !important;
+}
+
 .header-secondary-actions { display: contents; }
 .z1-header-more, .z1-header-back, .z1-mini-player { display: none; }
 
