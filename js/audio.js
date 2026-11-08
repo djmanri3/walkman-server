@@ -706,7 +706,7 @@
         lastSeenPlaylistVersion = playlistVersion;
       }
 
-      const canAnimate = document.getElementById('view-playing').dataset.theme !== 'classic' && !skipAnimation && trackHasLoaded && prevIndex !== index;
+      const canAnimate = document.getElementById('view-playing').dataset.theme === 'modern' && !skipAnimation && trackHasLoaded && prevIndex !== index;
 
       if (canAnimate) {
         const goingForward = index > prevIndex;

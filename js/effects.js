@@ -152,6 +152,32 @@
       }
     }
 
+    function paintAlbumBackground(color) {
+      const bg = $('bg-container');
+      const playing = $('view-playing');
+      const { r, g, b } = color;
+      if (playing.dataset.theme !== 'z1' || !playing.classList.contains('active')) {
+        bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
+        return;
+      }
+      // The original Xperia background spreads the artwork hue across the
+      // whole screen, with a broad glow and tinted edges rather than black.
+      const red = r / 255, green = g / 255, blue = b / 255;
+      const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+      const delta = max - min, light = (max + min) / 2;
+      let hue = 0, saturation = 0;
+      if (delta > 0) {
+        hue = max === red ? ((green - blue) / delta + 6) % 6
+          : max === green ? (blue - red) / delta + 2 : (red - green) / delta + 4;
+        hue *= 60;
+        saturation = delta / (1 - Math.abs(2 * light - 1));
+      }
+      saturation = saturation < .04 ? 0 : Math.min(.68, Math.max(.35, saturation * 1.4));
+      const glow = 22 + max * 8;
+      const tone = brightness => `hsl(${hue.toFixed(1)}, ${(saturation * 100).toFixed(1)}%, ${brightness.toFixed(1)}%)`;
+      bg.style.background = `radial-gradient(ellipse farthest-corner at 50% 45%, ${tone(glow)} 0%, ${tone(glow * .85)} 55%, ${tone(glow * .55)} 100%)`;
+    }
+
     // Color Thief
     const imgCurrent = document.getElementById('img-current');
     imgCurrent.addEventListener('load', function() {
@@ -164,8 +190,7 @@
           visAlbumColor = { r: r, g: g, b: b };
 
           // El fondo SIEMPRE se adapta al color de la carátula, independientemente del modo
-          $('bg-container').style.background = 
-            `radial-gradient(circle at 50% 60%, ${colorHex} 0%, #050505 85%)`;
+          paintAlbumBackground(visAlbumColor);
           
           // Solo el color de acento depende del modo
           if (accentMode === 'dynamic') {
@@ -365,7 +390,7 @@
             const b = Math.min(255, Math.floor(c.b * level));
             const bg = document.getElementById('bg-container');
             if (bg) {
-              bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
+              paintAlbumBackground({ r, g, b });
             }
           }
         } catch (e) {}
@@ -377,7 +402,7 @@
       const c = visAlbumColor || { r: 120, g: 120, b: 120 };
       const bg = document.getElementById('bg-container');
       if (bg) {
-        bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${c.r},${c.g},${c.b}) 0%, #050505 85%)`;
+        paintAlbumBackground(c);
       }
     }
 

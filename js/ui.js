@@ -204,6 +204,8 @@
         document.getElementById('nav-playing').setAttribute('aria-selected', 'false');
         document.getElementById('view-music').classList.add('active');
       }
+      updateZ1Layout();
+      resetBeatGlowBackground();
     }
 
     // Color promedio de la carátula (refleja fielmente cualquier tono, incl. verde)
@@ -268,6 +270,7 @@
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.zoom) === num);
       });
+      updateZ1Layout();
     }
 
     function setZoom(z) {
@@ -314,18 +317,20 @@
     }
 
     function applyPlayingTheme(theme) {
-      const selected = theme === 'classic' ? 'classic' : 'modern';
+      const selected = ['modern', 'classic', 'z1'].includes(theme) ? theme : 'modern';
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.querySelectorAll('[data-playing-theme]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.playingTheme === selected));
       });
       refreshCarouselImages();
+      updateZ1Layout();
+      resetBeatGlowBackground();
     }
 
     function setPlayingTheme(theme) {
       applyPlayingTheme(theme);
-      saveLS('walkman_playing_theme', theme === 'classic' ? 'classic' : 'modern');
+      saveLS('walkman_playing_theme', document.getElementById('view-playing').dataset.theme);
     }
 
     function initPlayingTheme() {
@@ -339,6 +344,20 @@
         `${track ? currentTrackIndex + 1 : 0}/${playlist.length}`;
     }
 
+    function updateZ1Layout() {
+      const view = document.getElementById('view-playing');
+      view.classList.remove('z1-stacked');
+      if (view.dataset.theme !== 'z1' || !view.classList.contains('active')) return;
+      if (!window.matchMedia('(min-aspect-ratio: 6/5)').matches) return;
+      const style = getComputedStyle(view);
+      const available = view.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const cover = document.getElementById('card-current').offsetWidth;
+      const play = view.querySelector('.control-btn.play').offsetWidth;
+      const controls = Math.max(280, play / 1.3 * 3.3 + 86);
+      view.classList.toggle('z1-stacked', cover * 1.32 + parseFloat(style.columnGap) + controls > available);
+    }
+    window.addEventListener('resize', updateZ1Layout);
+
     function applyCarouselZoom(z) {
       const num = Math.max(55, Math.min(175, Number(z) || 100));
       try { document.documentElement.style.setProperty('--carousel-size', String(num / 100)); } catch (e) {}
@@ -346,6 +365,7 @@
       opts.forEach(o => {
         o.classList.toggle('active', Number(o.dataset.czoom) === num);
       });
+      updateZ1Layout();
     }
 
     function setCarouselZoom(z) {
@@ -1424,7 +1444,8 @@
         outgoing.style.zIndex = direction < 0 ? '4' : '2';
         incoming.style.zIndex = direction < 0 ? '3' : '4';
         outgoing.style.transformOrigin = incoming.style.transformOrigin = classic ? 'left center' : 'center';
-        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, backgrounds, progress: 0 };
+        const z1 = document.getElementById('view-playing').dataset.theme === 'z1';
+        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, z1, backgrounds, progress: 0 };
         if (!classic) {
           motion.modernCards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
           backgrounds.forEach(({copy}) => {
@@ -1449,16 +1470,19 @@
           m.modernCards.forEach(({copy,slot}) => {
             const position = slot+m.direction*progress;
             const distance = Math.abs(position);
-            const scale = 1-0.18*Math.min(2,distance);
+            const scale = 1-(m.z1 ? 0.34 : 0.18)*Math.min(2,distance);
             // The cover nearest the center stays opaque, so the artwork
             // behind it does not bleed through while the front order swaps.
             let opacity = distance<=1 ? Math.min(1,1.5-distance) : Math.max(0,(2-distance)*0.5);
+            if (m.z1) opacity = distance <= 1 ? 1 : Math.max(0, 2-distance);
             if (copy===m.incoming && m.index===m.source) opacity = 0;
             if (copy===m.outgoing && m.index!==m.source-m.direction) opacity *= 1-progress;
             copy.style.transformOrigin = 'center';
-            copy.style.transform = `translateX(${position*m.width*0.58}px) scale(${scale})`;
+            copy.style.transform = m.z1
+              ? `translateX(${position*m.width*0.36}px) perspective(${m.width*3}px) rotateY(${-position*32}deg) scale(${scale})`
+              : `translateX(${position*m.width*0.58}px) scale(${scale})`;
             copy.style.opacity = String(opacity);
-            copy.style.filter = `brightness(${1-0.3*Math.min(1,distance)})`;
+            copy.style.filter = `brightness(${1-(m.z1 ? 0.12 : 0.3)*Math.min(1,distance)})`;
             copy.style.zIndex = String(10+Math.round((2-distance)*100));
             const badge = copy.querySelector('.hires-badge');
             if (badge) badge.style.opacity = String(Math.max(0,1-distance));
@@ -1520,7 +1544,7 @@
         if (motion && motion.direction !== direction) clearMotion();
         if (!motion) beginMotion(gesture, direction);
         const distance = Math.abs(dx) / motion.zoom;
-        draw(Math.min(motion.index===motion.source?0.12:0.95, distance/(motion.width*(motion.classic?0.85:0.58))));
+        draw(Math.min(motion.index===motion.source?0.12:0.95, distance/(motion.width*(motion.classic?0.85:motion.z1?0.36:0.58))));
       });
       carousel.addEventListener('pointerup', event => {
         if (!gesture || event.pointerId !== gesture.id) return;

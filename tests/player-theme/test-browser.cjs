@@ -33,7 +33,7 @@ await run(`(()=>{
 await new Promise(r=>setTimeout(r,500));
 assert.equal(await run("document.getElementById('view-playing').dataset.theme"),'modern');
 await run("toggleSettingsMenu();openSettingsSection('customization')");
-assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),2);
+assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),3);
 await run("document.querySelector('[data-playing-theme=classic]').click()");
 assert.equal(await run("document.querySelector('[data-playing-theme=classic]').getAttribute('aria-pressed')"),'true');
 const screenshot=async name=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(artifacts,name+'.png'),Buffer.from(shot.data,'base64'));};
@@ -78,6 +78,72 @@ assert(await run(`!audio.paused&&audio.currentTime>=${before}`));
 assert.equal(await run("getComputedStyle(document.querySelector('#view-playing')).display"),'flex');
 assert(await run("document.querySelector('#img-prev').src===playlist[0].coverUrl&&document.querySelector('#img-next').src===playlist[2].coverUrl"));
 await screenshot('modern');
+// Z1 keeps the shared player while using a portrait Xperia layout.
+await run("setPlayingTheme('z1');playTrack(0)");
+for (const [width,height] of [[1341,772],[390,844],[844,390]]) {
+ await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
+ await new Promise(r=>setTimeout(r,700));
+ const layout=await run(`(()=>{
+  const rect=id=>{const r=document.querySelector(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
+  return {art:rect('#card-current'),title:rect('#track-title'),controls:rect('.controls'),volume:rect('#volume-bar'),progress:rect('#progress-bar'),scroll:document.body.scrollWidth,playing:!audio.paused,album:document.querySelector('#track-album').textContent};
+ })()`);
+ assert(layout.playing);assert.equal(layout.album,'1000 Faces (Single)');
+ assert(layout.scroll<=width+1,'Z1 horizontal overflow');
+ assert(layout.progress.y>=layout.controls.bottom&&layout.progress.y-layout.controls.bottom<=32,'Z1 progress should sit just below transport controls: '+JSON.stringify({width,controls:layout.controls,progress:layout.progress}));
+ for(const id of ['art','title','controls','volume','progress']) {
+  const box=layout[id];assert(box.width>20,id+' hidden');
+  assert(box.x>=0&&box.right<=width+1,id+' outside Z1 screen at '+width);
+  assert(box.y>=0&&box.bottom<=height+1,id+' below Z1 screen at '+width);
+ }
+ if(width/height<1.2) assert(layout.title.bottom<layout.art.y&&layout.art.bottom<layout.controls.y,'Z1 cover overlaps metadata or controls');
+ else assert(layout.art.right<layout.title.x,'Z1 landscape must put the cover to the left of the metadata');
+ // Scale until the cover fills the screen, then keep all player elements
+ // separate by reflowing large covers into their own row.
+ for(const zoom of [55,85,100,125,150,175]) {
+  await run(`setCarouselZoom(${zoom})`);
+  await new Promise(r=>setTimeout(r,650));
+  const sizes=await run("({cover:document.getElementById('card-current').offsetWidth,button:document.querySelector('.control-btn.play').offsetWidth})");
+  assert(Math.abs(sizes.cover-Math.min(layout.art.width*zoom/100,width-32))<=1,'Z1 cover zoom does not follow its setting at '+zoom+'% on '+width);
+  if(zoom===55) layout.buttonWidth=sizes.button;
+  else assert.equal(sizes.button,layout.buttonWidth,'Cover zoom resized Z1 transport controls');
+  const overlaps=await run(`(()=>{
+   const rect=el=>el.getBoundingClientRect();
+   const covers=[...document.querySelectorAll('#view-playing .art-card')].filter(el=>getComputedStyle(el).display!=='none').map(rect);
+   const content=[document.querySelector('.track-header-wrapper'),document.querySelector('.controls-wrapper')].map(rect);
+   return covers.some(a=>content.some(b=>Math.min(a.right,b.right)>Math.max(a.left,b.left)+1&&Math.min(a.bottom,b.bottom)>Math.max(a.top,b.top)+1));
+  })()`);
+  assert.equal(overlaps,false,'Z1 covers overlap text or controls at '+zoom+'% on '+width);
+  await run("document.querySelector('#view-playing .controls-wrapper').scrollIntoView({block:'nearest'})");
+  assert(await run("(()=>{const r=document.querySelector('#view-playing .controls-wrapper').getBoundingClientRect();return r.y>=0&&r.bottom<=innerHeight+1})()"),'Z1 controls cannot be reached at '+zoom+'%');
+ }
+ await screenshot('z1-large-'+width);
+ await run("setCarouselZoom(100);document.getElementById('view-playing').scrollTop=0");
+ await screenshot('z1-'+width);
+}
+assert.equal(await run("getComputedStyle(document.querySelector('#view-playing .control-btn')).borderTopColor"),'rgb(255, 255, 255)');
+assert.equal(await run("getComputedStyle(document.querySelector('#track-album')).display"),'block');
+// Z1 may add a translucent texture, but cannot cover the shared adaptive color.
+assert.equal(await run("getComputedStyle(document.getElementById('view-playing')).backgroundColor"),'rgba(0, 0, 0, 0)');
+assert.equal(await run("getComputedStyle(document.getElementById('view-playing')).backgroundImage.includes('radial-gradient')"),false);
+const z1Background=await run("document.getElementById('bg-container').style.backgroundImage");
+assert(z1Background.includes('50% 45%') && z1Background.includes('100%'),'Z1 should tint the whole background');
+assert(!z1Background.includes('rgb(5, 5, 5)'),'Z1 edges should retain the artwork hue');
+await run("switchTab('music')");
+assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('circle'));
+await run("switchTab('playing')");
+assert.equal(await run("document.getElementById('bg-container').style.backgroundImage"),z1Background);
+await run("setAccentMode('custom')");
+await run("document.getElementById('card-next').click()");await new Promise(r=>setTimeout(r,800));
+assert.equal(await run('currentTrackIndex'),1);
+assert.notEqual(await run("document.getElementById('bg-container').style.backgroundImage"),z1Background);
+assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('50% 45%'));
+// Beat glow must use the same Z1 background painter and restore its palette.
+await run("paintAlbumBackground({r:30,g:96,b:100})");
+assert((await run("document.getElementById('bg-container').style.backgroundImage")).includes('50% 45%'));
+await screenshot('z1-background-teal');
+await run("resetBeatGlowBackground();setAccentMode('dynamic')");
+assert(await run("document.querySelector('#img-prev').src===playlist[0].coverUrl&&document.querySelector('#img-next').src===playlist[2].coverUrl"));
+console.log('PASS Z1 layouts, white controls, artwork navigation and adaptive background');
 // A focused theme button must use native Space activation, without toggling playback.
 await run("toggleSettingsMenu();openSettingsSection('customization');document.querySelector('[data-playing-theme=classic]').focus()");
 await command('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
@@ -103,6 +169,12 @@ assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),
 assert.equal(await run('isPlayingHiResEnabled()'),false,'Hi-Res preference should survive reload');
 assert.equal(await run("document.getElementById('playing-hires-btn').getAttribute('aria-pressed')"),'false');
 console.log('PASS Hi-Res cover toggle, ordinary tracks and saved preference');
+await run("setPlayingTheme('z1')");
+await command('Page.reload');
+for(let i=0;i<100;i++){if(await run("document.querySelector('#view-playing')?.dataset.theme==='z1'"))break;await new Promise(r=>setTimeout(r,100));}
+assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),'z1');
+assert.equal(await run("document.querySelector('[data-playing-theme=z1]').getAttribute('aria-pressed')"),'true');
+console.log('PASS saved Z1 preference');
 await run("applyPlayingTheme('invalid')");
 assert.equal(await run("document.querySelector('#view-playing').dataset.theme"),'modern');
 console.log('PASS theme switching, playback, queue metadata, keyboard and saved preference');

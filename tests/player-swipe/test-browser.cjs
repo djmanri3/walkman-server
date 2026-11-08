@@ -73,7 +73,7 @@ async function drag(dx,dy=0,{cancel=false,start,verifyMotion=false}={}) {
  await command('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});
  await wait(700);
 }
-for(const theme of ['modern','classic']) {
+for(const theme of ['modern','classic','z1']) {
  await run(`setPlayingTheme('${theme}');playTrack(0)`);await wait(700);
  await drag(-110,0,{verifyMotion:true});
  assert.equal(await run('currentTrackIndex'),1,theme+' left swipe must advance exactly once');
