@@ -26,6 +26,7 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       scrollbar-width: thin;
       scrollbar-color: color-mix(in srgb, var(--accent-color) 55%, transparent) rgba(255, 255, 255, 0.06);
@@ -3223,7 +3224,7 @@
 }
 #view-playing[data-theme="z1"] .control-btn.play { width: calc(var(--z1-button-size) * 1.3); height: calc(var(--z1-button-size) * 1.3); }
 #view-playing[data-theme="z1"] .control-btn span { font-size: clamp(32px, 5vw, 44px); }
-#view-playing[data-theme="z1"] .control-btn.play span { font-size: clamp(42px, 6vw, 56px); }
+#view-playing[data-theme="z1"] .control-btn.play span { font-size: min(56px, calc(var(--z1-button-size) * .72)); line-height: 1; }
 #view-playing[data-theme="z1"] .control-btn:not(.play) span,
 .z1-mini-controls button:not(.z1-mini-play) span { display: none; }
 #view-playing[data-theme="z1"] .control-btn:not(.play)::after,
@@ -3401,6 +3402,13 @@ body[data-theme="z1"] .z1-mini-player:not([hidden]) { display: flex; position: f
 .z1-mini-controls button { display: flex; justify-content: center; align-items: center; border: 2px solid white; border-radius: 50%; width: 44px; height: 44px; }
 .z1-mini-controls .z1-mini-play { width: 56px; height: 56px; }
 .z1-mini-play span { font-size: 38px; }
+@media (min-width: 800px) {
+  body[data-theme="z1"] #list-view .menu-header { font-size: 24px; }
+  body[data-theme="z1"] #list-view .list-item { min-height: 64px; padding: 8px; gap: 12px; }
+  body[data-theme="z1"] #list-view .list-item img { width: 44px; height: 44px; }
+  body[data-theme="z1"] #list-view .list-item-title { font-size: 17px; }
+  body[data-theme="z1"] #list-view .list-item-sub { font-size: 13px; }
+}
 @media (max-width: 799px) {
   body[data-theme="z1"] { --z1-mini-height: 68px; }
   body[data-theme="z1"] header { height: 60px; padding: 0 12px; gap: 12px; }
@@ -3418,7 +3426,7 @@ body[data-theme="z1"] .z1-mini-player:not([hidden]) { display: flex; position: f
   .z1-mini-controls { padding: 0 10px; gap: 8px; }
   .z1-mini-controls button { width: 32px; height: 32px; }
   .z1-mini-controls .z1-mini-play { width: 42px; height: 42px; }
-  .z1-mini-play span { font-size: 30px; }
+  .z1-mini-play span { font-size: 24px; }
 }
 
 /* Center desktop navigation independently of the side controls. */
