@@ -78,16 +78,17 @@
     async function handleImageFallback(el, item) {
       if (!el) return;
       el.onerror = null;
-      if (!item) { el.src = defaultPlaceholder; return; }
+      if (!item) { handleArtworkError(el); return; }
       if (item.Type !== 'MusicArtist' || el.dataset.extTried) {
-        el.src = defaultPlaceholder;
+        handleArtworkError(el);
         return;
       }
       el.dataset.extTried = '1';
       el.referrerPolicy = 'no-referrer';
       const name = String(item.Name || item.AlbumArtist || '').trim();
       const url = await fetchExternalArtistImage(name);
-      el.src = url || defaultPlaceholder;
+      if (url) { el.onerror = () => handleArtworkError(el); el.src = url; }
+      else handleArtworkError(el);
     }
 
     function hasServerImage(item) {
@@ -108,7 +109,7 @@
     function applyArtistImageFallback(imgEl, item) {
       if (!imgEl || !item) return;
       if (item.Type !== 'MusicArtist') {
-        imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = defaultPlaceholder; };
+        imgEl.onerror = () => handleArtworkError(imgEl);
         return;
       }
       if (hasServerImage(item)) {
@@ -120,7 +121,7 @@
       fetchExternalArtistImage(name).then(url => {
         if (url && imgEl) {
           imgEl.dataset.extTried = '1';
-          imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = defaultPlaceholder; };
+          imgEl.onerror = () => handleArtworkError(imgEl);
           imgEl.src = url;
         }
       }).catch(() => {});

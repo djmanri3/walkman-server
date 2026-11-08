@@ -375,7 +375,7 @@
       document.getElementById('z1-mini-artist').textContent = (track.Artists || []).join(', ') || track.AlbumArtist || '';
       const img = document.getElementById('z1-mini-cover');
       const url = getEmbyImageUrl(track);
-      if (img.getAttribute('src') !== url) img.src = url;
+      if (img.getAttribute('src') !== url) setCardImg(img, url);
       document.getElementById('z1-mini-play-icon').textContent = audio.paused ? 'play_arrow' : 'pause';
     }
 
@@ -394,9 +394,6 @@
       ['timeupdate', 'durationchange', 'seeking'].forEach(event => audio.addEventListener(event, () => {
         if (!document.getElementById('z1-mini-player').hidden) updateZ1MiniProgress();
       }));
-      document.getElementById('z1-mini-cover').onerror = event => {
-        if (event.target.src !== defaultPlaceholder) event.target.src = defaultPlaceholder;
-      };
       document.addEventListener('click', event => {
         if (!event.target.closest('header')) closeZ1HeaderMenu();
       });

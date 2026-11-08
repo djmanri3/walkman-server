@@ -76,7 +76,19 @@
     const DOM = {};
     function $(id) { return DOM[id] || (DOM[id] = document.getElementById(id)); }
 
-    const defaultPlaceholder = "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#282828"/><circle cx="150" cy="130" r="60" fill="none" stroke="#535353" stroke-width="4"/><circle cx="150" cy="130" r="20" fill="#535353"/><path d="M165 130 L165 70 Q165 55 180 50 L180 60 Q170 65 170 70 L170 125" fill="#535353"/><rect x="130" y="210" width="40" height="6" rx="3" fill="#535353"/><rect x="110" y="222" width="80" height="6" rx="3" fill="#404040"/></svg>`);
+    const defaultPlaceholder = new URL('images/default-album-cover.png', document.baseURI).href;
+    const emergencyPlaceholder = "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#282828"/><circle cx="150" cy="130" r="60" fill="none" stroke="#535353" stroke-width="4"/><circle cx="150" cy="130" r="20" fill="#535353"/><path d="M165 130 L165 70 Q165 55 180 50 L180 60 Q170 65 170 70 L170 125" fill="#535353"/><rect x="130" y="210" width="40" height="6" rx="3" fill="#535353"/><rect x="110" y="222" width="80" height="6" rx="3" fill="#404040"/></svg>`);
+
+    // The packaged image is the primary fallback. The embedded image is a
+    // last resort if assets are unavailable, without retrying a failed URL.
+    function handleArtworkError(image) {
+      const defaultFailed = image.src === defaultPlaceholder;
+      image.onerror = null;
+      if (defaultFailed) { image.src = emergencyPlaceholder; return; }
+      image.onerror = () => handleArtworkError(image);
+      if (defaultPlaceholder.startsWith('file:')) image.removeAttribute('crossorigin');
+      image.src = defaultPlaceholder;
+    }
 
     function showToast(msg, type) {
       const toast = document.getElementById('context-toast');
@@ -103,7 +115,7 @@
     function renderMediaRow(element, imageUrl, title, subtitle, hiRes = false) {
       element.innerHTML = '<img loading="lazy"><div class="list-item-info"><div class="list-item-title"></div><div class="list-item-sub"></div></div><button class="list-item-more"><span class="material-icons">more_vert</span></button>';
       const image = element.querySelector('img');
-      image.onerror = () => { image.onerror = null; image.src = defaultPlaceholder; };
+      image.onerror = () => handleArtworkError(image);
       image.src = imageUrl;
       const titleElement = element.querySelector('.list-item-title');
       titleElement.textContent = title || '';
