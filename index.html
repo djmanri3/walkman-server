@@ -60,6 +60,16 @@
       <button class="music-only music-header-sort" type="button" onclick="toggleMusicLibrarySort()" data-i18n-title="sortBy" aria-label="Ordenar por" aria-expanded="false" hidden><span class="material-icons">sort</span></button>
       <div class="header-secondary-actions" onclick="closeZ1HeaderMenu()">
       <span class="material-icons music-only music-home-action" onclick="refreshMusicHome()" data-i18n-title="musicRefreshHome" role="button" tabindex="0">refresh</span>
+      <span class="material-icons music-only" id="music-albums-view-action" onclick="toggleMusicAlbumsGrid()" role="button" tabindex="0" hidden>grid_view</span>
+      <label class="music-only music-grid-columns-control" id="music-albums-columns-control" for="music-albums-columns" onclick="event.stopPropagation()" hidden>
+        <span class="material-icons" aria-hidden="true">view_column</span>
+        <span data-i18n="musicGridColumns">Columns</span>
+        <select id="music-albums-columns" onchange="setMusicAlbumsColumns(this.value)">
+          <option value="auto" data-i18n="musicGridAuto">Auto</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </label>
       <span class="material-icons music-only" onclick="openMusicLyrics()" data-i18n-title="lyrics" role="button" tabindex="0">menu_book</span>
       <span class="material-icons" onclick="toggleVisualizerView()" title="Visualizador" data-i18n-title="visualizer" role="button" tabindex="0" aria-label="Visualizador">blur_on</span>
       <span class="material-icons" id="eq-btn" onclick="toggleEqualizer()" title="Mejoras de Sonido / Ecualizador" data-i18n-title="soundEnhancements" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Mejoras de Sonido / Ecualizador">equalizer</span>

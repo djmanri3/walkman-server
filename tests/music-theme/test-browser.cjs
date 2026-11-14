@@ -61,11 +61,39 @@ for(const [width,height] of [[1341,772],[844,390],[798,399],[390,844],[320,640],
  assert(await run("getComputedStyle(document.getElementById('card-prev')).display==='none' && getComputedStyle(document.getElementById('card-next')).display==='none'"));
  assert.equal(await run("getComputedStyle(document.querySelector('.volume-container')).display"),'none');
  const headerAlignment=await run("(()=>{const a=document.querySelector('.header-search').getBoundingClientRect(),b=document.querySelector('.z1-header-more').getBoundingClientRect();return {search:a.top+a.height/2,more:b.top+b.height/2,width:a.width,height:a.height}})()");
- assert(Math.abs(headerAlignment.search-headerAlignment.more)<.5 && headerAlignment.width===32 && headerAlignment.height===44,'Search is misaligned at '+width);
+ assert(Math.abs(headerAlignment.search-headerAlignment.more)<.5 && headerAlignment.width===(width<=600?44:32) && headerAlignment.height===(width<=600?48:44),'Search is misaligned at '+width);
  assert(await run('!audio.paused'),'Theme changed playback');
  await screenshot('music-'+width);
  console.log('PASS Music layout',width,height);
 }
+await run(`(()=>{
+ document.documentElement.style.setProperty('--wm-inset-top','28px');
+ document.documentElement.style.setProperty('--wm-inset-bottom','24px');
+ const style=document.createElement('style');style.id='android-test-safe-area';style.textContent='body{padding-top:28px;padding-bottom:24px}';document.head.appendChild(style);
+})()`);
+for(const [width,height] of [[399,798],[360,640],[798,399]]) {
+ await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+ await new Promise(r=>setTimeout(r,300));
+ assert(await run(`(()=>{
+  const playing=document.getElementById('view-playing'),header=document.querySelector('header').getBoundingClientRect();
+  const cover=document.getElementById('card-current').getBoundingClientRect(),controls=document.querySelector('.controls').getBoundingClientRect();
+  return document.querySelector('.z1-header-back').getBoundingClientRect().top>=28
+   && cover.top>=header.bottom-1 && controls.bottom<=innerHeight-24+1 && playing.scrollHeight<=playing.clientHeight+2;
+ })()`),'Android player overlaps system bars or needs vertical scrolling at '+width+'x'+height);
+}
+await command('Emulation.setDeviceMetricsOverride',{width:399,height:798,deviceScaleFactor:1,mobile:true});
+await run("navigateMusicTheme('Songs')");
+assert(await run(`(()=>{
+ const view=document.getElementById('view-music').getBoundingClientRect(),tabs=document.getElementById('music-library-tabs').getBoundingClientRect(),mini=document.getElementById('z1-mini-player').getBoundingClientRect();
+ const rail=getComputedStyle(document.getElementById('view-music'),'::-webkit-scrollbar-track');
+ return Math.abs(view.top-tabs.bottom)<1 && Math.abs(view.bottom-parseFloat(rail.marginBottom)-mini.top)<1
+  && view.bottom>=mini.bottom-1
+  && document.getElementById('z1-mini-cover').getBoundingClientRect().bottom<=innerHeight-24+1;
+})()`),'Android library has duplicate safe-area gaps or an obscured mini player');
+await run("document.querySelector('.z1-header-more').click()");
+assert(await run("document.querySelector('.header-secondary-actions').getBoundingClientRect().bottom<=innerHeight-24"),'Android overflow menu runs under the navigation bar');
+await run("closeZ1HeaderMenu();navigateMusicTheme('home');switchTab('playing');document.getElementById('android-test-safe-area').remove();document.documentElement.style.removeProperty('--wm-inset-top');document.documentElement.style.removeProperty('--wm-inset-bottom')");
+console.log('PASS Android safe areas, portrait/landscape player, library alignment and touch controls');
 await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
 assert.equal(await run("document.getElementById('emby-modal').style.display"),'none','Startup modal unexpectedly covers the player');
 await run("document.getElementById('music-track-favorite').click()");await new Promise(r=>setTimeout(r,100));
@@ -147,6 +175,42 @@ for(const category of ['Albums','Artists','Playlists','Songs']) {
  assert.equal(await run("getComputedStyle(document.querySelector('#list-view > .back-btn')).display"),'none');
  assert((await run("document.querySelectorAll('#items-container .music-media-row').length"))>0);
  assert(await run("document.querySelector('#items-container .list-item').getBoundingClientRect().top >= document.getElementById('music-library-tabs').getBoundingClientRect().bottom-1"),'Tabs obscure the first row in '+category);
+ if(category==='Albums') {
+  assert.equal(await run("document.getElementById('music-albums-view-action').title"),'Show grid');
+  await run("document.querySelector('.z1-header-more').click()");
+  assert(await run("!document.getElementById('music-albums-view-action').hidden"));
+  await run("document.getElementById('music-albums-view-action').click()");
+  assert.equal(await run("getComputedStyle(document.getElementById('items-container')).display"),'grid');
+  assert.equal(await run("document.getElementById('music-albums-view-action').title"),'Show list');
+  assert(await run(`(()=>{
+   const rows=[...document.querySelectorAll('#items-container .list-item')];
+   const a=rows[0].getBoundingClientRect(),b=rows[1].getBoundingClientRect(),image=rows[0].querySelector('img').getBoundingClientRect();
+   return Math.abs(a.top-b.top)<1 && b.left>a.left && Math.abs(image.width-image.height)<1;
+  })()`),'Albums grid does not show square covers in columns');
+  await screenshot('music-albums-grid');
+  assert(await run("!document.getElementById('music-albums-columns-control').hidden"));
+  await run("document.querySelector('.z1-header-more').click();document.getElementById('music-albums-columns').click()");
+  assert(await run("document.querySelector('header').classList.contains('z1-actions-open')"),'Column selector closes the overflow menu');
+  for(const columns of [1,3,6]) {
+   await run(`document.getElementById('music-albums-columns').value='${columns}';document.getElementById('music-albums-columns').dispatchEvent(new Event('change',{bubbles:true}))`);
+   assert.equal(await run("getComputedStyle(document.getElementById('items-container')).gridTemplateColumns.split(' ').length"),columns);
+   assert.equal(await run("loadLS('walkman_music_albums_columns')"),String(columns));
+  }
+  await run("setMusicAlbumsColumns('auto')");
+  assert.equal(await run("getComputedStyle(document.getElementById('items-container')).gridTemplateColumns.split(' ').length"),2,'Automatic columns no longer adapt to the viewport');
+  await run('setMusicAlbumsColumns(3);closeZ1HeaderMenu()');
+  await screenshot('music-albums-three-columns');
+  await run('toggleMusicAlbumsGrid()');
+  assert(await run("document.getElementById('music-albums-columns-control').hidden"));
+  assert.equal(await run("getComputedStyle(document.getElementById('items-container')).display"),'flex');
+  await run('toggleMusicAlbumsGrid()');
+  assert.equal(await run("document.getElementById('music-albums-columns').value"),'3');
+  assert.equal(await run("loadLS('walkman_music_albums_grid')"),'on');
+ } else {
+  assert(await run("document.getElementById('music-albums-view-action').hidden"),'Albums grid option leaked into '+category);
+  assert(await run("document.getElementById('music-albums-columns-control').hidden"),'Columns selector leaked into '+category);
+  assert(await run("!document.body.classList.contains('music-albums-grid')"));
+ }
  if(category==='Artists')assert((await run("document.querySelectorAll('#items-container .music-row-placeholder').length"))>0,'Missing artist initials');
  if(category==='Playlists')assert.equal(await run("document.querySelector('#items-container .music-row-subtitle').textContent"),'2 songs');
  if(category==='Songs') {
@@ -200,9 +264,11 @@ await run(`(async()=>{
 assert.equal(await run('currentCategory'),'Albums');
 assert(await run("currentCategoryItems.every(item=>item.Type==='MusicAlbum')"),'A late songs response overwrote the Albums tab');
 await run("navigateMusicTheme('Albums')");
+assert.equal(await run("getComputedStyle(document.getElementById('items-container')).display"),'grid','Saved Albums grid preference was lost');
 await run("document.querySelector('#items-container .list-item').click()");
 for(let i=0;i<100;i++){if(await run("document.body.classList.contains('music-detail-open') && !!subItems"))break;await new Promise(r=>setTimeout(r,30));}
 assert(await run("!document.getElementById('music-detail-header').hidden"));
+assert(await run("document.getElementById('music-albums-view-action').hidden"),'Grid toggle must not appear inside an album');
 assert.equal(await run("getComputedStyle(document.querySelector('.music-row-number')).display"),'block');
 await screenshot('music-album-detail');
 await run("document.querySelector('.z1-header-back').click()");
@@ -215,6 +281,7 @@ await screenshot('music-favorites-songs');
 await run("loadFavorites('Albums')");assert.equal(await run("document.querySelector('[data-music-favorites=Albums]').getAttribute('aria-selected')"),'true');
 await screenshot('music-favorites-albums');
 await run("setPlayingTheme('classic')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-albums-view-action')).display"),'none','Music grid action leaked into Classic');
 assert.equal(await run("getComputedStyle(document.getElementById('music-library-tabs')).display"),'none');
 assert.notEqual(await run("getComputedStyle(document.querySelector('#list-view > .back-btn')).display"),'none');
 await run("setPlayingTheme('music');navigateMusicTheme('home')");
@@ -231,7 +298,8 @@ assert(await run(`(()=>{
  const view=document.getElementById('view-music').getBoundingClientRect();
  const tabs=document.getElementById('music-library-tabs').getBoundingClientRect();
  const mini=document.getElementById('z1-mini-player').getBoundingClientRect();
- return view.top>=tabs.bottom && view.bottom<=mini.top;
+ const rail=getComputedStyle(document.getElementById('view-music'),'::-webkit-scrollbar-track');
+ return view.top>=tabs.bottom && view.bottom-parseFloat(rail.marginBottom)<=mini.top+1;
 })()`),'Library scrollbar extends underneath the fixed tabs or mini player');
 assert(await run(`(()=>{
  const view=document.getElementById('view-music');

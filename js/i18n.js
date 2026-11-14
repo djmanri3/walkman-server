@@ -3,6 +3,8 @@
     const I18N = {
       en: {
         musicMyLibrary: "My Library",
+        musicShowGrid: "Show grid", musicShowList: "Show list",
+        musicGridColumns: "Columns", musicGridAuto: "Auto",
         musicRefreshHome: "Refresh library",
         musicOneTrack: "{count} song",
         musicTracks: "{count} songs",
@@ -98,6 +100,8 @@
       },
       es: {
         musicMyLibrary: "Mi biblioteca",
+        musicShowGrid: "Mostrar cuadrícula", musicShowList: "Mostrar lista",
+        musicGridColumns: "Columnas", musicGridAuto: "Automático",
         musicRefreshHome: "Actualizar biblioteca",
         musicOneTrack: "{count} canción",
         musicTracks: "{count} canciones",
@@ -193,6 +197,8 @@
       },
       fr: {
         musicMyLibrary: "Ma bibliothèque",
+        musicShowGrid: "Afficher la grille", musicShowList: "Afficher la liste",
+        musicGridColumns: "Colonnes", musicGridAuto: "Auto",
         musicRefreshHome: "Actualiser la bibliothèque",
         musicOneTrack: "{count} morceau",
         musicTracks: "{count} morceaux",
@@ -276,6 +282,8 @@
       },
       de: {
         musicMyLibrary: "Meine Bibliothek",
+        musicShowGrid: "Raster anzeigen", musicShowList: "Liste anzeigen",
+        musicGridColumns: "Spalten", musicGridAuto: "Automatisch",
         musicRefreshHome: "Bibliothek aktualisieren",
         musicOneTrack: "{count} Titel",
         musicTracks: "{count} Titel",
@@ -358,6 +366,8 @@
       },
       it: {
         musicMyLibrary: "La mia libreria",
+        musicShowGrid: "Mostra griglia", musicShowList: "Mostra elenco",
+        musicGridColumns: "Colonne", musicGridAuto: "Automatico",
         musicRefreshHome: "Aggiorna libreria",
         musicOneTrack: "{count} brano",
         musicTracks: "{count} brani",
@@ -440,6 +450,8 @@
       },
       pt: {
         musicMyLibrary: "A minha biblioteca",
+        musicShowGrid: "Mostrar grelha", musicShowList: "Mostrar lista",
+        musicGridColumns: "Colunas", musicGridAuto: "Automático",
         musicRefreshHome: "Atualizar biblioteca",
         musicOneTrack: "{count} música",
         musicTracks: "{count} músicas",

@@ -154,6 +154,24 @@ function toggleMusicLibrarySort() {
   if (open) document.getElementById('list-sort-select').focus();
 }
 
+function toggleMusicAlbumsGrid() {
+  if (document.body.dataset.theme !== 'music' || currentCategory !== 'Albums' || subItems || favoritesViewKind) return;
+  saveLS('walkman_music_albums_grid', loadLS('walkman_music_albums_grid') === 'on' ? 'off' : 'on');
+  closeZ1HeaderMenu();
+  updateMusicLibraryChrome();
+}
+
+function getMusicAlbumsColumns() {
+  const columns = Number(loadLS('walkman_music_albums_columns'));
+  return Number.isInteger(columns) && columns >= 1 && columns <= 6 ? columns : 0;
+}
+
+function setMusicAlbumsColumns(value) {
+  const columns = Number(value);
+  saveLS('walkman_music_albums_columns', Number.isInteger(columns) && columns >= 1 && columns <= 6 ? String(columns) : 'auto');
+  updateMusicLibraryChrome();
+}
+
 let musicLibraryViewKey = '';
 let musicFavoriteCollection = { kind: '', items: null };
 let musicLibraryRequestId = 0;
@@ -183,6 +201,20 @@ function updateMusicLibraryChrome() {
   const detail = library && list && navStack.at(-1)?.type === 'subitems';
   const favorites = library && !detail && (!!favoritesViewKind || favoriteMenu);
   const category = favorites ? 'Favorites' : currentCategory || navStack.find(entry => entry.type === 'category')?.category;
+  const albums = library && !detail && !favorites && category === 'Albums';
+  const grid = loadLS('walkman_music_albums_grid') === 'on';
+  document.body.classList.toggle('music-albums-grid', albums && grid);
+  const albumsAction = document.getElementById('music-albums-view-action');
+  const albumsActionLabel = grid ? 'musicShowList' : 'musicShowGrid';
+  albumsAction.hidden = !albums;
+  albumsAction.textContent = grid ? 'view_list' : 'grid_view';
+  albumsAction.dataset.i18nTitle = albumsActionLabel;
+  albumsAction.title = t(albumsActionLabel);
+  albumsAction.setAttribute('aria-label', t(albumsActionLabel));
+  const columns = getMusicAlbumsColumns();
+  document.getElementById('music-albums-columns-control').hidden = !albums || !grid;
+  document.getElementById('music-albums-columns').value = columns ? String(columns) : 'auto';
+  document.getElementById('items-container').style.setProperty('--music-album-columns', columns ? `repeat(${columns}, minmax(0, 1fr))` : 'repeat(auto-fill, minmax(140px, 1fr))');
   document.body.classList.toggle('music-library-open', library);
   document.body.classList.toggle('music-detail-open', detail);
   document.body.classList.toggle('music-favorites-open', favorites);
