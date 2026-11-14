@@ -98,6 +98,7 @@
       applySavedAudioSettings();
       restoreAccentSettings();
       initBeatGlow();
+      initProgressParticles();
       initXpspLeds();
       initFullscreen();
       fitHeader();

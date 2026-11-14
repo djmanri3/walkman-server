@@ -108,6 +108,12 @@ docker-compose up -d
 - Add default image when music haven't album cover
 - Add new Z1 theme change all of UI Playing and My Music tab
 
+### Version 3.1
+- Add progress bar particles to Modern, Classic and Z1, including the visualizer and Z1 mini-player
+- Add album-based or custom particle colors, plus RGB rainbow, color cycle, breathing and wave effects
+- Add round and square particle shapes and save effect preferences
+- Keep the particle preview running in Settings and smooth animation as playback advances
+
 # Bugs
 - Tell me :)
 

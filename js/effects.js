@@ -218,8 +218,7 @@
         // Restaurar dinámico: el próximo load de imgCurrent lo recalculará
         try {
           if (imgCurrent.complete && imgCurrent.naturalWidth !== 0) {
-            const c = ColorThief.getColorSync(imgCurrent);
-            const { r, g, b } = c.rgb();
+            const { r, g, b } = dominantFromCanvas(imgCurrent);
             document.documentElement.style.setProperty('--accent-color', `rgb(${r}, ${g}, ${b})`);
           }
         } catch (e) {}
@@ -255,6 +254,243 @@
       } catch (e) {}
       document.getElementById('accent-color-input').value = customAccentHex;
       applyAccent();
+    }
+
+    // ---- Partículas sobre el tramo reproducido (todos los temas) ----
+    let progressParticlesEnabled = false;
+    let progressParticlesShape = 'round';
+    let progressParticlesColorMode = 'dynamic';
+    let progressParticlesCustomColor = '#aa00ff';
+    let progressParticlesRgbEnabled = false;
+    let progressParticlesRgbEffect = 'rainbow';
+    const progressParticlesRgbEffects = ['rainbow', 'cycle', 'breathing', 'wave'];
+    let progressParticlesFrame = null;
+    let progressParticlesTime = 0;
+    const progressParticleLayers = [];
+
+    function setProgressParticlesShape(shape) {
+      if (shape !== 'round' && shape !== 'square') return;
+      progressParticlesShape = shape;
+      saveLS('walkman_particles_shape', shape);
+      syncProgressParticles();
+    }
+
+    function toggleProgressParticlesRgb() {
+      progressParticlesRgbEnabled = !progressParticlesRgbEnabled;
+      saveLS('walkman_particles_rgb', progressParticlesRgbEnabled ? 'on' : 'off');
+      syncProgressParticles();
+    }
+
+    function setProgressParticlesRgbEffect(effect) {
+      if (!progressParticlesRgbEffects.includes(effect)) return;
+      progressParticlesRgbEffect = effect;
+      saveLS('walkman_particles_rgb_effect', effect);
+      syncProgressParticles();
+    }
+
+    function getProgressParticlesRgb(now, position) {
+      const seconds = now / 1000;
+      let hue = seconds * 30;
+      let brightness = 1;
+      if (progressParticlesRgbEffect === 'rainbow') hue += position * 360;
+      if (progressParticlesRgbEffect === 'breathing') {
+        brightness = .15 + .85 * (.5 - .5 * Math.cos(seconds * Math.PI / 2));
+      }
+      if (progressParticlesRgbEffect === 'wave') {
+        hue += position * 180;
+        brightness = .15 + .85 * Math.pow(.5 + .5 * Math.cos(position * Math.PI * 2 - seconds * 2.5), 3);
+      }
+      return { color: `hsl(${hue % 360}, 100%, 65%)`, brightness };
+    }
+
+    function setProgressParticlesColorMode(mode) {
+      if (mode !== 'dynamic' && mode !== 'custom') return;
+      progressParticlesColorMode = mode;
+      saveLS('walkman_particles_color_mode', mode);
+      syncProgressParticles();
+    }
+
+    function setProgressParticlesCustomColor(color) {
+      if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+      progressParticlesCustomColor = color;
+      saveLS('walkman_particles_custom_color', color);
+      syncProgressParticles();
+    }
+
+    function getProgressParticlesColor() {
+      if (progressParticlesColorMode === 'custom') return progressParticlesCustomColor;
+      const { r, g, b } = visAlbumColor;
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function toggleProgressParticles() {
+      progressParticlesEnabled = !progressParticlesEnabled;
+      saveLS('walkman_progress_particles', progressParticlesEnabled ? 'on' : 'off');
+      syncProgressParticles();
+    }
+
+    function clearProgressParticles() {
+      if (progressParticlesFrame !== null) cancelAnimationFrame(progressParticlesFrame);
+      progressParticlesFrame = null;
+      progressParticlesTime = 0;
+      progressParticleLayers.forEach(layer => {
+        layer.particles.length = 0;
+        layer.emission = 0;
+        layer.canvas.hidden = true;
+        layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+      });
+    }
+
+    function syncProgressParticles() {
+      const btn = document.getElementById('progress-particles-btn');
+      btn.classList.toggle('on', progressParticlesEnabled);
+      btn.setAttribute('aria-pressed', String(progressParticlesEnabled));
+      document.getElementById('progress-particles-color-options').style.display = progressParticlesEnabled ? '' : 'none';
+      ['round', 'square'].forEach(shape => {
+        const option = document.getElementById('particles-shape-' + shape);
+        option.classList.toggle('active', progressParticlesShape === shape);
+        option.setAttribute('aria-pressed', String(progressParticlesShape === shape));
+      });
+      const custom = progressParticlesEnabled && progressParticlesColorMode === 'custom';
+      document.getElementById('particles-custom-color-row').style.display = custom && !progressParticlesRgbEnabled ? 'flex' : 'none';
+      document.getElementById('particles-rgb-options').style.display = custom ? 'flex' : 'none';
+      const rgbBtn = document.getElementById('particles-rgb-btn');
+      rgbBtn.classList.toggle('on', progressParticlesRgbEnabled);
+      rgbBtn.setAttribute('aria-pressed', String(progressParticlesRgbEnabled));
+      document.getElementById('particles-rgb-effect-row').style.display = custom && progressParticlesRgbEnabled ? 'flex' : 'none';
+      document.getElementById('particles-rgb-effect').value = progressParticlesRgbEffect;
+      ['dynamic', 'custom'].forEach(mode => {
+        const option = document.getElementById('particles-color-' + mode);
+        option.classList.toggle('active', progressParticlesColorMode === mode);
+        option.setAttribute('aria-pressed', String(progressParticlesColorMode === mode));
+      });
+      document.getElementById('particles-color-input').value = progressParticlesCustomColor;
+      if (!progressParticlesEnabled || document.hidden) {
+        clearProgressParticles();
+      } else if (progressParticlesFrame === null && !audio.paused && !audio.ended) {
+        progressParticlesTime = 0;
+        progressParticlesFrame = requestAnimationFrame(drawProgressParticles);
+      }
+    }
+
+    function initProgressParticles() {
+      ['progress-bar', 'vis-progress-bar', 'z1-mini-progress'].forEach(id => {
+        const bar = document.getElementById(id);
+        if (!bar) return;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'progress-particles-canvas';
+        canvas.setAttribute('aria-hidden', 'true');
+        canvas.hidden = true;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        document.body.appendChild(canvas);
+        progressParticleLayers.push({ bar, canvas, ctx, particles: [], emission: 0 });
+      });
+      progressParticlesEnabled = loadLS('walkman_progress_particles') === 'on';
+      progressParticlesShape = loadLS('walkman_particles_shape') === 'square' ? 'square' : 'round';
+      progressParticlesColorMode = loadLS('walkman_particles_color_mode') === 'custom' ? 'custom' : 'dynamic';
+      const savedColor = loadLS('walkman_particles_custom_color');
+      if (/^#[0-9a-f]{6}$/i.test(savedColor || '')) progressParticlesCustomColor = savedColor;
+      progressParticlesRgbEnabled = loadLS('walkman_particles_rgb') === 'on';
+      const savedRgbEffect = loadLS('walkman_particles_rgb_effect');
+      if (progressParticlesRgbEffects.includes(savedRgbEffect)) progressParticlesRgbEffect = savedRgbEffect;
+      audio.addEventListener('play', syncProgressParticles);
+      audio.addEventListener('emptied', clearProgressParticles);
+      audio.addEventListener('seeking', clearProgressParticles);
+      audio.addEventListener('seeked', syncProgressParticles);
+      document.addEventListener('visibilitychange', syncProgressParticles);
+      syncProgressParticles();
+    }
+
+    function drawProgressParticles(now) {
+      progressParticlesFrame = null;
+      if (!progressParticlesEnabled || document.hidden) { clearProgressParticles(); return; }
+      const dt = progressParticlesTime ? Math.min(.05, (now - progressParticlesTime) / 1000) : 1 / 60;
+      progressParticlesTime = now;
+      const playing = !audio.paused && !audio.ended;
+      // timeupdate and range values advance in discrete steps. Sample the
+      // media clock on every animation frame instead of stretching the cloud.
+      const progress = Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.max(0, Math.min(1, audio.currentTime / audio.duration)) : 0;
+      const color = getProgressParticlesColor();
+      const rgb = progressParticlesColorMode === 'custom' && progressParticlesRgbEnabled;
+      const visualizerOpen = document.getElementById('visualizer-overlay').classList.contains('open');
+      let alive = false;
+      progressParticleLayers.forEach(layer => {
+        const { bar, canvas, ctx } = layer;
+        const rect = bar.getBoundingClientRect();
+        const y = rect.top + rect.height / 2;
+        // Settings cover the player with a transparent backdrop. Keep the
+        // preview running underneath while editing the effect's color.
+        const coveringElement = document.elementFromPoint(rect.left + rect.width / 2, y);
+        const settingsCover = coveringElement && coveringElement.closest('#settings-overlay, #settings-menu, .settings-submenu');
+        const visible = rect.width > 0 && rect.height > 0 && y > 0 && y < innerHeight
+          && getComputedStyle(bar).visibility === 'visible'
+          && (!visualizerOpen || bar.id === 'vis-progress-bar')
+          && (coveringElement === bar || settingsCover);
+        if (!visible) {
+          canvas.hidden = true;
+          layer.particles.length = 0;
+          layer.emission = 0;
+          return;
+        }
+        canvas.hidden = false;
+        const width = rect.width, height = 76;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const pixels = Math.round(width * dpr);
+        if (canvas.width !== pixels || canvas.height !== height * dpr) {
+          canvas.width = pixels;
+          canvas.height = height * dpr;
+        }
+        canvas.style.left = rect.left + 'px';
+        canvas.style.top = (y - 76) + 'px';
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        // Native range thumbs travel inside the rail, inset by half their width.
+        const inset = bar.id === 'z1-mini-progress' ? 4.5 : 6;
+        const railWidth = Math.max(0, width - inset * 2);
+        const played = railWidth * progress;
+        if (playing && played > 0) {
+          layer.emission += dt * Math.min(65, played * .16);
+          while (layer.emission >= 1 && layer.particles.length < 160) {
+            layer.emission--;
+            layer.particles.push({ x: Math.random() * progress, rise: 0, age: 0,
+              life: 1 + Math.random() * 1.3, speed: 16 + Math.random() * 16,
+              radius: .7 + Math.random() * 1.4, drift: (Math.random() - .5) * 8 });
+          }
+          layer.emission = Math.min(layer.emission, 1);
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(inset, 0, played, height);
+        ctx.clip();
+        ctx.fillStyle = ctx.shadowColor = color;
+        ctx.shadowBlur = progressParticlesShape === 'square' ? 2 : 5;
+        layer.particles = layer.particles.filter(p => {
+          p.age += dt;
+          p.rise += p.speed * dt;
+          if (p.age >= p.life) return false;
+          const light = rgb ? getProgressParticlesRgb(now, p.x) : null;
+          ctx.fillStyle = ctx.shadowColor = light ? light.color : color;
+          ctx.globalAlpha = .8 * Math.pow(1 - p.age / p.life, 1.4) * (light ? light.brightness : 1);
+          const x = inset + p.x * railWidth + p.drift * p.age;
+          const y = 70 - p.rise;
+          if (progressParticlesShape === 'square') {
+            ctx.fillRect(x - p.radius, y - p.radius, p.radius * 2, p.radius * 2);
+          } else {
+            ctx.beginPath();
+            ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          return true;
+        });
+        ctx.restore();
+        alive = alive || layer.particles.length > 0;
+      });
+      if (playing || alive) progressParticlesFrame = requestAnimationFrame(drawProgressParticles);
+      else progressParticlesTime = 0;
     }
 
     // ---- Resplandor al ritmo de la música ----
