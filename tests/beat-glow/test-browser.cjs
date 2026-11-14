@@ -13,7 +13,7 @@ const run=async expression=>{let r=await command('Runtime.evaluate',{expression,
 await command('Runtime.enable');await command('Emulation.setDeviceMetricsOverride',{width:1900,height:700,deviceScaleFactor:1,mobile:false});
 await command('Page.navigate',{url:fileMode?require('node:url').pathToFileURL(path.join(root,'index.html')).href:'http://127.0.0.1:'+server.address().port+'/'});
 
-for(let i=0;i<100;i++){if(await run("typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
+for(let i=0;i<400;i++){if(await run("document.readyState==='complete' && typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
 
 await run(`(async()=>{
  const rate=44100,count=rate*10,bytes=new Uint8Array(44+count*2),v=new DataView(bytes.buffer);
@@ -71,4 +71,23 @@ await new Promise(r=>setTimeout(r,100));assert.equal(await run('glowPending.size
 await run('toggleBeatGlow()');assert.equal(await run('glowPending.size'),0);
 assert.equal(await run("Number(document.getElementById('bg-container').style.getPropertyValue('--z1-beat-level'))"),0);
 console.log('PASS Z1 stable hue, rhythmic opacity, pause/silence, artwork changes, theme isolation and one RAF loop');
+await run("setPlayingTheme('music');audio.volume=1;audio.play();toggleBeatGlow()");
+await new Promise(r=>setTimeout(r,1800));
+const musicSamples=await run(`(async()=>{
+ const samples=[];
+ for(let i=0;i<60;i++){
+  const bg=document.getElementById('bg-container');
+  samples.push({level:Number(bg.style.getPropertyValue('--z1-beat-level')),overlay:getComputedStyle(bg,'::after').backgroundImage});
+  await new Promise(r=>setTimeout(r,35));
+ }
+ return samples;
+})()`);
+assert(Math.max(...musicSamples.map(s=>s.level))-Math.min(...musicSamples.map(s=>s.level))>.06,'Music glow does not follow the rhythm');
+assert(new Set(musicSamples.map(s=>s.overlay)).size>5,'Music glow remains hidden behind the artwork');
+assert.equal(await run("getComputedStyle(document.getElementById('music-album-background')).display"),'block','Music lost its blurred artwork');
+await run('audio.pause()');await new Promise(r=>setTimeout(r,1700));
+assert((await run("Number(document.getElementById('bg-container').style.getPropertyValue('--z1-beat-level'))"))<.005,'Music glow remains lit when paused');
+await run('toggleBeatGlow()');
+assert.equal(await run("Number(document.getElementById('bg-container').style.getPropertyValue('--z1-beat-level'))"),0,'Music glow remains lit when disabled');
+console.log('PASS Music visible rhythmic overlay above blurred artwork, pause decay and disabled reset');
 ws.close();}finally{chrome?.kill();server.close();}})().catch(e=>{console.error(e);process.exitCode=1});

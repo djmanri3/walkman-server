@@ -158,6 +158,8 @@ function toggleMusicLibrarySort() {
 let musicLibraryViewKey = '';
 let musicFavoriteCollection = { kind: '', items: null };
 let musicLibraryRequestId = 0;
+let musicRowsRenderState = null;
+let musicCenteredCategory = '';
 
 function beginMusicLibraryRequest() {
   const id = ++musicLibraryRequestId;
@@ -200,9 +202,10 @@ function updateMusicLibraryChrome() {
     const active = button.dataset.musicCategory === category;
     button.setAttribute('aria-selected', String(active));
     button.tabIndex = active ? 0 : -1;
-    if (changed && active && library && !detail) {
+    if (active && library && !detail && musicCenteredCategory !== category) {
       const tabs = document.getElementById('music-library-tabs');
       tabs.scrollLeft = Math.max(0, button.offsetLeft - (tabs.clientWidth - button.offsetWidth) / 2);
+      musicCenteredCategory = category;
     }
   });
   document.querySelectorAll('[data-music-favorites]').forEach(button => {
@@ -221,9 +224,16 @@ function updateMusicLibraryChrome() {
     document.querySelector('.z1-header-back span').textContent = detail ? 'arrow_back' : 'menu';
     document.querySelector('.z1-header-back').setAttribute('aria-label', t(detail ? 'back' : 'musicHome'));
   }
-  document.querySelectorAll('#items-container .list-item').forEach(row => {
-    if (row._musicPresentation) decorateMusicMediaRow(row, ...row._musicPresentation);
-  });
+  if (library) {
+    const container = document.getElementById('items-container');
+    const state = [container.firstElementChild, container.lastElementChild, container.childElementCount, playlist[currentTrackIndex], currentLang];
+    if (!musicRowsRenderState || state.some((value, index) => value !== musicRowsRenderState[index])) {
+      container.querySelectorAll('.list-item').forEach(row => {
+        if (row._musicPresentation) decorateMusicMediaRow(row, ...row._musicPresentation);
+      });
+      musicRowsRenderState = state;
+    }
+  }
   renderMusicDetailHeader(detail || (favorites && list), favorites);
 }
 
@@ -294,6 +304,9 @@ function renderMusicDetailHeader(visible, favorites = false) {
   const header = document.getElementById('music-detail-header');
   header.hidden = !visible;
   if (!visible) return;
+  const state = [favorites, favoritesViewKind, musicFavoriteCollection, subItems, currentLang, document.getElementById('selected-category-title').textContent];
+  if (header._musicRenderState && state.every((value, index) => value === header._musicRenderState[index])) return;
+  header._musicRenderState = state;
   if (favorites) {
     const items = musicFavoriteCollection.kind === favoritesViewKind ? musicFavoriteCollection.items : null;
     const art = document.createElement('div');
@@ -370,24 +383,33 @@ function createMusicLibraryCard(track, onPlay, queueIndex = -1) {
   return article;
 }
 
-function renderMusicLibrary() {
-  if (document.body.dataset.theme !== 'music') return;
+let musicQueueRenderKey = '';
+
+function renderMusicLibrary(force = false) {
+  if (force) musicRecentState.loadedAt = 0;
+  if (document.body.dataset.theme !== 'music'
+    || !document.getElementById('view-music').classList.contains('active')
+    || document.getElementById('category-view').style.display === 'none') return;
   const container = document.getElementById('music-library-cards');
-  const fragment = document.createDocumentFragment();
-  playlist.slice(currentTrackIndex, currentTrackIndex + 12).forEach((track, offset) => {
-    const index = currentTrackIndex + offset;
-    fragment.appendChild(createMusicLibraryCard(track, () => { playTrack(index); switchTab('playing'); }, index));
-  });
-  if (!playlist.length) {
-    const empty = document.createElement('p');
-    empty.className = 'music-library-empty';
-    empty.textContent = t('emptyQueue');
-    fragment.appendChild(empty);
+  const tracks = playlist.slice(currentTrackIndex, currentTrackIndex + 12);
+  const key = JSON.stringify([musicLibrarySource(), currentLang, currentTrackIndex, playlistVersion,
+    tracks.map(track => [track.Id, track.Name, track.Artists, track.AlbumArtist, getEmbyImageUrl(track)])]);
+  if (key !== musicQueueRenderKey) {
+    const fragment = document.createDocumentFragment();
+    tracks.forEach((track, offset) => {
+      const index = currentTrackIndex + offset;
+      fragment.appendChild(createMusicLibraryCard(track, () => { playTrack(index); switchTab('playing'); }, index));
+    });
+    if (!playlist.length) {
+      const empty = document.createElement('p');
+      empty.className = 'music-library-empty';
+      empty.textContent = t('emptyQueue');
+      fragment.appendChild(empty);
+    }
+    container.replaceChildren(fragment);
+    musicQueueRenderKey = key;
   }
-  container.replaceChildren(fragment);
-  if (document.getElementById('view-music').classList.contains('active') && getComputedStyle(document.getElementById('category-view')).display !== 'none') {
-    loadMusicRecentTracks();
-  }
+  loadMusicRecentTracks(force);
 }
 
 let musicRecentState = { source: '', tracks: [], loadedAt: 0, promise: null, loading: false, error: false };
@@ -399,6 +421,9 @@ function musicLibrarySource() {
 function renderMusicRecentTracks() {
   const container = document.getElementById('music-recent-cards');
   const state = musicRecentState;
+  const renderState = [state, state.tracks, state.loading, state.error, currentLang];
+  if (container._musicRenderState && renderState.every((value, index) => value === container._musicRenderState[index])) return;
+  container._musicRenderState = renderState;
   container.setAttribute('aria-busy', String(state.loading));
   const fragment = document.createDocumentFragment();
   if (!state.tracks.length) {
@@ -436,8 +461,13 @@ async function loadMusicRecentTracks(force = false) {
   }
   const state = musicRecentState;
   if (embyConfig.serverType === 'local') {
+    if (!force && state.localTracks === localTracks && state.localCount === localTracks.length
+      && Date.now() - state.loadedAt < 60000) { renderMusicRecentTracks(); return; }
     const tracks = localTracks.filter(track => track.Type !== 'Playlist').map(track => track.Type ? track : { ...track, Type: 'Audio' });
     state.tracks = sortListItems(tracks, 'dateAdded', 'desc').slice(0, 18);
+    state.localTracks = localTracks;
+    state.localCount = localTracks.length;
+    state.loadedAt = Date.now();
     renderMusicRecentTracks();
     return;
   }

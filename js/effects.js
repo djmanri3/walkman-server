@@ -157,6 +157,12 @@
       const bg = $('bg-container');
       const playing = $('view-playing');
       const { r, g, b } = color;
+      // Boost saturation around the HSL midpoint, preserving hue and lightness.
+      const midpoint = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      const gain = chroma > 0 ? Math.min(1.65, 2 * Math.min(midpoint, 255 - midpoint) / chroma) : 1;
+      const glowColor = [r, g, b].map(channel => Math.round(midpoint + (channel - midpoint) * gain));
+      bg.style.setProperty('--music-beat-color', glowColor.join(' '));
       if (playing.dataset.theme !== 'z1') {
         bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
         return;
@@ -641,7 +647,7 @@
         }
       } catch (e) {}
 
-      if ($('view-playing').dataset.theme === 'z1') {
+      if (['z1', 'music'].includes($('view-playing').dataset.theme)) {
         const dt = z1BeatLastTime ? (now - z1BeatLastTime) / 1000 : 1 / 60;
         z1BeatLastTime = now;
         let bands = null, binHz = 1, rms = null;

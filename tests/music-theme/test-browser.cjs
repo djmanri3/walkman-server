@@ -82,6 +82,13 @@ assert.equal(await run("document.querySelectorAll('#music-library-cards .music-l
 assert.equal(await run("getComputedStyle(document.getElementById('home-grid')).display"),'none');
 assert.equal(await run("document.querySelector('#music-recent-cards .music-library-card-title').textContent"),'A Little More');
 await screenshot('music-library');
+assert(await run(`(()=>{
+ const queueCard=document.querySelector('#music-library-cards .music-library-card');
+ const recentCard=document.querySelector('#music-recent-cards .music-library-card');
+ for(let i=0;i<4;i++){switchTab('playing');switchTab('music');}
+ return queueCard===document.querySelector('#music-library-cards .music-library-card')
+  && recentCard===document.querySelector('#music-recent-cards .music-library-card');
+})()`),'Switching views rebuilt unchanged Home cards');
 await run("document.querySelector('.z1-header-back').click()");
 assert(await run("!document.getElementById('music-navigation').hidden"));
 await screenshot('music-navigation');
@@ -137,6 +144,12 @@ for(const category of ['Albums','Artists','Playlists','Songs']) {
  }
  await screenshot('music-category-'+category);
 }
+assert.equal(await run(`(()=>{
+ const observer=new MutationObserver(()=>{});
+ observer.observe(document.getElementById('items-container'),{childList:true,subtree:true});
+ for(let i=0;i<4;i++){switchTab('playing');switchTab('music');}
+ const count=observer.takeRecords().length;observer.disconnect();return count;
+})()`),0,'Switching views rewrote unchanged song rows');
 await run("document.querySelector('.music-header-sort').click()");
 assert.notEqual(await run("getComputedStyle(document.getElementById('list-sortbar')).display"),'none');
 await run('toggleMusicLibrarySort()');
@@ -171,6 +184,24 @@ await run("setPlayingTheme('classic')");
 assert.equal(await run("getComputedStyle(document.getElementById('music-library-tabs')).display"),'none');
 assert.notEqual(await run("getComputedStyle(document.querySelector('#list-view > .back-btn')).display"),'none');
 await run("setPlayingTheme('music');navigateMusicTheme('home')");
+await run(`(async()=>{
+ window.savedLocalTracks=localTracks;
+ const seed=localTracks.find(track=>track.Type==='Audio');
+ localTracks=Array.from({length:1500},(_,i)=>({...seed,Id:'large-'+i,Name:'Song '+String(i).padStart(4,'0')}));
+ await navigateMusicTheme('Songs');
+ const view=document.getElementById('view-music');
+ view.scrollTop=view.scrollHeight;
+})()`);
+await new Promise(r=>setTimeout(r,250));
+assert(await run(`(()=>{
+ const view=document.getElementById('view-music');
+ const last=document.querySelector('#items-container .list-item:last-child');
+ const rect=last.getBoundingClientRect(),bounds=view.getBoundingClientRect();
+ return last.querySelector('.list-item-title').textContent==='Song 1499' && rect.top<bounds.bottom && rect.bottom>bounds.top;
+})()`),'A large library cannot scroll to its final song');
+await run('switchTab("playing");switchTab("music")');
+assert(await run("document.querySelector('#items-container .list-item:last-child').getBoundingClientRect().top < document.getElementById('view-music').getBoundingClientRect().bottom"),'Switching views lost the library scroll position');
+await run("localTracks=savedLocalTracks;navigateMusicTheme('home')");
 await run(`(()=>{
  window.recentRealFetch=window.fetch;
  window.recentQueries=[];window.recentFailure=false;

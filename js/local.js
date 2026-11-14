@@ -472,5 +472,5 @@
       invalidateFavoritesCache();
       invalidateAlbumDates();
       updateFavoritesCount();
-      if (typeof renderMusicLibrary === 'function') renderMusicLibrary();
+      if (typeof renderMusicLibrary === 'function') renderMusicLibrary(true);
     }
