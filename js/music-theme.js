@@ -84,6 +84,49 @@ function initMusicPlayerDismissGesture() {
 
 initMusicPlayerDismissGesture();
 
+function initMusicLibraryTabGesture() {
+  const library = document.getElementById('view-music');
+  const tabs = [...document.querySelectorAll('#music-library-tabs [data-music-category]')];
+  let gesture = null;
+  const available = () => document.body.dataset.theme === 'music' && library.classList.contains('active')
+    && document.body.classList.contains('music-library-open') && !document.body.classList.contains('music-detail-open');
+  const selected = () => tabs.findIndex(tab => tab.getAttribute('aria-selected') === 'true');
+  library.addEventListener('touchstart', event => {
+    gesture = null;
+    if (!available() || event.touches.length !== 1
+      || event.target.closest('button,input,select,textarea,a,[role="button"],#music-library-tabs,#music-favorite-tabs,#list-sortbar')) return;
+    const index = selected(), touch = event.touches[0];
+    if (index >= 0) gesture = { id: touch.identifier, x: touch.clientX, y: touch.clientY, index, horizontal: false };
+  }, { passive: true });
+  library.addEventListener('touchmove', event => {
+    if (!gesture) return;
+    if (!available() || event.touches.length !== 1 || selected() !== gesture.index) { gesture = null; return; }
+    const touch = [...event.touches].find(point => point.identifier === gesture.id);
+    if (!touch) { gesture = null; return; }
+    const dx = touch.clientX - gesture.x, dy = touch.clientY - gesture.y;
+    if (!gesture.horizontal) {
+      if (Math.abs(dy) > 14 && Math.abs(dy) >= Math.abs(dx)) { gesture = null; return; }
+      if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.35) gesture.horizontal = true;
+    }
+    if (gesture.horizontal && event.cancelable) event.preventDefault();
+  }, { passive: false });
+  library.addEventListener('touchend', event => {
+    const ended = gesture;
+    gesture = null;
+    if (!ended || !ended.horizontal || !available() || selected() !== ended.index) return;
+    const touch = [...event.changedTouches].find(point => point.identifier === ended.id);
+    if (!touch) return;
+    if (event.cancelable) event.preventDefault();
+    const dx = touch.clientX - ended.x, dy = touch.clientY - ended.y;
+    if (Math.abs(dx) < Math.max(56, Math.min(100, library.clientWidth * .15)) || Math.abs(dx) <= Math.abs(dy) * 1.35) return;
+    const next = tabs[ended.index + (dx < 0 ? 1 : -1)];
+    if (next) next.click();
+  }, { passive: false });
+  library.addEventListener('touchcancel', () => { gesture = null; }, { passive: true });
+}
+
+initMusicLibraryTabGesture();
+
 function updateMusicThemeData() {
   const music = document.body.dataset.theme === 'music';
   const playing = document.getElementById('view-playing').classList.contains('active');

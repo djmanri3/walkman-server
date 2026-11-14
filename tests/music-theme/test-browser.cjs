@@ -310,14 +310,41 @@ assert.equal(await run("getComputedStyle(document.getElementById('music-albums-v
 assert.equal(await run("getComputedStyle(document.getElementById('music-library-tabs')).display"),'none');
 assert.notEqual(await run("getComputedStyle(document.querySelector('#list-view > .back-btn')).display"),'none');
 await run("setPlayingTheme('music');navigateMusicTheme('home')");
+await run("navigateMusicTheme('Playlists')");
+await swipe('#items-container',120,0);
+assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),'Playlists','Swiping beyond the first tab must stay on Playlists');
+for(const category of ['Artists','Albums','Songs','Favorites']) {
+ await swipe('#items-container',-120,0);
+ assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),category,'Left swipe did not advance to '+category);
+ assert(await run("document.getElementById('view-music').classList.contains('active')"),'Tab swipe opened a media row instead');
+}
+await swipe('#items-container',-120,0);
+assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),'Favorites','Swiping beyond the last tab must stay on Favorites');
+for(const category of ['Songs','Albums','Artists','Playlists']) {
+ await swipe('#items-container',120,0);
+ assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),category,'Right swipe did not go back to '+category);
+}
+await swipe('#items-container',24,0);
+assert.equal(await run('currentCategory'),'Playlists','A short drag changed tabs');
+await run("navigateMusicTheme('Albums')");
+await run("document.querySelector('#items-container .list-item').click()");
+for(let i=0;i<100;i++){if(await run('!!subItems'))break;await new Promise(r=>setTimeout(r,30));}
+await swipe('#items-container',-120,0);
+assert(await run("document.body.classList.contains('music-detail-open')"),'Tab swipes interfered with album details');
+await run("navigateMusicTheme('home')");
+console.log('PASS Music library tab swipes in both directions, bounds, short gestures and album-detail isolation');
 await run(`(async()=>{
  window.savedLocalTracks=localTracks;
  const seed=localTracks.find(track=>track.Type==='Audio');
  localTracks=Array.from({length:1500},(_,i)=>({...seed,Id:'large-'+i,Name:'Song '+String(i).padStart(4,'0')}));
  await navigateMusicTheme('Songs');
  const view=document.getElementById('view-music');
- view.scrollTop=view.scrollHeight;
+ view.scrollTop=0;
 })()`);
+await swipe('#view-music',0,-150);
+assert.equal(await run('currentCategory'),'Songs','Vertical scrolling changed the library tab');
+assert(await run("document.getElementById('view-music').scrollTop>0"),'Tab swipes blocked vertical scrolling');
+await run("document.getElementById('view-music').scrollTop=document.getElementById('view-music').scrollHeight");
 await new Promise(r=>setTimeout(r,250));
 assert(await run(`(()=>{
  const view=document.getElementById('view-music').getBoundingClientRect();
