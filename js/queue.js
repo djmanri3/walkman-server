@@ -261,6 +261,7 @@
     }
 
     function renderQueueList() {
+      if (typeof renderMusicLibrary === 'function') renderMusicLibrary();
       const container = document.getElementById('queue-list-container');
       container.innerHTML = '';
 

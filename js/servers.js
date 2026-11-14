@@ -179,8 +179,9 @@
       return obj;
     }
 
-    async function fetchPlexJson(url) {
+    async function fetchPlexJson(url, requireSuccess = false) {
       const res = await fetch(url);
+      if (requireSuccess && !res.ok) throw new Error('Plex request failed: ' + res.status);
       const text = await res.text();
       if (!text || !text.trim()) return { MediaContainer: { Metadata: [], Directory: [] } };
       try {
@@ -312,6 +313,33 @@
         select.appendChild(opt);
       });
       document.getElementById('library-selector').style.display = 'block';
+    }
+
+    async function fetchRecentlyAddedTracks(limit = 18) {
+      limit = Math.max(1, Math.min(36, Math.floor(Number(limit) || 18)));
+      let items;
+      if (embyConfig.serverType === 'local') {
+        items = localTracks.filter(item => item.Type !== 'Playlist').map(item => item.Type ? item : { ...item, Type: 'Audio' });
+      } else if (embyConfig.serverType === 'plex') {
+        const query = new URLSearchParams({
+          type: '10', sort: 'addedAt:desc',
+          'X-Plex-Container-Start': '0', 'X-Plex-Container-Size': String(limit),
+          'X-Plex-Token': embyConfig.token
+        });
+        const data = await fetchPlexJson(`${embyConfig.host}/library/sections/${encodeURIComponent(embyConfig.libraryId)}/all?${query}`, true);
+        items = (data.MediaContainer?.Metadata || []).map(normalizePlexItem);
+      } else {
+        const query = new URLSearchParams({
+          ParentId: embyConfig.libraryId, IncludeItemTypes: 'Audio', Recursive: 'true',
+          SortBy: 'DateCreated', SortOrder: 'Descending', Limit: String(limit),
+          Fields: 'DateCreated,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,MediaSources,MediaStreams',
+          api_key: embyConfig.token
+        });
+        const response = await fetch(`${embyConfig.host}/Users/${encodeURIComponent(embyConfig.userId)}/Items?${query}`);
+        if (!response.ok) throw new Error('Recent tracks request failed: ' + response.status);
+        items = (await response.json()).Items || [];
+      }
+      return sortListItems(items.filter(item => item.Type === 'Audio'), 'dateAdded', 'desc').slice(0, limit);
     }
 
     async function fetchItems(type, parentId, parentKind, artistName) {
@@ -823,6 +851,7 @@ let audioQuality = null;
       // Recuento de favoritos (en segundo plano: no bloquea la rejilla)
       updateFavoritesCount();
       refreshFavoritesCount();
+      if (typeof renderMusicLibrary === 'function') renderMusicLibrary();
     }
 
 

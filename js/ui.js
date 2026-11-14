@@ -207,6 +207,9 @@
       updateZ1Layout();
       updateZ1MiniPlayer();
       closeZ1HeaderMenu();
+      closeMusicNavigation(false);
+      updateMusicThemeData();
+      renderMusicLibrary();
       resetBeatGlowBackground();
     }
 
@@ -319,12 +322,13 @@
     }
 
     function applyPlayingTheme(theme) {
-      const selected = ['modern', 'classic', 'z1'].includes(theme) ? theme : 'modern';
+      const selected = ['modern', 'classic', 'z1', 'music'].includes(theme) ? theme : 'modern';
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.body.dataset.theme = selected;
       document.getElementById('app-logo').textContent = 'WALKMAN';
       closeZ1HeaderMenu();
+      closeMusicNavigation(false);
       document.querySelectorAll('[data-playing-theme]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.dataset.playingTheme === selected));
       });
@@ -333,6 +337,9 @@
       updateZ1MiniPlayer();
       fitHeader();
       resetBeatGlowBackground();
+      updateMusicThemeData();
+      applyPlayingHiResState();
+      renderMusicLibrary();
     }
 
     function setPlayingTheme(theme) {
@@ -350,6 +357,7 @@
       document.getElementById('playing-queue-position').textContent =
         `${track ? currentTrackIndex + 1 : 0}/${playlist.length}`;
       updateZ1MiniPlayer();
+      updateMusicThemeData();
     }
 
     function closeZ1HeaderMenu() {
@@ -365,7 +373,8 @@
     function updateZ1MiniPlayer() {
       const track = playlist[currentTrackIndex];
       document.body.classList.toggle('z1-playing', document.body.dataset.theme === 'z1' && document.getElementById('view-playing').classList.contains('active'));
-      const visible = document.body.dataset.theme === 'z1' && !!track && document.getElementById('view-music').classList.contains('active');
+      document.body.classList.toggle('music-playing', document.body.dataset.theme === 'music' && document.getElementById('view-playing').classList.contains('active'));
+      const visible = ['z1', 'music'].includes(document.body.dataset.theme) && !!track && document.getElementById('view-music').classList.contains('active');
       const mini = document.getElementById('z1-mini-player');
       mini.hidden = !visible;
       document.body.classList.toggle('z1-has-mini', visible);
@@ -577,7 +586,12 @@
       button.classList.toggle('on', enabled);
       button.setAttribute('aria-pressed', String(enabled));
       document.getElementById('hires-badge').classList.toggle('hidden',
-        !enabled || !isHiResAudio(playlist[currentTrackIndex]));
+        !enabled || !isPlayingTrackHiRes(playlist[currentTrackIndex]));
+      document.querySelectorAll('#music-track-quality .music-hr-badge').forEach(badge => { badge.hidden = !enabled; });
+    }
+
+    function isPlayingTrackHiRes(item) {
+      return document.body.dataset.theme === 'music' ? musicHasHr(item) : isHiResAudio(item);
     }
 
     function togglePlayingHiRes() {
@@ -876,6 +890,7 @@
 
 
     async function loadCategory(category) {
+      const musicRequest = beginMusicLibraryRequest();
       favoritesViewKind = '';
       subItems = null;
       currentCategory = category;
@@ -886,6 +901,7 @@
 
       // Nivel actual = categoría; desde aquí se accede a sub-elementos
       navStack = [{ type: 'category', category: category }];
+      updateMusicLibraryChrome();
 
       const container = document.getElementById('items-container');
       container.innerHTML = '<div style="color:#aaa;">Cargando...</div>';
@@ -894,6 +910,7 @@
       const types = SERVER_TYPES[st];
       const typeMap = { 'Songs': types.Audio, 'Albums': types.Album, 'Artists': types.Artist, 'Playlists': types.Playlist };
       const data = await fetchItems(typeMap[category]);
+      if (!isCurrentMusicLibraryRequest(musicRequest)) return;
       // Si el orden activo necesita el año del álbum, lo pedimos antes de pintar
       if (LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
 
@@ -905,6 +922,7 @@
         await resolveAlbumCoverIds(data.Items || []);
       }
 
+      if (!isCurrentMusicLibraryRequest(musicRequest)) return;
       currentCategoryItems = data.Items || [];
       renderCategoryList(category, currentCategoryItems);
     }
@@ -938,6 +956,7 @@
         const imgUrl = getEmbyImageUrl(item);
         
         renderMediaRow(div, imgUrl, item.Name, item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : catLabel), item._hasHiRes || isHiResAudio(item));
+        decorateMusicMediaRow(div, item, index);
         const imgEl = div.querySelector('img');
         applyArtistImageFallback(imgEl, item);
 
@@ -964,12 +983,15 @@
         fragment.appendChild(div);
       });
       container.appendChild(fragment);
+      updateMusicLibraryChrome();
     }
 
     // --- FAVORITOS ---
 
     // Muestra el submenú con "Álbumes favoritos" y "Canciones favoritas"
     async function showFavoritesMenu() {
+      beginMusicLibraryRequest();
+      if (document.body.dataset.theme === 'music') return loadFavorites('Songs');
       document.getElementById('list-view').style.display = 'none';
       document.getElementById('category-view').style.display = 'block';
       document.getElementById('home-featured').style.display = 'none';
@@ -980,6 +1002,7 @@
     }
 
     async function loadFavorites(kind) {
+      const musicRequest = beginMusicLibraryRequest();
       currentCategory = '';
       currentCategoryItems = null;
       subItems = null;
@@ -991,11 +1014,16 @@
       // Desde aquí se accede a los elementos de cada favorito
       navStack = [{ type: 'favmenu' }, { type: 'favorites', favKind: kind }];
       favoritesViewKind = kind;
+      rememberMusicFavorites(kind, null);
+      updateMusicLibraryChrome();
 
       const container = document.getElementById('items-container');
       container.innerHTML = '<div style="color:#aaa;">' + t('loadingSongs') + '</div>';
 
       const items = await fetchFavorites(kind);
+      if (!isCurrentMusicLibraryRequest(musicRequest)) return;
+      rememberMusicFavorites(kind, items);
+      updateMusicLibraryChrome();
 
       container.innerHTML = '';
       if (items.length === 0) {
@@ -1024,6 +1052,7 @@
         const imgUrl = getEmbyImageUrl(item);
 
         renderMediaRow(div, imgUrl, item.Name, item.AlbumArtist || (item.Artists ? item.Artists.join(', ') : (item.Album || '')), item._hasHiRes || isHiResAudio(item));
+        decorateMusicMediaRow(div, item, index);
         const imgEl = div.querySelector('img');
         applyArtistImageFallback(imgEl, item);
 
@@ -1049,9 +1078,14 @@
         fragment.appendChild(div);
       });
       container.appendChild(fragment);
+      updateMusicLibraryChrome();
     }
 
     async function loadSubItems(parentId, title, parentKind) {
+      const musicRequest = beginMusicLibraryRequest();
+      const parentItem = [...document.querySelectorAll('#items-container .list-item')]
+        .map(row => row._musicPresentation?.[0]).find(item => item && String(item.Id) === String(parentId));
+      subItems = null;
       favoritesViewKind = '';
       currentCategory = '';
       currentCategoryItems = null;
@@ -1071,6 +1105,7 @@
         category: current ? current.category : '',
         favKind: current ? current.favKind : ''
       });
+      updateMusicLibraryChrome();
 
       const container = document.getElementById('items-container');
       container.innerHTML = '<div style="color:#aaa;">' + t('loadingSongs') + '</div>';
@@ -1078,9 +1113,11 @@
       const st = embyConfig.serverType;
       const types = SERVER_TYPES[st];
       const data = await fetchItems(types.Audio, parentId, parentKind);
+      if (!isCurrentMusicLibraryRequest(musicRequest)) return;
       const tracks = data.Items || [];
-      subItems = { title: title, kind: parentKind, tracks: tracks, ordenable: ordenable };
+      subItems = { title: title, kind: parentKind, tracks: tracks, ordenable: ordenable, item: parentItem };
       if (ordenable && LIST_SORTS[getListSort()].needsAlbum) await ensureAlbumDates();
+      if (!isCurrentMusicLibraryRequest(musicRequest)) return;
       renderTrackList(ordenable ? sortListItems(tracks, getListSort(), getListSortDir()) : tracks);
     }
 
@@ -1112,6 +1149,7 @@
         const imgUrl = getEmbyImageUrl(track);
 
         renderMediaRow(div, imgUrl, track.Name, track.Artists ? track.Artists.join(', ') : t('unknown'), isHiResAudio(track));
+        decorateMusicMediaRow(div, track, index, true);
 
         div.onclick = () => {
           playlist = [...tracks];
@@ -1131,9 +1169,11 @@
         fragment.appendChild(div);
       });
       container.appendChild(fragment);
+      updateMusicLibraryChrome();
     }
 
     function backToCategories() {
+      beginMusicLibraryRequest();
       // Si venimos de un sub-elemento (álbum/artista/playlist), volvemos a la lista de esa categoría
       if (navStack.length > 1) {
         const previous = navStack[navStack.length - 2] || navStack[0];
@@ -1160,6 +1200,8 @@
       document.getElementById('home-grid').style.display = '';
       // applyFeaturedVisibility respeta si el side show está desactivado
       applyFeaturedVisibility();
+      updateMusicLibraryChrome();
+      renderMusicLibrary();
     }
 
     // --- MENÚ CONTEXTUAL ---
@@ -1481,10 +1523,11 @@
         carousel.appendChild(layer);
         const classic = document.getElementById('view-playing').dataset.theme === 'classic';
         const z1 = document.getElementById('view-playing').dataset.theme === 'z1';
+        const music = document.getElementById('view-playing').dataset.theme === 'music';
         const index = direction < 0
           ? (g.index + 1 < playlist.length ? g.index + 1 : (repeatMode === 1 ? 0 : g.index))
           : Math.max(0, g.index - 1);
-        const incomingCard = classic || z1 ? (direction < 0 ? cards[0] : null) : (direction < 0 ? cards[2] : cards[0]);
+        const incomingCard = music ? null : classic || z1 ? (direction < 0 ? cards[0] : null) : (direction < 0 ? cards[2] : cards[0]);
         const backgrounds = [];
         // Move each queued cover once, keeping the remaining stack behind it.
         cards.filter(card => card !== current && card !== incomingCard && getComputedStyle(card).display !== 'none').forEach(card => {
@@ -1498,11 +1541,11 @@
         const track = playlist[index];
         incoming.querySelector('img').src = getEmbyImageUrl(track);
         const badge = incoming.querySelector('.hires-badge');
-        if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(track));
+        if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(track));
         outgoing.style.zIndex = direction < 0 ? '4' : '2';
         incoming.style.zIndex = direction < 0 ? '3' : '4';
         outgoing.style.transformOrigin = incoming.style.transformOrigin = classic ? 'left center' : 'center';
-        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, z1, backgrounds, progress: 0 };
+        motion = { layer, outgoing, incoming, index, source: g.index, direction, width, zoom, classic, z1, music, backgrounds, progress: 0 };
         if (z1) {
           motion.z1Cards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
           backgrounds.forEach(({copy,side}) => {
@@ -1515,10 +1558,10 @@
             const copy = copyCard(current,layer,left,top,width,height);
             copy.querySelector('img').src = getEmbyImageUrl(outerTrack);
             const badge = copy.querySelector('.hires-badge');
-            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(outerTrack));
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(outerTrack));
             motion.z1Cards.push({copy,slot:3});
           }
-        } else if (!classic) {
+        } else if (!classic && !music) {
           motion.modernCards = [{copy:outgoing,slot:0}, {copy:incoming,slot:-direction}];
           backgrounds.forEach(({copy}) => {
             Object.assign(copy.style, {left:left+'px',top:top+'px',width:width+'px',height:height+'px'});
@@ -1529,7 +1572,7 @@
             const copy = copyCard(current,layer,left,top,width,height);
             copy.querySelector('img').src = getEmbyImageUrl(playlist[outerIndex]);
             const badge = copy.querySelector('.hires-badge');
-            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(playlist[outerIndex]));
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(playlist[outerIndex]));
             motion.modernCards.push({copy,slot:-direction*2});
           }
         }
@@ -1538,6 +1581,12 @@
       function draw(progress) {
         const m = motion;
         m.progress = progress;
+        if (m.music) {
+          m.outgoing.style.transform = `translateX(${m.direction * progress * m.width * 1.08}px)`;
+          m.incoming.style.transform = `translateX(${-m.direction * (1 - progress) * m.width * 1.08}px)`;
+          m.incoming.style.opacity = m.index === m.source ? '0' : '1';
+          return;
+        }
         if (m.z1) {
           const slots = [
             {x:0,scale:1,angle:0,light:1,opacity:1},
@@ -1696,7 +1745,7 @@
       const header = document.querySelector('header');
       const appLogo = document.getElementById('app-logo');
       if (!header || !appLogo) return;
-      if (document.body.dataset.theme === 'z1') { appLogo.style.display = ''; return; }
+      if (['z1', 'music'].includes(document.body.dataset.theme)) { appLogo.style.display = ''; return; }
 
       const isMobile = window.innerWidth <= 768;
       if (!isMobile) {

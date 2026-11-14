@@ -115,6 +115,7 @@ docker-compose up -d
 - Keep the particle preview running in Settings and smooth animation as playback advances
 
 ### Upcoming changes
+- Add the Music theme with Sony Music-inspired portrait/landscape playback, blurred artwork, queue cards, newly added songs, colored navigation, a tabbed library and Sony-style HR markers for FLAC
 - Restore server playback after reload, including the current track, position and playing/paused state
 - Improve Classic controls on narrow windows and activate the compact layout at 640px
 - Add translated update notices with Update and Later actions, preserving settings

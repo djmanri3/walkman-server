@@ -13,7 +13,7 @@ const run=async expression=>{let r=await command('Runtime.evaluate',{expression,
 await command('Runtime.enable');await command('Emulation.setDeviceMetricsOverride',{width:1900,height:700,deviceScaleFactor:1,mobile:false});
 await command('Page.navigate',{url:fileMode?require('node:url').pathToFileURL(path.join(root,'index.html')).href:'http://127.0.0.1:'+server.address().port+'/'});
 
-for(let i=0;i<400;i++){if(await run("typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
+for(let i=0;i<400;i++){if(await run("document.readyState==='complete' && typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
 
 await run(`(async()=>{
  const rate=44100,count=rate*10,bytes=new Uint8Array(44+count*2),v=new DataView(bytes.buffer);
@@ -59,7 +59,7 @@ const continuity=await run(`(()=>{
 })()`);
 assert(continuity.count>1,'Emission is still using the stepped slider instead of the media clock');
 assert(Math.abs(continuity.first-continuity.second)<.01,'Slider updates drag existing particles sideways');
-for (const theme of ['modern','classic','z1']) {
+for (const theme of ['modern','classic','music','z1']) {
  for (const [width,height] of [[1341,772],[390,844]]) {
   await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
   await run(`setPlayingTheme('${theme}')`);

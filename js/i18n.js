@@ -2,6 +2,20 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        musicMyLibrary: "My Library",
+        musicRefreshHome: "Refresh library",
+        musicOneTrack: "{count} song",
+        musicTracks: "{count} songs",
+        musicEmptyPlaylist: "Empty playlist",
+        musicRecentlyAdded: "Newly added",
+        musicRecentLoading: "Loading newly added songs…",
+        musicRecentEmpty: "No songs in this library yet.",
+        musicRecentError: "Could not load newly added songs.",
+        musicRecentRetry: "Retry",
+        musicHome: "Home",
+        musicPlayQueue: "Play queue",
+        musicOpenQueue: "Open",
+        moreOptions: "More options",
         appUpdateAvailable: "A new update is available!",
         appUpdateCacheMessage: "The app cache needs to be cleared to update.",
         appUpdateMoreInfo: "More information at",
@@ -83,6 +97,20 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        musicMyLibrary: "Mi biblioteca",
+        musicRefreshHome: "Actualizar biblioteca",
+        musicOneTrack: "{count} canción",
+        musicTracks: "{count} canciones",
+        musicEmptyPlaylist: "Lista vacía",
+        musicRecentlyAdded: "Recientemente añadidas",
+        musicRecentLoading: "Cargando canciones recientes…",
+        musicRecentEmpty: "Todavía no hay canciones en esta biblioteca.",
+        musicRecentError: "No se pudieron cargar las canciones recientes.",
+        musicRecentRetry: "Reintentar",
+        musicHome: "Inicio",
+        musicPlayQueue: "Cola de reproducción",
+        musicOpenQueue: "Abrir",
+        moreOptions: "Más opciones",
         appUpdateAvailable: "¡Hay una nueva actualización!",
         appUpdateCacheMessage: "Es necesario borrar la caché de la app para actualizar.",
         appUpdateMoreInfo: "Más información en",
@@ -164,6 +192,20 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        musicMyLibrary: "Ma bibliothèque",
+        musicRefreshHome: "Actualiser la bibliothèque",
+        musicOneTrack: "{count} morceau",
+        musicTracks: "{count} morceaux",
+        musicEmptyPlaylist: "Liste de lecture vide",
+        musicRecentlyAdded: "Ajouts récents",
+        musicRecentLoading: "Chargement des morceaux récents…",
+        musicRecentEmpty: "Cette bibliothèque ne contient pas encore de morceaux.",
+        musicRecentError: "Impossible de charger les morceaux récents.",
+        musicRecentRetry: "Réessayer",
+        musicHome: "Accueil",
+        musicPlayQueue: "File de lecture",
+        musicOpenQueue: "Ouvrir",
+        moreOptions: "Plus d’options",
         appUpdateAvailable: "Une nouvelle mise à jour est disponible !",
         appUpdateCacheMessage: "Il est nécessaire de vider le cache de l’application pour la mettre à jour.",
         appUpdateMoreInfo: "Plus d’informations sur",
@@ -233,6 +275,20 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        musicMyLibrary: "Meine Bibliothek",
+        musicRefreshHome: "Bibliothek aktualisieren",
+        musicOneTrack: "{count} Titel",
+        musicTracks: "{count} Titel",
+        musicEmptyPlaylist: "Leere Wiedergabeliste",
+        musicRecentlyAdded: "Neu hinzugefügt",
+        musicRecentLoading: "Neu hinzugefügte Titel werden geladen…",
+        musicRecentEmpty: "Diese Bibliothek enthält noch keine Titel.",
+        musicRecentError: "Neu hinzugefügte Titel konnten nicht geladen werden.",
+        musicRecentRetry: "Erneut versuchen",
+        musicHome: "Startseite",
+        musicPlayQueue: "Wiedergabeliste",
+        musicOpenQueue: "Öffnen",
+        moreOptions: "Weitere Optionen",
         appUpdateAvailable: "Ein neues Update ist verfügbar!",
         appUpdateCacheMessage: "Für das Update muss der App-Cache geleert werden.",
         appUpdateMoreInfo: "Weitere Informationen unter",
@@ -301,6 +357,20 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        musicMyLibrary: "La mia libreria",
+        musicRefreshHome: "Aggiorna libreria",
+        musicOneTrack: "{count} brano",
+        musicTracks: "{count} brani",
+        musicEmptyPlaylist: "Playlist vuota",
+        musicRecentlyAdded: "Aggiunti di recente",
+        musicRecentLoading: "Caricamento dei brani recenti…",
+        musicRecentEmpty: "Questa libreria non contiene ancora brani.",
+        musicRecentError: "Impossibile caricare i brani recenti.",
+        musicRecentRetry: "Riprova",
+        musicHome: "Home",
+        musicPlayQueue: "Coda di riproduzione",
+        musicOpenQueue: "Apri",
+        moreOptions: "Altre opzioni",
         appUpdateAvailable: "È disponibile un nuovo aggiornamento!",
         appUpdateCacheMessage: "Per aggiornare è necessario svuotare la cache dell’app.",
         appUpdateMoreInfo: "Maggiori informazioni su",
@@ -369,6 +439,20 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        musicMyLibrary: "A minha biblioteca",
+        musicRefreshHome: "Atualizar biblioteca",
+        musicOneTrack: "{count} música",
+        musicTracks: "{count} músicas",
+        musicEmptyPlaylist: "Lista de reprodução vazia",
+        musicRecentlyAdded: "Adicionadas recentemente",
+        musicRecentLoading: "A carregar músicas recentes…",
+        musicRecentEmpty: "Esta biblioteca ainda não tem músicas.",
+        musicRecentError: "Não foi possível carregar as músicas recentes.",
+        musicRecentRetry: "Tentar novamente",
+        musicHome: "Início",
+        musicPlayQueue: "Fila de reprodução",
+        musicOpenQueue: "Abrir",
+        moreOptions: "Mais opções",
         appUpdateAvailable: "Há uma nova atualização disponível!",
         appUpdateCacheMessage: "É necessário limpar a cache da aplicação para atualizar.",
         appUpdateMoreInfo: "Mais informações em",
@@ -497,6 +581,7 @@
         updateFavoriteMenuOption();
       }
       if (typeof renderAppUpdateBanner === 'function') renderAppUpdateBanner();
+      if (typeof updateMusicThemeData === 'function') { updateMusicThemeData(); renderMusicLibrary(); }
     }
     currentLang = getLang();
 

@@ -13,7 +13,7 @@ const run=async expression=>{let r=await command('Runtime.evaluate',{expression,
 await command('Runtime.enable');await command('Emulation.setDeviceMetricsOverride',{width:1900,height:700,deviceScaleFactor:1,mobile:false});
 await command('Page.navigate',{url:fileMode?require('node:url').pathToFileURL(path.join(root,'index.html')).href:'http://127.0.0.1:'+server.address().port+'/'});
 
-for(let i=0;i<400;i++){if(await run("typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
+for(let i=0;i<400;i++){if(await run("document.readyState==='complete' && typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
 
 await run(`(async()=>{
  const rate=44100,count=rate*10,bytes=new Uint8Array(44+count*2),v=new DataView(bytes.buffer);
@@ -33,14 +33,14 @@ await run(`(()=>{
 await new Promise(r=>setTimeout(r,500));
 assert.equal(await run("document.getElementById('view-playing').dataset.theme"),'modern');
 await run("toggleSettingsMenu();openSettingsSection('customization')");
-assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),3);
+assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),4);
 await run("document.querySelector('[data-playing-theme=classic]').click()");
 assert.equal(await run("document.querySelector('[data-playing-theme=classic]').getAttribute('aria-pressed')"),'true');
 const screenshot=async name=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(artifacts,name+'.png'),Buffer.from(shot.data,'base64'));};
 await new Promise(r=>setTimeout(r,650));await screenshot('settings');await run('closeSettingsMenu()');
 for(const [width,height] of [[1341,772],[1100,772],[641,900],[640,900],[640,360],[900,700],[880,400],[768,1024],[390,844],[320,640],[844,390]]) {
  await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
- await new Promise(r=>setTimeout(r,350));
+ await new Promise(r=>setTimeout(r,750));
  const layout=await run(`(()=>{
   const rect=id=>{const r=document.querySelector(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
   return {art:rect('#card-current'),near:rect('#card-prev'),far:rect('#card-next'),title:rect('#track-title'),controls:rect('.controls'),volume:rect('#volume-bar'),progress:rect('#progress-bar'),scroll:document.body.scrollWidth,playing:!audio.paused,album:document.querySelector('#track-album').textContent};

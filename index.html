@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
   <meta name="walkman-version" content="3.1">
-  <meta name="walkman-cache-version" content="walkman-v59">
+  <meta name="walkman-cache-version" content="walkman-v60">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -43,19 +43,24 @@
 </head>
 <body>
 
-  <div id="bg-container"></div>
+  <div id="bg-container"><img id="music-album-background" class="music-only" alt="" aria-hidden="true"></div>
 
   <!-- Header Xperia -->
   <header>
     <div id="app-logo" onclick="walkmanTap()" role="button" tabindex="0" aria-label="WALKMAN">WALKMAN</div>
-    <button class="z1-header-back" type="button" onclick="switchTab('music')" aria-label="Volver a My music"><span class="material-icons">chevron_left</span></button>
+    <button class="z1-header-back" type="button" onclick="handlePlayerBack()" aria-label="Volver a My music"><span class="material-icons">chevron_left</span></button>
+    <div class="music-only" id="music-header-title" data-i18n="musicMyLibrary">Mi biblioteca</div>
     <div class="top-nav" role="tablist">
       <div id="nav-playing" class="active" onclick="switchTab('playing')" data-i18n="playing" role="tab" aria-selected="true" tabindex="0">Playing</div>
       <div id="nav-music" onclick="switchTab('music')" data-i18n="myMusic" role="tab" aria-selected="false" tabindex="0">My music</div>
     </div>
     <div class="header-icons">
-      <span class="material-icons" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
+      <span class="material-icons header-search" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
+      <button class="music-only music-header-queue" type="button" onclick="openMusicQueue()" data-i18n-title="musicPlayQueue" aria-label="Play queue"><span class="material-icons">queue_music</span></button>
+      <button class="music-only music-header-sort" type="button" onclick="toggleMusicLibrarySort()" data-i18n-title="sortBy" aria-label="Ordenar por" aria-expanded="false" hidden><span class="material-icons">sort</span></button>
       <div class="header-secondary-actions" onclick="closeZ1HeaderMenu()">
+      <span class="material-icons music-only music-home-action" onclick="refreshMusicHome()" data-i18n-title="musicRefreshHome" role="button" tabindex="0">refresh</span>
+      <span class="material-icons music-only" onclick="openMusicLyrics()" data-i18n-title="lyrics" role="button" tabindex="0">menu_book</span>
       <span class="material-icons" onclick="toggleVisualizerView()" title="Visualizador" data-i18n-title="visualizer" role="button" tabindex="0" aria-label="Visualizador">blur_on</span>
       <span class="material-icons" id="eq-btn" onclick="toggleEqualizer()" title="Mejoras de Sonido / Ecualizador" data-i18n-title="soundEnhancements" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Mejoras de Sonido / Ecualizador">equalizer</span>
       <span class="material-icons" onclick="showServerModal()" title="Ajustes de Servidor" data-i18n-title="serverSettings" role="button" tabindex="0" aria-label="Ajustes de Servidor">storage</span>
@@ -64,6 +69,18 @@
       <button class="z1-header-more" type="button" onclick="toggleZ1HeaderMenu()" aria-label="Más opciones" aria-expanded="false" aria-haspopup="true"><span class="material-icons">more_vert</span></button>
     </div>
   </header>
+
+  <button id="music-navigation-overlay" class="music-only music-navigation-overlay" type="button" onclick="closeMusicNavigation()" aria-label="Cerrar menú" hidden></button>
+  <nav id="music-navigation" class="music-only" aria-label="Music" hidden>
+    <button type="button" data-music-target="home" onclick="navigateMusicTheme('home')"><span class="music-nav-icon music-nav-home material-icons" aria-hidden="true">dashboard</span><span data-i18n="musicHome">Inicio</span></button>
+    <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span data-i18n="musicPlayQueue">Cola de reproducción</span></button>
+    <button type="button" data-music-target="Playlists" onclick="navigateMusicTheme('Playlists')"><span class="music-nav-icon music-nav-playlists material-icons" aria-hidden="true">format_list_bulleted</span><span data-i18n="playlists">Listas</span></button>
+    <button type="button" data-music-target="Artists" onclick="navigateMusicTheme('Artists')"><span class="music-nav-icon music-nav-artists material-icons" aria-hidden="true">person</span><span data-i18n="artists">Artistas</span></button>
+    <button type="button" data-music-target="Albums" onclick="navigateMusicTheme('Albums')"><span class="music-nav-icon music-nav-albums material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
+    <button type="button" data-music-target="Songs" onclick="navigateMusicTheme('Songs')"><span class="music-nav-icon music-nav-songs material-icons" aria-hidden="true">music_note</span><span data-i18n="songs">Canciones</span></button>
+    <button type="button" data-music-target="favorites" onclick="navigateMusicTheme('favorites')"><span class="music-nav-icon music-nav-favorites material-icons" aria-hidden="true">star</span><span data-i18n="favorites">Favoritos</span></button>
+    <button type="button" data-music-target="settings" onclick="navigateMusicTheme('settings')"><span class="music-nav-icon music-nav-settings material-icons" aria-hidden="true">settings</span><span data-i18n="settings">Ajustes</span></button>
+  </nav>
 
   <!-- MENÚ DE AJUSTES DERECHO -->
   <div id="settings-overlay" class="settings-overlay" onclick="closeSettingsMenu()"></div>
@@ -176,6 +193,20 @@
             <path d="M42 100h76" stroke="white" stroke-width="2"/>
           </svg>
           <span class="playing-theme-caption"><span>Z1</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
+        <button type="button" class="playing-theme-option" data-playing-theme="music" aria-pressed="false" onclick="setPlayingTheme('music')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <defs><linearGradient id="music-theme-preview-bg" x2="1" y2="1"><stop stop-color="#a5a8a6"/><stop offset="1" stop-color="#92784d"/></linearGradient></defs>
+            <rect width="160" height="104" fill="url(#music-theme-preview-bg)"/>
+            <path d="m8 7 3 3 3-3m126 0h6m-3-3v6" stroke="white" fill="none"/>
+            <rect x="12" y="24" width="58" height="58" fill="#ece9e1"/>
+            <circle cx="41" cy="53" r="21" fill="#2a2a2a"/><circle cx="41" cy="53" r="7" fill="#c3ac8c"/>
+            <path d="M92 32h37" stroke="#f5d77e" stroke-width="2"/>
+            <path d="M85 43h50m-39 9h28m-26 8h25m-43 9h62" stroke="white" stroke-width="2"/>
+            <g stroke="white" fill="none"><circle cx="97" cy="85" r="5"/><circle cx="113" cy="85" r="7"/><circle cx="129" cy="85" r="5"/></g>
+            <path d="m111 81 6 4-6 4z" fill="white"/>
+          </svg>
+          <span class="playing-theme-caption"><span>Music</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
         </button>
       </div>
     </div>
@@ -620,7 +651,9 @@
   <div id="view-playing" class="view active">
     
     <div class="track-header-wrapper">
+      <button class="music-only music-track-action" id="music-track-favorite" type="button" onclick="toggleMusicTrackFavorite()" aria-label="Añadir a favoritos" aria-pressed="false"><span class="material-icons">star_border</span></button>
       <div class="track-info">
+        <div class="music-only" id="music-track-quality" hidden></div>
         <div class="track-title" id="track-title"><span class="track-title-text" id="track-title-text" data-i18n="selectTrack">Selecciona una canción</span></div>
         <div class="track-artist" id="track-artist">Emby Server</div>
         <div class="track-album classic-only" id="track-album"></div>
@@ -634,6 +667,7 @@
           <span class="material-icons">queue_music</span>
         </div>
       </div>
+      <button class="music-only music-track-action" id="music-track-add" type="button" onclick="addMusicTrackToPlaylist()" data-i18n-title="addToPlaylist" aria-label="Añadir a lista de reproducción"><span class="material-icons">add_circle_outline</span></button>
     </div>
 
     <!-- CARRUSEL DE PORTADAS -->
@@ -768,6 +802,13 @@
 
   <!-- VISTA: MY MUSIC -->
   <div id="view-music" class="view">
+    <div class="music-only" id="music-library-tabs" role="tablist" data-i18n-title="musicMyLibrary">
+      <button type="button" role="tab" data-music-category="Playlists" onclick="navigateMusicTheme('Playlists')" data-i18n="playlists" aria-selected="false">Listas</button>
+      <button type="button" role="tab" data-music-category="Artists" onclick="navigateMusicTheme('Artists')" data-i18n="artists" aria-selected="false">Artistas</button>
+      <button type="button" role="tab" data-music-category="Albums" onclick="navigateMusicTheme('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
+      <button type="button" role="tab" data-music-category="Songs" onclick="navigateMusicTheme('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
+      <button type="button" role="tab" data-music-category="Favorites" onclick="navigateMusicTheme('favorites')" data-i18n="favorites" aria-selected="false">Favoritos</button>
+    </div>
     <div id="category-view">
       <div id="home-featured" class="featured-section">
         <div class="featured-slideshow" id="featured-slideshow">
@@ -775,6 +816,14 @@
         </div>
         <span class="featured-refresh material-icons" title="Recargar side show" data-i18n-title="refreshSlideshow" onclick="refreshFeatured()">refresh</span>
       </div>
+      <section class="music-only" id="music-library-queue">
+        <div class="music-library-heading"><h2 data-i18n="musicPlayQueue">Cola de reproducción</h2><button type="button" onclick="openMusicQueue()" data-i18n="musicOpenQueue">Abrir</button></div>
+        <div id="music-library-cards"></div>
+      </section>
+      <section class="music-only" id="music-recently-added" aria-labelledby="music-recent-title">
+        <div class="music-library-heading"><h2 id="music-recent-title" data-i18n="musicRecentlyAdded">Recientemente añadidas</h2></div>
+        <div id="music-recent-cards" aria-live="polite"></div>
+      </section>
       <div class="grid-menu" id="home-grid">
         <div class="grid-card" data-category="songs" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadCategory('Songs')">
           <div class="grid-card-content">
@@ -832,6 +881,11 @@
     </div>
 
     <div id="list-view" style="display: none;">
+      <div class="music-only" id="music-favorite-tabs" role="tablist" data-i18n-title="favorites">
+        <button type="button" role="tab" data-music-favorites="Songs" onclick="loadFavorites('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
+        <button type="button" role="tab" data-music-favorites="Albums" onclick="loadFavorites('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
+      </div>
+      <section class="music-only" id="music-detail-header" hidden></section>
       <div class="back-btn" onclick="backToCategories()">
         <span class="material-icons">arrow_back</span> <span data-i18n="back">Volver</span>
       </div>
@@ -1046,6 +1100,7 @@
   <script src="js/queue.js"></script>
   <script src="js/favorites.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/music-theme.js"></script>
   <script src="js/app.js"></script>
 
   <div id="local-banner" class="local-wait-banner" style="display:none;">
