@@ -13,7 +13,7 @@ const run=async expression=>{let r=await command('Runtime.evaluate',{expression,
 await command('Runtime.enable');await command('Emulation.setDeviceMetricsOverride',{width:1900,height:700,deviceScaleFactor:1,mobile:false});
 await command('Page.navigate',{url:fileMode?require('node:url').pathToFileURL(path.join(root,'index.html')).href:'http://127.0.0.1:'+server.address().port+'/'});
 
-for(let i=0;i<100;i++){if(await run("typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
+for(let i=0;i<400;i++){if(await run("typeof toggleVisualizerView==='function' && typeof audio!=='undefined'"))break;await new Promise(r=>setTimeout(r,100));}
 
 await run(`(async()=>{
  const rate=44100,count=rate*10,bytes=new Uint8Array(44+count*2),v=new DataView(bytes.buffer);
@@ -38,25 +38,42 @@ await run("document.querySelector('[data-playing-theme=classic]').click()");
 assert.equal(await run("document.querySelector('[data-playing-theme=classic]').getAttribute('aria-pressed')"),'true');
 const screenshot=async name=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(artifacts,name+'.png'),Buffer.from(shot.data,'base64'));};
 await new Promise(r=>setTimeout(r,650));await screenshot('settings');await run('closeSettingsMenu()');
-for(const [width,height] of [[1341,772],[880,400],[390,844],[844,390]]) {
+for(const [width,height] of [[1341,772],[1100,772],[641,900],[640,900],[640,360],[900,700],[880,400],[768,1024],[390,844],[320,640],[844,390]]) {
  await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
  await new Promise(r=>setTimeout(r,350));
  const layout=await run(`(()=>{
   const rect=id=>{const r=document.querySelector(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
   return {art:rect('#card-current'),near:rect('#card-prev'),far:rect('#card-next'),title:rect('#track-title'),controls:rect('.controls'),volume:rect('#volume-bar'),progress:rect('#progress-bar'),scroll:document.body.scrollWidth,playing:!audio.paused,album:document.querySelector('#track-album').textContent};
  })()`);
+ const buttons=await run(`(()=>{
+  const selectors=['.controls .control-btn','.extra-controls-right .mode-btn','.volume-container'];
+  return selectors.flatMap(s=>[...document.querySelectorAll('#view-playing '+s)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,transport:el.classList.contains('control-btn')}}));
+ })()`);
+ for(const [i,button] of buttons.entries()) {
+  if(button.transport)assert(Math.abs(button.width-button.height)<1,'Classic button is distorted at '+width+': '+JSON.stringify(button));
+  assert(button.x>=0 && button.right<=width+1,'Classic button outside viewport at '+width);
+  for(const other of buttons.slice(i+1))assert(button.right<=other.x+1 || other.right<=button.x+1 || button.bottom<=other.y+1 || other.bottom<=button.y+1,'Classic controls overlap at '+width);
+ }
  assert(layout.playing);assert.equal(layout.album,'1000 Faces (Single)');
  assert(layout.volume.width>30 && layout.progress.width>50);
  assert(layout.scroll<=width+1,'Horizontal overflow');
  for(const id of ['art','title','controls','volume','progress']) {
   const box=layout[id];assert(box.x>=0&&box.right<=width+1,id+' outside screen at '+width);
-  assert(box.y>=0&&box.bottom<=height+1,id+' below screen at '+width);
+  assert(box.y>=0 && (width<=640 || box.bottom<=height+1),id+' below screen at '+width);
  }
  assert(layout.near.right-layout.art.right>layout.art.width*.19,'Next artwork is hidden behind the current cover');
  assert(layout.far.right-layout.near.right>layout.art.width*.13,'Second upcoming artwork is hidden');
  assert(layout.far.right<=width+1,'Stack exceeds viewport');
- if(width>680)assert(layout.far.right<layout.title.x,'Classic stack overlaps the track information');
+ if(width>640)assert(layout.far.right<layout.title.x,'Classic stack overlaps the track information');
+ else {
+  assert(Math.max(layout.art.bottom,layout.near.bottom,layout.far.bottom)<=layout.title.y,'Compact artwork overlaps metadata at '+width);
+  assert(layout.controls.y>=layout.title.bottom,'Compact controls must be below metadata at '+width);
+  await run("document.querySelector('#view-playing .controls-wrapper').scrollIntoView({block:'end'})");
+  assert(await run("(()=>{const r=document.querySelector('#view-playing .controls-wrapper').getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1})()"),'Compact controls are not reachable at '+width);
+ }
+
  await screenshot('classic-'+width);console.log('PASS Classic layout',width,height);
+ await run("document.getElementById('view-playing').scrollTop=0");
 }
 assert(await run("document.querySelector('#img-prev').src===playlist[1].coverUrl&&document.querySelector('#img-next').src===playlist[2].coverUrl"));
 const firstBackground=await run("document.getElementById('bg-container').style.backgroundImage");
@@ -91,6 +108,15 @@ for (const [width,height] of [[1341,772],[390,844],[844,390]]) {
   const rect=id=>{const r=document.querySelector(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
   return {art:rect('#card-current'),title:rect('#track-title'),controls:rect('.controls'),volume:rect('#volume-bar'),progress:rect('#progress-bar'),scroll:document.body.scrollWidth,playing:!audio.paused,album:document.querySelector('#track-album').textContent};
  })()`);
+ const buttons=await run(`(()=>{
+  const selectors=['.controls .control-btn','.extra-controls-right .mode-btn','.volume-container'];
+  return selectors.flatMap(s=>[...document.querySelectorAll('#view-playing '+s)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,transport:el.classList.contains('control-btn')}}));
+ })()`);
+ for(const [i,button] of buttons.entries()) {
+  if(button.transport)assert(Math.abs(button.width-button.height)<1,'Classic button is distorted at '+width+': '+JSON.stringify(button));
+  assert(button.x>=0 && button.right<=width+1,'Classic button outside viewport at '+width);
+  for(const other of buttons.slice(i+1))assert(button.right<=other.x+1 || other.right<=button.x+1 || button.bottom<=other.y+1 || other.bottom<=button.y+1,'Classic controls overlap at '+width);
+ }
  assert(layout.playing);assert.equal(layout.album,'1000 Faces (Single)');
  assert(layout.scroll<=width+1,'Z1 horizontal overflow');
  assert(layout.progress.y>=layout.controls.bottom&&layout.progress.y-layout.controls.bottom<=32,'Z1 progress should sit just below transport controls: '+JSON.stringify({width,controls:layout.controls,progress:layout.progress}));

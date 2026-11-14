@@ -3121,10 +3121,11 @@
 #view-playing[data-theme="classic"] .queue-btn-top span { font-size: 28px; color: #fff; }
 #view-playing[data-theme="classic"] .controls-wrapper {
   grid-column: 2; grid-row: 2; align-self: start; max-width: none; min-width: 0;
+  container-type: inline-size;
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, .4fr); gap: 38px 24px;
 }
 #view-playing[data-theme="classic"] .controls { grid-column: 1; grid-row: 1; justify-content: flex-start; gap: 28px; margin: 0; padding-left: 12px; }
-#view-playing[data-theme="classic"] .control-btn { width: 64px; height: 64px; border-width: 1px; border-color: #fff; background: transparent; }
+#view-playing[data-theme="classic"] .control-btn { flex-shrink: 0; width: 64px; height: 64px; border-width: 1px; border-color: #fff; background: transparent; }
 #view-playing[data-theme="classic"] .control-btn.play { width: 80px; height: 80px; }
 #view-playing[data-theme="classic"] .control-btn span { font-size: 38px; color: #fff; }
 #view-playing[data-theme="classic"] .mode-btn { color: #fff; }
@@ -3144,10 +3145,10 @@
 #view-playing[data-theme="classic"] .volume-bar { width: 100%; min-width: 0; opacity: 1; visibility: visible; }
 #view-playing[data-theme="classic"] .volume-container span { font-size: 24px; }
 
-@media (max-width: 680px) and (orientation: portrait) {
+@media (max-width: 640px) {
   #view-playing[data-theme="classic"] {
-    --album-size: min(calc(70vw * var(--carousel-size)), calc((100vw - 48px) / 1.34), 38dvh);
-    grid-template-columns: minmax(0, 440px); grid-template-rows: auto auto auto;
+    --album-size: min(calc(70vw * var(--carousel-size)), calc((100vw - 48px) / 1.34), calc(420px / 1.34), 38dvh);
+    grid-template-columns: minmax(0, 420px); grid-template-rows: auto auto auto;
     gap: 20px; padding: 20px 24px; align-content: safe center;
   }
   #view-playing[data-theme="classic"] .carousel-wrapper { grid-column: 1; grid-row: 1; }
@@ -3159,12 +3160,35 @@
   #view-playing[data-theme="classic"] .control-btn.play { width: 72px; height: 72px; }
   #view-playing[data-theme="classic"] .track-title { font-size: 30px; }
 }
-@media (orientation: landscape) and (max-height: 520px) {
+@media (min-width: 641px) and (orientation: landscape) and (max-height: 520px) {
   #view-playing[data-theme="classic"] { padding: 12px 20px; gap: 0 28px; }
   #view-playing[data-theme="classic"] .track-header-wrapper { margin-bottom: 20px; }
   #view-playing[data-theme="classic"] .controls-wrapper { gap: 18px 16px; }
   #view-playing[data-theme="classic"] .track-title { font-size: 30px; margin-bottom: 8px; }
   #view-playing[data-theme="classic"] .track-artist { font-size: 20px; }
+}
+
+/* Adapt to the controls column, which can be narrow even on desktop. */
+@container (max-width: 420px) {
+  #view-playing[data-theme="classic"] .controls {
+    grid-column: 1 / -1; justify-content: center;
+    gap: clamp(10px, 4cqw, 20px); padding: 0;
+  }
+  #view-playing[data-theme="classic"] .control-btn {
+    width: clamp(44px, 18cqw, 64px); height: clamp(44px, 18cqw, 64px);
+  }
+  #view-playing[data-theme="classic"] .control-btn.play {
+    width: clamp(56px, 22cqw, 80px); height: clamp(56px, 22cqw, 80px);
+  }
+  #view-playing[data-theme="classic"] .control-btn span { font-size: clamp(28px, 10cqw, 38px); }
+  #view-playing[data-theme="classic"] .progress-container { grid-column: 1 / -1; }
+  #view-playing[data-theme="classic"] .extra-controls-right {
+    grid-column: 1; grid-row: 3; justify-content: flex-start; gap: 12px;
+  }
+  #view-playing[data-theme="classic"] .mode-btn span { font-size: 28px; }
+  #view-playing[data-theme="classic"] .volume-container {
+    grid-column: 2; grid-row: 3; align-self: center;
+  }
 }
 
 /* Xperia Z1: tall metadata strip, perspective covers and white transport. */
