@@ -2,23 +2,49 @@
 
     // --- Cola de reproducción persistente ---
     const QUEUE_LS_KEY = 'walkman_queue';
+    const PLAYBACK_LS_KEY = 'walkman_playback';
     let _saveQueueTimer = null;
+    let _lastPlaybackSave = 0;
+    let playbackPersistenceEnabled = true;
+
+    function suspendPlaybackPersistence() {
+      playbackPersistenceEnabled = false;
+      clearTimeout(_saveQueueTimer);
+      _saveQueueTimer = null;
+    }
+
+    function playbackSource() {
+      return JSON.stringify([embyConfig.serverType, embyConfig.host || '', embyConfig.libraryId || '']);
+    }
+
+    function savePlaybackState() {
+      if (!playbackPersistenceEnabled) return;
+      const track = playlist[currentTrackIndex];
+      if (!track || !audio.src || audio._loadedTrackId !== String(track.Id)) return;
+      const position = audio._restorePosition ?? audio.currentTime;
+      saveLS(PLAYBACK_LS_KEY, {
+        source: playbackSource(), trackId: String(track.Id),
+        position: Number.isFinite(position) ? Math.max(0, position) : 0,
+        playing: !audio._userPaused && !audio.ended && (!!audio._resumeWanted || !audio.paused)
+      });
+      _lastPlaybackSave = performance.now();
+    }
+
+    function saveQueueNow() {
+      if (!playbackPersistenceEnabled) return;
+      clearTimeout(_saveQueueTimer);
+      _saveQueueTimer = null;
+      saveLS(QUEUE_LS_KEY, {
+        v: 3, source: playbackSource(), playlist, originalPlaylist,
+        currentTrackIndex, isShuffle, repeatMode
+      });
+      savePlaybackState();
+    }
+
     function saveQueue() {
+      if (!playbackPersistenceEnabled) return;
       if (_saveQueueTimer) return;
-      _saveQueueTimer = setTimeout(() => {
-        _saveQueueTimer = null;
-        try {
-          const state = {
-            v: 2,
-            playlist: playlist,
-            originalPlaylist: originalPlaylist,
-            currentTrackIndex: currentTrackIndex,
-            isShuffle: isShuffle,
-            repeatMode: repeatMode
-          };
-          saveLS(QUEUE_LS_KEY, state);
-        } catch (e) {}
-      }, 300);
+      _saveQueueTimer = setTimeout(saveQueueNow, 300);
     }
 
     function restoreQueue() {
@@ -27,6 +53,7 @@
         if (!raw) return false;
         const state = JSON.parse(raw);
         if (!state || !Array.isArray(state.playlist) || state.playlist.length === 0) return false;
+        if (state.source && state.source !== playbackSource()) return false;
         playlist = state.playlist;
         originalPlaylist = Array.isArray(state.originalPlaylist) ? state.originalPlaylist : [...playlist];
         currentTrackIndex = Math.min(Math.max(0, state.currentTrackIndex || 0), playlist.length - 1);
@@ -35,6 +62,34 @@
         return true;
       } catch (e) { return false; }
     }
+
+    function restoreQueuedPlayback() {
+      const track = playlist[currentTrackIndex];
+      if (!track || track.IsLocal) return;
+      let saved = null;
+      try { saved = JSON.parse(loadLS(PLAYBACK_LS_KEY)); } catch (e) {}
+      const matching = saved && saved.source === playbackSource() && saved.trackId === String(track.Id);
+      playTrack(currentTrackIndex, true, {
+        autoplay: !!(matching && saved.playing),
+        position: matching && Number.isFinite(saved.position) ? Math.max(0, saved.position) : 0,
+        restoring: true
+      });
+    }
+
+    audio.addEventListener('timeupdate', () => {
+      if (performance.now() - _lastPlaybackSave >= 1500) savePlaybackState();
+    });
+    ['playing', 'pause', 'seeked', 'ended'].forEach(event => audio.addEventListener(event, savePlaybackState));
+    // Flush synchronously: a debounced save may never run during a reload.
+    function flushQueueForNavigation() {
+      // Do not erase an existing queue if the page is reloaded again while
+      // the saved server configuration is still being restored.
+      if (playlist.length || _saveQueueTimer) saveQueueNow();
+    }
+    window.addEventListener('pagehide', flushQueueForNavigation);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) flushQueueForNavigation();
+    });
 
     // ---- Seguridad: Sanitización de URLs de servidores ----
 

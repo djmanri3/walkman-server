@@ -115,6 +115,7 @@ docker-compose up -d
 - Keep the particle preview running in Settings and smooth animation as playback advances
 
 ### Upcoming changes
+- Restore server playback after reload, including the current track, position and playing/paused state
 - Improve Classic controls on narrow windows and activate the compact layout at 640px
 - Add translated update notices with Update and Later actions, preserving settings
 - Detect installed and available cache revisions on hosted installations and local file bundles

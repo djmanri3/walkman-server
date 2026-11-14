@@ -644,6 +644,8 @@ let audioQuality = null;
     }
 
     function clearCache() {
+      // The reload must not save the playback session we are explicitly clearing.
+      if (typeof suspendPlaybackPersistence === 'function') suspendPlaybackPersistence();
       // 1) Cachés del service worker (protegido: falla en APK con origin null)
       try {
         if (window.caches) {

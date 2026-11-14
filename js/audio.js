@@ -635,8 +635,59 @@
 
     let trackHasLoaded = false;
 
-    function playTrack(index, skipAnimation = false) {
+    let playbackRestoreCleanup = null;
+    let playbackGestureRetry = null;
+
+    function syncPlaybackButtons() {
+      const playing = !audio.paused && !audio.ended;
+      $('play-icon').textContent = playing ? 'pause' : 'play_arrow';
+      $('vis-play-icon').textContent = playing ? 'pause' : 'play_arrow';
+      setMediaSessionPlayback(playing);
+      if (typeof updateZ1MiniPlayer === 'function') updateZ1MiniPlayer();
+      notifyAndroidMedia();
+    }
+
+    function clearPlaybackGestureRetry() {
+      if (playbackGestureRetry) window.removeEventListener('pointerdown', playbackGestureRetry, true);
+      playbackGestureRetry = null;
+    }
+
+    function requestTrackPlayback(restoring = false) {
+      clearPlaybackGestureRetry();
+      initAudioContext();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      audio._userPaused = false;
+      audio._resumeWanted = true;
+      const expectedSource = audio.src;
+      return audio.play().then(() => {
+        if (audio.src !== expectedSource) return;
+        audio._resumeWanted = false;
+        syncPlaybackButtons();
+        savePlaybackState();
+      }).catch(error => {
+        if (audio.src !== expectedSource) return;
+        if (error.name === 'AbortError') return;
+        audio._resumeWanted = restoring && error.name === 'NotAllowedError';
+        syncPlaybackButtons();
+        savePlaybackState();
+        if (audio._resumeWanted) {
+          playbackGestureRetry = event => {
+            // The Play button has its own click handler; do not toggle twice.
+            if (event.target.closest('[onclick="togglePlay()"]')) return;
+            if (!audio._userPaused && audio.src === expectedSource) requestTrackPlayback(true);
+            else clearPlaybackGestureRetry();
+          };
+          window.addEventListener('pointerdown', playbackGestureRetry, true);
+        }
+      });
+    }
+
+    ['playing', 'pause', 'ended'].forEach(event => audio.addEventListener(event, syncPlaybackButtons));
+
+    function playTrack(index, skipAnimation = false, options = {}) {
       if (playlist.length === 0) return;
+      if (playbackRestoreCleanup) playbackRestoreCleanup();
+      clearPlaybackGestureRetry();
       
       const prevIndex = currentTrackIndex;
       currentTrackIndex = index;
@@ -807,11 +858,6 @@
         });
       }
 
-      initAudioContext();
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-
       const streamUrl = track.IsLocal
         ? track.objUrl || track.Path
         : embyConfig.serverType === 'plex'
@@ -819,11 +865,33 @@
           : `${embyConfig.host}/Audio/${track.Id}/stream?static=true&api_key=${embyConfig.token}`;
       const doSwitch = () => {
         audio._crossfadeAdvancing = false;
+        const autoplay = options.autoplay !== false;
+        const position = Number.isFinite(options.position) ? Math.max(0, options.position) : 0;
+        audio._loadedTrackId = String(track.Id);
+        audio._restorePosition = position;
+        audio._resumeWanted = autoplay;
+        audio._userPaused = !autoplay;
+        audio._lastTimeUpdate = null;
         audio.src = streamUrl;
-        audio._userPaused = false;
-        audio.play();
-        document.getElementById('play-icon').textContent = 'pause';
-        document.getElementById('vis-play-icon').textContent = 'pause';
+        const expectedSource = audio.src;
+        const start = () => {
+          if (audio.src !== expectedSource) return;
+          if (position > 0 && Number.isFinite(audio.duration)) {
+            audio.currentTime = Math.min(position, Math.max(0, audio.duration - .05));
+          }
+          audio._restorePosition = null;
+          playbackRestoreCleanup = null;
+          if (autoplay) requestTrackPlayback(!!options.restoring);
+          else syncPlaybackButtons();
+        };
+        if (options.restoring) {
+          audio.addEventListener('loadedmetadata', start, { once: true });
+          playbackRestoreCleanup = () => {
+            audio.removeEventListener('loadedmetadata', start);
+            playbackRestoreCleanup = null;
+          };
+          audio.load();
+        } else start();
       };
       if (crossfadeSeconds > 0 && prevIndex !== index && audio.src && !audio.paused) {
         // Fundido suave: baja el volumen de la pista actual y entra la nueva
@@ -857,30 +925,25 @@
       updateVisualizerOverlayData();
       renderQueueList();
       notifyAndroidMedia();
-      showNowPlayingNotification(track);
+      if (!options.restoring) showNowPlayingNotification(track);
       setupMediaSessionHandlers();
-      setMediaSessionPlayback(true);
+      syncPlaybackButtons();
       saveQueue();
     }
 
     function togglePlay() {
       if (!audio.src) return;
-      initAudioContext();
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
       if (audio.paused) {
-        audio._userPaused = false;
-        audio.play();
-        $('play-icon').textContent = 'pause';
-        $('vis-play-icon').textContent = 'pause';
-        setMediaSessionPlayback(true);
+        requestTrackPlayback();
       } else {
+        clearPlaybackGestureRetry();
+        audio._resumeWanted = false;
         audio._userPaused = true;
         audio.pause();
         $('play-icon').textContent = 'play_arrow';
         $('vis-play-icon').textContent = 'play_arrow';
         setMediaSessionPlayback(false);
+        savePlaybackState();
       }
       notifyAndroidMedia();
     }

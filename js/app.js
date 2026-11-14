@@ -122,26 +122,7 @@
           if (shufBtn) { if (isShuffle) shufBtn.classList.add('active'); else shufBtn.classList.remove('active'); }
           renderQueueList();
           refreshCarouselImages();
-          if (playlist.length > 0 && currentTrackIndex >= 0) {
-            const track = playlist[currentTrackIndex];
-            document.getElementById('track-title').textContent = track.Name || '';
-            const artistText = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || '');
-            document.getElementById('track-artist').textContent = artistText;
-            const img = getEmbyImageUrl(track);
-            setCardImg(document.getElementById('img-current'), img);
-            setCardImg(document.getElementById('img-prev'), currentTrackIndex > 0 ? getEmbyImageUrl(playlist[currentTrackIndex - 1]) : '');
-            setCardImg(document.getElementById('img-next'), currentTrackIndex < playlist.length - 1 ? getEmbyImageUrl(playlist[currentTrackIndex + 1]) : '');
-            document.getElementById('card-prev').style.display = currentTrackIndex > 0 ? '' : 'none';
-            document.getElementById('card-next').style.display = currentTrackIndex < playlist.length - 1 ? '' : 'none';
-            if ('mediaSession' in navigator) {
-              navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.Name,
-                artist: artistText,
-                album: track.Album || 'Walkman Web',
-                artwork: img ? [{ src: img, sizes: '512x512', type: 'image/jpeg' }] : []
-              });
-            }
-          }
+          restoreQueuedPlayback();
         }
       }
     };
