@@ -42,6 +42,17 @@ await new Promise(r=>setTimeout(r,500));
 assert.equal(await run("document.querySelector('[data-playing-theme=music]').getAttribute('aria-pressed')"),'true');
 assert.equal(await run("document.getElementById('music-track-quality').textContent"),'MP3 320 kbps');
 const screenshot=async name=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(artifacts,name+'.png'),Buffer.from(shot.data,'base64'))};
+const swipe=async(selector,dx,dy)=>{
+ const origin=await run(`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+ const point=(step)=>({x:origin.x+dx*step/8,y:origin.y+dy*step/8,id:1});
+ await command('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point(0)]});
+ for(let step=1;step<=8;step++){
+  await command('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point(step)]});
+  await new Promise(resolve=>setTimeout(resolve,16));
+ }
+ await command('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await new Promise(resolve=>setTimeout(resolve,350));
+};
 for(const [width,height] of [[1341,772],[844,390],[798,399],[390,844],[320,640],[768,1024],[640,360]]) {
  await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
  await new Promise(r=>setTimeout(r,300));
@@ -110,6 +121,20 @@ assert.equal(await run("document.querySelectorAll('#music-library-cards .music-l
 assert.equal(await run("getComputedStyle(document.getElementById('home-grid')).display"),'none');
 assert.equal(await run("document.querySelector('#music-recent-cards .music-library-card-title').textContent"),'A Little More');
 await screenshot('music-library');
+await run("switchTab('playing')");
+await swipe('#card-current',0,130);
+assert(await run("document.getElementById('view-music').classList.contains('active') && document.getElementById('category-view').style.display!=='none' && document.getElementById('list-view').style.display==='none'"),'Downward swipe did not return to Home');
+assert(await run('!audio.paused'),'Dismissing Playing paused the song');
+await run("switchTab('playing')");
+await swipe('.track-header-wrapper',0,24);
+assert(await run("document.getElementById('view-playing').classList.contains('active')"),'A short drag dismissed Playing');
+await swipe('#card-current',-140,0);
+assert.equal(await run('currentTrackIndex'),1,'Horizontal artwork swipes stopped changing songs');
+assert(await run("document.getElementById('view-playing').classList.contains('active')"),'Horizontal swipe dismissed Playing');
+await run("playTrack(0);document.getElementById('view-lyrics').classList.add('active')");
+await swipe('.track-header-wrapper',0,130);
+assert(await run("document.getElementById('view-playing').classList.contains('active')"),'Dismiss gesture interfered with Lyrics');
+await run("document.getElementById('view-lyrics').classList.remove('active');switchTab('music')");
 assert(await run(`(()=>{
  const queueCard=document.querySelector('#music-library-cards .music-library-card');
  const recentCard=document.querySelector('#music-recent-cards .music-library-card');
@@ -309,6 +334,11 @@ assert(await run(`(()=>{
 })()`),'A large library cannot scroll to its final song');
 await run('switchTab("playing");switchTab("music")');
 assert(await run("document.querySelector('#items-container .list-item:last-child').getBoundingClientRect().top < document.getElementById('view-music').getBoundingClientRect().bottom"),'Switching views lost the library scroll position');
+await run("window.libraryScrollBeforeSwipe=document.getElementById('view-music').scrollTop;switchTab('playing')");
+await swipe('.track-header-wrapper',0,130);
+assert.equal(await run('currentCategory'),'Songs','Dismiss gesture changed the originating library tab');
+assert(await run("document.body.classList.contains('music-library-open') && document.getElementById('view-music').classList.contains('active')"),'Dismiss gesture returned to Home instead of the originating library');
+assert(await run("Math.abs(document.getElementById('view-music').scrollTop-libraryScrollBeforeSwipe)<2"),'Dismiss gesture lost library scroll position');
 await run("localTracks=savedLocalTracks;navigateMusicTheme('home')");
 await run(`(()=>{
  window.recentRealFetch=window.fetch;

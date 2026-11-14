@@ -41,6 +41,49 @@ function handlePlayerBack() {
   } else switchTab('music');
 }
 
+function initMusicPlayerDismissGesture() {
+  const player = document.getElementById('view-playing');
+  let gesture = null;
+  const available = () => document.body.dataset.theme === 'music' && player.classList.contains('active')
+    && !document.getElementById('view-lyrics').classList.contains('active')
+    && !document.getElementById('queue-drawer').classList.contains('open');
+  player.addEventListener('touchstart', event => {
+    gesture = null;
+    if (!available() || event.touches.length !== 1 || player.scrollTop > 1
+      || event.target.closest('button,input,select,textarea,a,[role="button"],.controls-wrapper,.lyrics-view,.queue-drawer')) return;
+    const touch = event.touches[0];
+    gesture = { id: touch.identifier, x: touch.clientX, y: touch.clientY, vertical: false };
+  }, { passive: true });
+  player.addEventListener('touchmove', event => {
+    if (!gesture) return;
+    if (!available() || event.touches.length !== 1) { gesture = null; return; }
+    const touch = [...event.touches].find(point => point.identifier === gesture.id);
+    if (!touch) { gesture = null; return; }
+    const dx = touch.clientX - gesture.x, dy = touch.clientY - gesture.y;
+    if (!gesture.vertical) {
+      if (dy < -14 || (Math.abs(dx) > 14 && Math.abs(dx) >= dy)) { gesture = null; return; }
+      if (dy > 14 && dy > Math.abs(dx) * 1.35) gesture.vertical = true;
+    }
+    if (gesture.vertical && event.cancelable) event.preventDefault();
+  }, { passive: false });
+  player.addEventListener('touchend', event => {
+    const ended = gesture;
+    gesture = null;
+    if (!ended || !ended.vertical || !available()) return;
+    const touch = [...event.changedTouches].find(point => point.identifier === ended.id);
+    if (!touch) return;
+    if (event.cancelable) event.preventDefault();
+    const dx = touch.clientX - ended.x, dy = touch.clientY - ended.y;
+    if (dy >= Math.max(56, Math.min(96, player.clientHeight * .1)) && dy > Math.abs(dx) * 1.35) {
+      // The library stays mounted while Playing is open, preserving its route and scroll.
+      switchTab('music');
+    }
+  }, { passive: false });
+  player.addEventListener('touchcancel', () => { gesture = null; }, { passive: true });
+}
+
+initMusicPlayerDismissGesture();
+
 function updateMusicThemeData() {
   const music = document.body.dataset.theme === 'music';
   const playing = document.getElementById('view-playing').classList.contains('active');
