@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
+  <meta name="walkman-version" content="3.1">
+  <meta name="walkman-cache-version" content="walkman-v58">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -1068,5 +1070,19 @@
     </div>
   </div>
 
+  <section id="app-update-banner" class="app-update-banner" role="region" aria-labelledby="app-update-title" aria-live="polite" hidden>
+    <div class="app-update-copy">
+      <h2 id="app-update-title" data-i18n="appUpdateAvailable">¡Hay una nueva actualización!</h2>
+      <p data-i18n="appUpdateCacheMessage">Es necesario borrar la caché de la app para actualizar.</p>
+      <p><span data-i18n="appUpdateMoreInfo">Más información en</span> <a href="https://github.com/djmanri3/walkman-server" target="_blank" rel="noopener noreferrer">github.com/djmanri3/walkman-server</a></p>
+      <p id="app-update-versions" class="app-update-versions"></p>
+      <p id="app-update-error" role="alert" data-i18n="appUpdateFailed" hidden>No se ha podido actualizar. Comprueba tu conexión y vuelve a intentarlo.</p>
+    </div>
+    <div class="app-update-actions">
+      <button id="app-update-now" type="button" onclick="applyAppUpdate()" data-i18n="appUpdateNow">Actualizar</button>
+      <button id="app-update-later" type="button" onclick="deferAppUpdate()" data-i18n="appUpdateLater">En otro momento</button>
+    </div>
+  </section>
+  <script src="js/updates.js"></script>
 </body>
 </html>

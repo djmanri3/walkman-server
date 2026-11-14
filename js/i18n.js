@@ -2,6 +2,14 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        appUpdateAvailable: "A new update is available!",
+        appUpdateCacheMessage: "The app cache needs to be cleared to update.",
+        appUpdateMoreInfo: "More information at",
+        appUpdateNow: "Update",
+        appUpdateLater: "Later",
+        appUpdateApplying: "Updating…",
+        appUpdateFailed: "Could not update. Check your connection and try again.",
+        appUpdateVersions: "Installed: {previous} · Available: {next}",
         appVersion: 'Version',
         playingHiResIcon: 'Hi-Res icon in Playing',
         playingTheme: 'Playing theme',
@@ -75,6 +83,14 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        appUpdateAvailable: "¡Hay una nueva actualización!",
+        appUpdateCacheMessage: "Es necesario borrar la caché de la app para actualizar.",
+        appUpdateMoreInfo: "Más información en",
+        appUpdateNow: "Actualizar",
+        appUpdateLater: "En otro momento",
+        appUpdateApplying: "Actualizando…",
+        appUpdateFailed: "No se ha podido actualizar. Comprueba tu conexión y vuelve a intentarlo.",
+        appUpdateVersions: "Instalada: {previous} · Disponible: {next}",
         appVersion: 'Versión',
         playingHiResIcon: 'Icono Hi-Res en Reproduciendo',
         playingTheme: 'Tema de Reproduciendo',
@@ -148,6 +164,14 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        appUpdateAvailable: "Une nouvelle mise à jour est disponible !",
+        appUpdateCacheMessage: "Il est nécessaire de vider le cache de l’application pour la mettre à jour.",
+        appUpdateMoreInfo: "Plus d’informations sur",
+        appUpdateNow: "Mettre à jour",
+        appUpdateLater: "Plus tard",
+        appUpdateApplying: "Mise à jour…",
+        appUpdateFailed: "Mise à jour impossible. Vérifiez votre connexion et réessayez.",
+        appUpdateVersions: "Installée : {previous} · Disponible : {next}",
         appVersion: 'Version',
         playingHiResIcon: 'Icône Hi-Res sur la pochette',
         playingTheme: 'Thème de lecture',
@@ -209,6 +233,14 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        appUpdateAvailable: "Ein neues Update ist verfügbar!",
+        appUpdateCacheMessage: "Für das Update muss der App-Cache geleert werden.",
+        appUpdateMoreInfo: "Weitere Informationen unter",
+        appUpdateNow: "Aktualisieren",
+        appUpdateLater: "Später",
+        appUpdateApplying: "Wird aktualisiert…",
+        appUpdateFailed: "Aktualisierung fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
+        appUpdateVersions: "Installiert: {previous} · Verfügbar: {next}",
         appVersion: 'Version',
         playingHiResIcon: 'Hi-Res-Symbol in der Wiedergabe',
         playingTheme: 'Wiedergabe-Design',
@@ -269,6 +301,14 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        appUpdateAvailable: "È disponibile un nuovo aggiornamento!",
+        appUpdateCacheMessage: "Per aggiornare è necessario svuotare la cache dell’app.",
+        appUpdateMoreInfo: "Maggiori informazioni su",
+        appUpdateNow: "Aggiorna",
+        appUpdateLater: "Più tardi",
+        appUpdateApplying: "Aggiornamento…",
+        appUpdateFailed: "Impossibile aggiornare. Controlla la connessione e riprova.",
+        appUpdateVersions: "Installata: {previous} · Disponibile: {next}",
         appVersion: 'Versione',
         playingHiResIcon: 'Icona Hi-Res in riproduzione',
         playingTheme: 'Tema di riproduzione',
@@ -329,6 +369,14 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        appUpdateAvailable: "Há uma nova atualização disponível!",
+        appUpdateCacheMessage: "É necessário limpar a cache da aplicação para atualizar.",
+        appUpdateMoreInfo: "Mais informações em",
+        appUpdateNow: "Atualizar",
+        appUpdateLater: "Mais tarde",
+        appUpdateApplying: "A atualizar…",
+        appUpdateFailed: "Não foi possível atualizar. Verifique a ligação e tente novamente.",
+        appUpdateVersions: "Instalada: {previous} · Disponível: {next}",
         appVersion: 'Versão',
         playingHiResIcon: 'Ícone Hi-Res em reprodução',
         playingTheme: 'Tema de reprodução',
@@ -448,6 +496,7 @@
       if (typeof updateFavoriteMenuOption === 'function') {
         updateFavoriteMenuOption();
       }
+      if (typeof renderAppUpdateBanner === 'function') renderAppUpdateBanner();
     }
     currentLang = getLang();
 

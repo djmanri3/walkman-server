@@ -114,6 +114,18 @@ docker-compose up -d
 - Add round and square particle shapes and save effect preferences
 - Keep the particle preview running in Settings and smooth animation as playback advances
 
+### Upcoming changes
+- Improve Classic controls on narrow windows and activate the compact layout at 640px
+- Add translated update notices with Update and Later actions, preserving settings
+- Detect installed and available cache revisions on hosted installations and local file bundles
+
+### App update notices
+When hosted over HTTP(S), the app checks `version.json` without using the cached response on each page load. It compares the installed cache revision with the available one and shows an update notice in the selected language. **Update** activates the downloaded service worker, removes obsolete app caches and reloads; server configuration, preferences and local-library storage are preserved. **Later** hides the notice until the next page load. Offline checks leave the current installation unchanged.
+
+For each deployment that changes app files, increment the `walkman-v…` cache revision in `sw.js`, `version.json` and the `walkman-cache-version` metadata in `index.html`. Set the display version in `version.json`, the `walkman-version` metadata and the Settings/About labels when releasing a new app version. Deploy these files together.
+
+When opened with `file://`, the app compares the bundle version embedded in `index.html` with the last accepted local version. The first load establishes a baseline; replacing the files with a newer bundle and reloading shows the notice. Update reloads that local bundle without erasing settings. Local mode cannot detect or download a newer hosted release and does not use service workers.
+
 # Bugs
 - Tell me :)
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v56';
+const CACHE_NAME = 'walkman-v58';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,8 @@ const SHELL_ASSETS = [
   './js/favorites.js',
   './js/ui.js',
   './js/app.js',
+  './js/updates.js',
+  './version.json',
   './manifest.json',
   './icons/Walkman.png',
   './images/default-album-cover.png',
@@ -77,15 +79,22 @@ function saveResponse(event, request, response) {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(CACHE_OPEN_PROMISE.then(cache => cache.addAll(SHELL_ASSETS)));
-  self.skipWaiting();
+  event.waitUntil(CACHE_OPEN_PROMISE.then(cache => cache.addAll(
+    SHELL_ASSETS.map(path => new Request(new URL(path, APP_BASE).href, { cache: 'reload' }))
+  )));
+});
+
+// A new release stays waiting until the user chooses Update.
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'ACTIVATE_UPDATE') {
+    event.waitUntil(self.skipWaiting());
+  }
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(
     keys.filter(key => key.startsWith('walkman-') && key !== CACHE_NAME).map(key => caches.delete(key))
-  )));
-  self.clients.claim();
+  )).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {

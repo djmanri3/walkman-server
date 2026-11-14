@@ -251,26 +251,6 @@
       } catch (e) {}
     }
 
-    // Registrar el Service Worker para PWA (el SW navega siempre contra la red
-    // con cache: 'no-cache', así nunca sirve un index.html viejo).
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => {
-            console.log('WALKMAN PWA Service Worker registrado con éxito:', reg.scope);
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
-                  console.log('WALKMAN PWA actualizado. Recarga para ver los cambios.');
-                }
-              });
-            });
-          })
-          .catch(err => console.error('Error al registrar Service Worker:', err));
-      });
-    }
-
     // Capturar evento de instalación PWA para mejor UX
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {

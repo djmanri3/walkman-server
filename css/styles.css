@@ -3560,3 +3560,47 @@ body[data-theme="z1"] .z1-mini-player:not([hidden]) { display: flex; position: f
   background: #202a2c;
   font: inherit;
 }
+
+/* Update notice stays readable above menus without blocking the player. */
+.app-update-banner[hidden], .app-update-banner [hidden] { display: none; }
+.app-update-banner {
+  position: fixed;
+  z-index: 2100;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.25);
+  border-top: 3px solid var(--accent-color);
+  border-radius: 12px;
+  background: #192023;
+  color: #fff;
+  box-shadow: 0 12px 40px #0009;
+  font-size: 14px;
+}
+.app-update-banner h2 { margin: 0 0 8px; font-size: 18px; }
+.app-update-banner p { margin: 6px 0; line-height: 1.5; }
+.app-update-banner a { color: #b5e5ff; overflow-wrap: anywhere; }
+.app-update-banner .app-update-versions { color: #bdc4c8; font-size: 12px; }
+#app-update-error { color: #ffb8b8; }
+.app-update-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.app-update-actions button {
+  padding: 10px 16px;
+  border: 1px solid #758087;
+  border-radius: 6px;
+  background: #293238;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+#app-update-now { border-color: #d7ebff; background: #d7ebff; color: #13202c; font-weight: 600; }
+.app-update-actions button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.app-update-actions button:disabled { opacity: .65; cursor: wait; }
+@media (max-width: 420px) {
+  .app-update-banner { padding: 16px; }
+  .app-update-actions button { flex: 1; }
+}
