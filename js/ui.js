@@ -586,12 +586,7 @@
       button.classList.toggle('on', enabled);
       button.setAttribute('aria-pressed', String(enabled));
       document.getElementById('hires-badge').classList.toggle('hidden',
-        !enabled || !isPlayingTrackHiRes(playlist[currentTrackIndex]));
-      document.querySelectorAll('#music-track-quality .music-hr-badge').forEach(badge => { badge.hidden = !enabled; });
-    }
-
-    function isPlayingTrackHiRes(item) {
-      return document.body.dataset.theme === 'music' ? musicHasHr(item) : isHiResAudio(item);
+        !enabled || !isHiResAudio(playlist[currentTrackIndex]));
     }
 
     function togglePlayingHiRes() {
@@ -1541,7 +1536,7 @@
         const track = playlist[index];
         incoming.querySelector('img').src = getEmbyImageUrl(track);
         const badge = incoming.querySelector('.hires-badge');
-        if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(track));
+        if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(track));
         outgoing.style.zIndex = direction < 0 ? '4' : '2';
         incoming.style.zIndex = direction < 0 ? '3' : '4';
         outgoing.style.transformOrigin = incoming.style.transformOrigin = classic ? 'left center' : 'center';
@@ -1558,7 +1553,7 @@
             const copy = copyCard(current,layer,left,top,width,height);
             copy.querySelector('img').src = getEmbyImageUrl(outerTrack);
             const badge = copy.querySelector('.hires-badge');
-            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(outerTrack));
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(outerTrack));
             motion.z1Cards.push({copy,slot:3});
           }
         } else if (!classic && !music) {
@@ -1572,7 +1567,7 @@
             const copy = copyCard(current,layer,left,top,width,height);
             copy.querySelector('img').src = getEmbyImageUrl(playlist[outerIndex]);
             const badge = copy.querySelector('.hires-badge');
-            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isPlayingTrackHiRes(playlist[outerIndex]));
+            if (badge) badge.classList.toggle('hidden', !isPlayingHiResEnabled() || !isHiResAudio(playlist[outerIndex]));
             motion.modernCards.push({copy,slot:-direction*2});
           }
         }

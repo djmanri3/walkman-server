@@ -58,7 +58,6 @@ function updateMusicThemeData() {
   label.textContent = quality;
   if (musicHasHr(track)) label.append(document.createTextNode(' '), createMusicHrBadge());
   label.hidden = !quality;
-  applyPlayingHiResState();
   document.getElementById('view-playing').classList.toggle('music-has-quality', !!quality);
   const background = document.getElementById('music-album-background');
   const url = track ? getEmbyImageUrl(track) : defaultPlaceholder;
@@ -280,8 +279,8 @@ function decorateMusicMediaRow(row, item, index = 0, detail = false) {
   number.className = 'music-only music-row-number';
   number.textContent = String(item.IndexNumber || item.TrackNumber || index + 1);
   row.prepend(number);
-  if ((item.Type === 'MusicArtist' || item.Type === 'Playlist') && !hasServerImage(item)) {
-    row.classList.add('music-placeholder-row');
+  if (item.Type === 'MusicArtist' || (item.Type === 'Playlist' && !hasServerImage(item))) {
+    row.classList.toggle('music-placeholder-row', !hasServerImage(item));
     const placeholder = document.createElement('span');
     placeholder.className = 'music-only music-row-placeholder';
     placeholder.setAttribute('aria-hidden', 'true');
@@ -297,6 +296,20 @@ function decorateMusicMediaRow(row, item, index = 0, detail = false) {
       placeholder.appendChild(icon);
     }
     row.insertBefore(placeholder, row.querySelector('.list-item-info'));
+    if (item.Type === 'MusicArtist') {
+      row.classList.add('music-artist-row');
+      const image = row.querySelector('img');
+      const originalUrl = new URL(getEmbyImageUrl(item), document.baseURI).href;
+      const syncPhoto = () => {
+        const isFallback = image.src === new URL(defaultPlaceholder, document.baseURI).href || image.src === emergencyPlaceholder;
+        const hasPhoto = image.complete && image.naturalWidth > 0 && !isFallback
+          && (hasServerImage(item) || image.src !== originalUrl);
+        row.classList.toggle('music-placeholder-row', !hasPhoto);
+      };
+      image.addEventListener('load', syncPhoto);
+      image.addEventListener('error', () => row.classList.add('music-placeholder-row'));
+      syncPhoto();
+    }
   }
 }
 

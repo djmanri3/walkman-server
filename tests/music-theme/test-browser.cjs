@@ -107,11 +107,24 @@ assert.equal(await run('playlist[currentTrackIndex].Name'),'A Little More');
 assert.equal(await run('isShuffle'),false);assert(await run('!audio.paused'));
 assert.equal(await run("document.querySelector('#music-track-quality .music-hr-badge').textContent"),'HR');
 assert.equal(await run('isHiResAudio(playlist[currentTrackIndex])'),false,'Fixture must cover FLAC without sample rate');
-await run('togglePlayingHiRes()');assert(await run("document.querySelector('#music-track-quality .music-hr-badge').hidden"));
+await run('togglePlayingHiRes();updateMusicThemeData()');
+assert.equal(await run('isPlayingHiResEnabled()'),false);
+assert(await run("!document.querySelector('#music-track-quality .music-hr-badge').hidden"),'Music HR must remain visible with the general Hi-Res setting disabled');
 await run('togglePlayingHiRes()');assert(await run("!document.querySelector('#music-track-quality .music-hr-badge').hidden"));
 await run("playlist[currentTrackIndex].MediaSources[0].MediaStreams[0].SampleRate=48000;playlist[currentTrackIndex].MediaSources[0].MediaStreams[0].BitDepth=24;updateMusicThemeData()");
 assert.equal(await run("document.getElementById('music-track-quality').textContent"),'FLAC 48 kHz / 24 bit HR');
-assert.equal(await run("getComputedStyle(document.getElementById('hires-badge')).display"),'none','HR must not overlay the album cover');
+await run("togglePlayingHiRes();setPlayingTheme('modern')");
+assert(await run("document.getElementById('hires-badge').classList.contains('hidden')"),'Modern must still respect the Hi-Res preference');
+assert.equal(await run("getComputedStyle(document.getElementById('music-track-quality')).display"),'none','Music HR leaked into Modern');
+await run('togglePlayingHiRes()');
+assert(await run("!document.getElementById('hires-badge').classList.contains('hidden')"),'Modern Hi-Res toggle stopped working');
+await run("setPlayingTheme('music')");
+assert.notEqual(await run("getComputedStyle(document.getElementById('hires-badge')).display"),'none','Music must show the cover Hi-Res icon when enabled');
+await run('togglePlayingHiRes()');
+assert.equal(await run("getComputedStyle(document.getElementById('hires-badge')).display"),'none','Music must hide the cover Hi-Res icon when disabled');
+assert(await run("!document.querySelector('#music-track-quality .music-hr-badge').hidden"),'The separate HR marker must stay visible');
+await run('togglePlayingHiRes()');
+assert.equal(await run("document.querySelector('#card-current .music-hr-badge')"),null,'The compact HR marker must remain beside audio quality');
 assert.equal(await run("document.querySelector('.music-library-card .music-hr-badge')"),null,'HR must not overlay card artwork');
 await screenshot('music-flac-hr');
 await run(`(async()=>{
@@ -150,6 +163,27 @@ assert.equal(await run(`(()=>{
  for(let i=0;i<4;i++){switchTab('playing');switchTab('music');}
  const count=observer.takeRecords().length;observer.disconnect();return count;
 })()`),0,'Switching views rewrote unchanged song rows');
+await run(`(()=>{
+ window.savedArtistLookup=fetchExternalArtistImage;
+ const photo='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#4188b5"/></svg>');
+ fetchExternalArtistImage=async name=>{await new Promise(resolve=>setTimeout(resolve,60));return name==='External Photo'?photo:'';};
+ currentCategory='Artists';
+ renderCategoryList('Artists',[
+  {Id:'artist-server',Type:'MusicArtist',Name:'Server Photo',IsLocal:true,coverUrl:photo},
+  {Id:'artist-external',Type:'MusicArtist',Name:'External Photo',IsLocal:true},
+  {Id:'artist-empty',Type:'MusicArtist',Name:'No Photo',IsLocal:true},
+  {Id:'artist-broken',Type:'MusicArtist',Name:'Broken Photo',IsLocal:true,coverUrl:location.origin+'/missing-artist-image.png'}
+ ]);
+})()`);
+for(let i=0;i<100;i++){
+ if(await run("[...document.querySelectorAll('.music-artist-row')].filter(row=>['artist-server','artist-external'].includes(row._musicPresentation[0].Id)).every(row=>!row.classList.contains('music-placeholder-row'))"))break;
+ await new Promise(r=>setTimeout(r,40));
+}
+assert.deepEqual(await run("Object.fromEntries([...document.querySelectorAll('.music-artist-row')].map(row=>[row._musicPresentation[0].Id,row.classList.contains('music-placeholder-row')]))"),{'artist-server':false,'artist-external':false,'artist-empty':true,'artist-broken':true},'Artist photos must replace initials, with initials retained for missing or failed photos');
+assert(await run("[...document.querySelectorAll('.music-artist-row')].filter(row=>['artist-server','artist-external'].includes(row._musicPresentation[0].Id)).every(row=>getComputedStyle(row.querySelector('img')).opacity==='1' && getComputedStyle(row.querySelector('.music-row-placeholder')).display==='none')"),'Loaded artist photos remain hidden');
+await run("switchTab('playing');switchTab('music')");
+assert(await run("![...document.querySelectorAll('.music-artist-row')].find(row=>row._musicPresentation[0].Id==='artist-external').classList.contains('music-placeholder-row')"),'Returning to Artists hides its loaded external photo');
+await run("fetchExternalArtistImage=savedArtistLookup;navigateMusicTheme('Songs')");
 await run("document.querySelector('.music-header-sort').click()");
 assert.notEqual(await run("getComputedStyle(document.getElementById('list-sortbar')).display"),'none');
 await run('toggleMusicLibrarySort()');
@@ -193,6 +227,12 @@ await run(`(async()=>{
  view.scrollTop=view.scrollHeight;
 })()`);
 await new Promise(r=>setTimeout(r,250));
+assert(await run(`(()=>{
+ const view=document.getElementById('view-music').getBoundingClientRect();
+ const tabs=document.getElementById('music-library-tabs').getBoundingClientRect();
+ const mini=document.getElementById('z1-mini-player').getBoundingClientRect();
+ return view.top>=tabs.bottom && view.bottom<=mini.top;
+})()`),'Library scrollbar extends underneath the fixed tabs or mini player');
 assert(await run(`(()=>{
  const view=document.getElementById('view-music');
  const last=document.querySelector('#items-container .list-item:last-child');
