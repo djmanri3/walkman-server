@@ -41,6 +41,29 @@ function handlePlayerBack() {
   } else switchTab('music');
 }
 
+function handleMusicAndroidBack() {
+  if (document.body.dataset.theme !== 'music') return false;
+  if (!document.getElementById('music-navigation').hidden) {
+    closeMusicNavigation();
+    return true;
+  }
+  if (document.querySelector('header').classList.contains('z1-actions-open')) {
+    closeZ1HeaderMenu();
+    return true;
+  }
+  if (!document.getElementById('view-music').classList.contains('active')) return false;
+  if (navStack.at(-1)?.type === 'subitems') {
+    backToCategories();
+    return true;
+  }
+  if (document.getElementById('list-view').style.display !== 'none'
+    || document.getElementById('fav-view').style.display !== 'none') {
+    navigateMusicTheme('home');
+    return true;
+  }
+  return false;
+}
+
 function initMusicPlayerDismissGesture() {
   const player = document.getElementById('view-playing');
   let gesture = null;
