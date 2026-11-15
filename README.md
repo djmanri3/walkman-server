@@ -113,13 +113,12 @@ docker-compose up -d
 - Add album-based or custom particle colors, plus RGB rainbow, color cycle, breathing and wave effects
 - Add round and square particle shapes and save effect preferences
 - Keep the particle preview running in Settings and smooth animation as playback advances
-
-### Upcoming changes
 - Add the Music theme with Sony Music-inspired portrait/landscape playback, blurred artwork, queue cards, newly added songs, colored navigation, a tabbed library and Sony-style HR markers for FLAC
 - Restore server playback after reload, including the current track, position and playing/paused state
 - Improve Classic controls on narrow windows and activate the compact layout at 640px
 - Add translated update notices with Update and Later actions, preserving settings
 - Detect installed and available cache revisions on hosted installations and local file bundles
+- Add hold bottons of next and prev song to rewind or avance song 5 seconds to 5 seconds
 
 ### App update notices
 When hosted over HTTP(S), the app checks `version.json` without using the cached response on each page load. It compares the installed cache revision with the available one and shows an update notice in the selected language. **Update** activates the downloaded service worker, removes obsolete app caches and reloads; server configuration, preferences and local-library storage are preserved. **Later** hides the notice until the next page load. Offline checks leave the current installation unchanged.
