@@ -216,7 +216,7 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Z1.png?raw=true" />
 
 ### Theme Music
-<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Z1.png?raw=true" />
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Music.png?raw=true" />
 
 ### Playlist
 ### Theme Modern and Classic
