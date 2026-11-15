@@ -3639,7 +3639,7 @@ body[data-theme="music"].music-library-open #view-music::-webkit-scrollbar-thumb
 body[data-theme="music"] #bg-container { overflow: hidden; }
 body[data-theme="music"] #music-album-background {
   display: block; width: 100%; height: 100%; object-fit: cover;
-  filter: blur(65px) saturate(.6); transform: scale(1.25); opacity: .9;
+  filter: blur(65px) saturate(1.2) brightness(1.3); transform: scale(1.25); opacity: .9;
 }
 body[data-theme="music"] #bg-container::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
@@ -3648,7 +3648,7 @@ body[data-theme="music"] #bg-container::after {
     rgb(var(--music-beat-color, 120 120 120) / calc(var(--z1-beat-level, 0) * 1.6)) 0%,
     rgb(var(--music-beat-color, 120 120 120) / calc(var(--z1-beat-level, 0) * 1.1)) 25%,
     transparent 100%
-  ), rgba(210,210,207,.3);
+  ), rgba(12,12,12,.32);
 }
 body[data-theme="music"] header {
   position: absolute; inset: 0 0 auto; width: 100%; height: calc(64px + var(--music-safe-top));
@@ -3937,7 +3937,6 @@ body[data-theme="music"] .queue-drawer {
   body[data-theme="music"] #items-container .music-row-subtitle { font-size: 15px; }
   body[data-theme="music"] #items-container :is(.music-row-format,.music-row-duration) { font-size: 13px; }
   body[data-theme="music"].music-albums-grid #items-container .list-item-info { padding-right: 40px; }
-  body[data-theme="music"] #bg-container::after { background-color: rgba(12,12,12,.32); }
   #view-playing[data-theme="music"] {
     --album-size: min(calc(82vw * var(--carousel-size)), calc(100vw - 64px), 520px, max(100px, calc(100dvh - 420px - var(--music-safe-top) - var(--music-safe-bottom))));
     gap: 16px;
@@ -3947,7 +3946,6 @@ body[data-theme="music"] .queue-drawer {
   #view-playing[data-theme="music"] .track-info { padding-right: 48px; padding-left: 48px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  body[data-theme="music"] #bg-container::after { background-color: rgba(12,12,12,.32); }
   #view-playing[data-theme="music"] { --music-control-size: 52px; row-gap: 12px; }
   #view-playing[data-theme="music"] .controls-wrapper { row-gap: 8px; }
   #view-playing[data-theme="music"] :is(.track-artist,.track-album,#music-track-quality) { font-size: 16px; }
