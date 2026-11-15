@@ -150,6 +150,16 @@ assert(await run("document.getElementById('music-navigation').hidden"));
 await run("document.querySelectorAll('.music-library-track')[1].click()");
 assert.equal(await run('currentTrackIndex'),1);assert(await run('!audio.paused'));
 await run("openMusicQueue()");assert(await run("document.getElementById('queue-drawer').classList.contains('open')"));await run('toggleQueueDrawer()');
+assert(await run(`(()=>{
+ document.querySelector('.controls-wrapper').classList.add('lyrics-open');
+ openMusicQueue();
+ openContextMenu(null,playlist[0],0);
+ const menu=document.querySelector('#context-menu-overlay .context-menu');
+ const controls=document.querySelector('.controls-wrapper');
+ const above=Number(getComputedStyle(menu.parentElement).zIndex)>Number(getComputedStyle(controls).zIndex);
+ closeContextMenu();toggleQueueDrawer();controls.classList.remove('lyrics-open');
+ return above;
+})()`),'Queue context menu is underneath multimedia controls');
 await run("setPlayingTheme('modern')");
 assert.equal(await run("getComputedStyle(document.getElementById('music-track-quality')).display"),'none');
 assert.equal(await run("getComputedStyle(document.querySelector('.music-track-action')).display"),'none');
@@ -354,6 +364,40 @@ await run(`(async()=>{
  const view=document.getElementById('view-music');
  view.scrollTop=0;
 })()`);
+assert(await run(`(async()=>{
+ const view=document.getElementById('view-music');
+ view.scrollTop=1234;
+ await navigateMusicTheme('Artists');
+ await navigateMusicTheme('Songs');
+ if(Math.abs(view.scrollTop-1234)>1) return false;
+ await navigateMusicTheme('home');
+ view.scrollTop=200;
+ const homePosition=view.scrollTop;
+ if(homePosition<1) return false;
+ await navigateMusicTheme('Songs');
+ if(Math.abs(view.scrollTop-1234)>1) return false;
+ await navigateMusicTheme('home');
+ if(Math.abs(view.scrollTop-homePosition)>1) return false;
+ const originalFetch=fetchItems;
+ try {
+  fetchItems=async()=>({Items:Array.from({length:100},(_,i)=>({...localTracks[0],Id:'scroll-'+i,Name:'Album '+i,Type:'MusicAlbum'}))});
+  await navigateMusicTheme('Albums');
+  view.scrollTop=800;
+  await loadSubItems('scroll-0','Album 0','MusicAlbum');
+  if(view.scrollTop!==0) return false;
+  view.scrollTop=450;
+  backToCategories();
+  for(let i=0;i<100 && !currentCategoryItems;i++) await new Promise(r=>setTimeout(r,10));
+  if(Math.abs(view.scrollTop-800)>1) return false;
+  await loadSubItems('scroll-0','Album 0','MusicAlbum');
+  if(Math.abs(view.scrollTop-450)>1) return false;
+ } finally { fetchItems=originalFetch; }
+ await navigateMusicTheme('Songs');
+ const restored=Math.abs(view.scrollTop-1234)<2;
+ view.scrollTop=0;
+ return restored;
+})()`),'Music lost per-list or album detail scroll positions');
+console.log('PASS Music remembers tab, Home and album detail scroll positions');
 await swipe('#view-music',0,-150);
 assert.equal(await run('currentCategory'),'Songs','Vertical scrolling changed the library tab');
 assert(await run("document.getElementById('view-music').scrollTop>0"),'Tab swipes blocked vertical scrolling');
