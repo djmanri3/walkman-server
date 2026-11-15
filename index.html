@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
   <meta name="walkman-version" content="3.1">
-  <meta name="walkman-cache-version" content="walkman-v60">
+  <meta name="walkman-cache-version" content="walkman-v64">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -650,9 +650,9 @@
       </div>
 
       <div class="visualizer-controls">
-        <div class="vis-control-btn" onclick="prevTrack()"><span class="material-icons">skip_previous</span></div>
+        <div class="vis-control-btn" onclick="prevTrack()" data-seek-direction="-1"><span class="material-icons">skip_previous</span></div>
         <div class="vis-control-btn" onclick="togglePlay()"><span class="material-icons" id="vis-play-icon">pause</span></div>
-        <div class="vis-control-btn" onclick="nextTrack()"><span class="material-icons">skip_next</span></div>
+        <div class="vis-control-btn" onclick="nextTrack()" data-seek-direction="1"><span class="material-icons">skip_next</span></div>
       </div>
   </div>
     </div>
@@ -779,9 +779,9 @@
 
     <div class="controls-wrapper">
       <div class="controls">
-        <div class="control-btn" onclick="prevTrack()" role="button" tabindex="0" aria-label="Canción anterior" data-a11y="prevTrack"><span class="material-icons">skip_previous</span></div>
+        <div class="control-btn" onclick="prevTrack()" data-seek-direction="-1" role="button" tabindex="0" aria-label="Canción anterior" data-a11y="prevTrack"><span class="material-icons">skip_previous</span></div>
         <div class="control-btn play" onclick="togglePlay()" role="button" tabindex="0" aria-label="Reproducir / Pausar" data-a11y="togglePlay"><span class="material-icons" id="play-icon">play_arrow</span></div>
-        <div class="control-btn" onclick="nextTrack()" role="button" tabindex="0" aria-label="Canción siguiente" data-a11y="nextTrack"><span class="material-icons">skip_next</span></div>
+        <div class="control-btn" onclick="nextTrack()" data-seek-direction="1" role="button" tabindex="0" aria-label="Canción siguiente" data-a11y="nextTrack"><span class="material-icons">skip_next</span></div>
       </div>
 
       <!-- BOTONES DE REPETIR Y ALEATORIO EN LA ESQUINA INFERIOR DERECHA -->
@@ -934,9 +934,9 @@
       <span class="z1-mini-info"><span id="z1-mini-title"></span><span id="z1-mini-artist"></span></span>
     </button>
     <div class="z1-mini-controls">
-      <button type="button" onclick="prevTrack()" aria-label="Canción anterior"><span class="material-icons">skip_previous</span></button>
+      <button type="button" onclick="prevTrack()" data-seek-direction="-1" aria-label="Canción anterior"><span class="material-icons">skip_previous</span></button>
       <button class="z1-mini-play" type="button" onclick="togglePlay()" aria-label="Reproducir / Pausar"><span class="material-icons" id="z1-mini-play-icon">play_arrow</span></button>
-      <button type="button" onclick="nextTrack()" aria-label="Canción siguiente"><span class="material-icons">skip_next</span></button>
+      <button type="button" onclick="nextTrack()" data-seek-direction="1" aria-label="Canción siguiente"><span class="material-icons">skip_next</span></button>
     </div>
   </div>
 
@@ -1093,6 +1093,10 @@
       </div>
   </div>
     </div>
+
+  <div id="track-seek-popup" class="track-seek-popup" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span id="track-seek-time">+0:00</span>
+  </div>
 
   <audio id="audio-player" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></audio>
 
