@@ -31,6 +31,18 @@ await run(`(()=>{
  currentTrackIndex=0;playTrack(0);return true;
 })()`);
 await new Promise(r=>setTimeout(r,500));
+// Changing language must preserve loaded song metadata in every player theme.
+for (const theme of ['modern','classic','z1','music']) {
+ await run(`applyPlayingTheme('${theme}')`);
+ for (const lang of ['en','es','fr','de','it','pt']) {
+  await run(`setLang('${lang}')`);
+  assert.equal(await run("document.getElementById('track-title-text').textContent"),'1000 Faces',theme+' title after '+lang);
+  assert.equal(await run("document.getElementById('track-artist').textContent"),'Jason Ross, Dia Frampton');
+  assert(await run('!audio.paused && currentTrackIndex===0'),'Language change interrupted playback');
+ }
+}
+await run("applyPlayingTheme('modern');setLang('en')");
+console.log('PASS language changes preserve the song title and playback in all themes');
 assert.equal(await run("document.getElementById('view-playing').dataset.theme"),'modern');
 await run("toggleSettingsMenu();openSettingsSection('customization')");
 assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),4);

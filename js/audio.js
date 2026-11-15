@@ -844,7 +844,10 @@
       }, 400);
 
       updatePlayingThemeData();
-      document.getElementById('track-title-text').textContent = track.Name;
+      const titleText = document.getElementById('track-title-text');
+      // Only the empty-player prompt is translatable; song names are metadata.
+      titleText.removeAttribute('data-i18n');
+      titleText.textContent = track.Name;
       document.getElementById('track-artist').textContent = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || 'Artista Desconocido');
 
       applyPlayingHiResState();
