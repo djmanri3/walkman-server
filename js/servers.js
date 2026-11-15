@@ -859,7 +859,7 @@ let audioQuality = null;
       // DateCreated es opt-in en Emby/Jellyfin (está en el enum ItemFields):
       // sin pedirlo aquí no viene y "Ordenar por Fecha añadida" no puede
       // funcionar. PremiereDate y ProductionYear en cambio son campos base.
-      const fields = "PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,DateCreated,MediaSources,MediaStreams";
+      const fields = "Path,PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,DateCreated,MediaSources,MediaStreams";
       let url;
       if (type === 'Audio' && artistName) {
         // Buscar todas las canciones de un artista por nombre

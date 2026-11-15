@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v66';
+const CACHE_NAME = 'walkman-v68';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const SHELL_ASSETS = [
   './js/favorites.js',
   './js/ui.js',
   './js/music-theme.js',
+  './js/folders.js',
   './js/app.js',
   './js/updates.js',
   './version.json',
@@ -29,6 +30,7 @@ const SHELL_ASSETS = [
   './images/z1/albums-variant.png',
   './images/z1/playlists-variant.png',
   './images/z1/favorites-variant.png',
+  './images/music-previews/folders.png',
   './images/music-previews/songs.png',
   './images/music-previews/albums.png',
   './images/music-previews/artists.png',

@@ -3373,6 +3373,11 @@ body:is([data-theme="modern"], [data-theme="classic"]) [data-category="favorites
   background-position: center 25% !important;
 }
 
+body:is([data-theme="modern"], [data-theme="classic"]) [data-category="folders"] {
+  --music-preview-image: url('../images/music-previews/folders.png'); --music-preview-icon: 'folder';
+  background-position: center 35% !important;
+}
+
 .header-secondary-actions { display: contents; }
 .z1-header-more, .z1-header-back, .z1-mini-player { display: none; }
 
@@ -3427,6 +3432,8 @@ body[data-theme="z1"] [data-category="songs"] { background-image: url('../images
 body[data-theme="z1"] [data-category="albums"] { background-image: url('../images/z1/albums-variant.png') !important; order: -1; }
 body[data-theme="z1"] [data-category="playlists"] { background-image: url('../images/z1/playlists-variant.png') !important; }
 body[data-theme="z1"] [data-category="favorites"] { background-image: url('../images/z1/favorites-variant.png') !important; }
+body[data-theme="z1"] [data-category="folders"] { background-image: url('../images/music-previews/folders.png') !important; }
+
 body[data-theme="z1"] [data-category="favorites"]::after { content: '♥'; position: absolute; inset: 15% 0 auto; text-align: center; font-size: 48px; color: white; text-shadow: 0 1px 5px #000; }
 body[data-theme="z1"] #fav-view { grid-column: 1 / -1; }
 body[data-theme="z1"] #fav-view .grid-menu { max-width: 560px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -4004,3 +4011,50 @@ body .context-menu-overlay .context-menu:not(.github-popup-card) {
 body .context-menu-overlay .context-menu-header-sub {
   color: rgba(255,255,255,.78);
 }
+
+/* Optional artwork on Music's Home and library, sharing Playing's background. */
+body[data-theme="music"].music-home-artwork:not(.music-library-open) #view-music,
+body[data-theme="music"].music-library-artwork.music-library-open #view-music {
+  background: transparent;
+}
+body[data-theme="music"].music-home-artwork .music-library-card {
+  background: rgba(30,30,30,.45);
+}
+body[data-theme="music"].music-library-artwork.music-library-open :is(header,#music-library-tabs,#music-favorite-tabs,#music-detail-header,#list-sortbar) {
+  background: rgba(25,35,37,.45);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+}
+.music-background-option { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+body[data-theme="music"] #music-background-settings { display: block; }
+.music-background-option input { width: 18px; height: 18px; accent-color: var(--accent-color); }
+.folder-row { width: 100%; border: 0; color: inherit; text-align: left; font: inherit; }
+.folder-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 50px; width: 50px; height: 50px; font-size: 34px; color: var(--accent-color); }
+body[data-theme="music"] #items-container .folder-icon { flex-basis: 64px; width: 64px; height: 64px; }
+#music-navigation .music-nav-folders { color: #eab44c; }
+.folder-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 8px; }
+.folder-breadcrumb button { border: 0; border-radius: 4px; padding: 10px; background: #ffffff14; color: inherit; font: inherit; cursor: pointer; }
+
+/* Folder navigation follows the same thumbnail and row treatments as each library. */
+body:is([data-theme="modern"], [data-theme="classic"]) .folder-row:not(.list-item-shuffle) .folder-icon {
+  border-radius: 3px; background: rgba(255,255,255,.08); font-size: 30px;
+}
+body[data-theme="z1"] .folder-row:not(.list-item-shuffle) .folder-icon {
+  flex-basis: 60px; width: 60px; height: 60px; color: #c4d0d0; font-size: 40px;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb {
+  gap: 0; padding: 0 0 12px; color: #aaa;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb:has(> :only-child) { display: none; }
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button {
+  display: inline-flex; align-items: center; min-height: 44px; min-width: 0;
+  max-width: 100%; padding: 6px 8px; background: transparent;
+  font-size: 14px; overflow-wrap: anywhere; text-align: left;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button + button::before {
+  content: 'chevron_right'; font-family: 'Material Icons'; font-size: 20px; margin-right: 8px; color: #aaa;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button[aria-current="page"] { color: #fff; }
+body:is([data-theme="modern"], [data-theme="classic"]) .folder-breadcrumb button:hover { color: var(--accent-color); }
+body[data-theme="z1"] .folder-breadcrumb button { border-radius: 0; font-size: 18px; font-weight: 300; }
+body[data-theme="z1"] .folder-breadcrumb button:hover { background: #ffffff0d; color: white; }

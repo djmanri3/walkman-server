@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
-  <meta name="walkman-version" content="4.0">
-  <meta name="walkman-cache-version" content="walkman-v66">
+  <meta name="walkman-version" content="4.1">
+  <meta name="walkman-cache-version" content="walkman-v68">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -89,6 +89,7 @@
     <button type="button" data-music-target="Albums" onclick="navigateMusicTheme('Albums')"><span class="music-nav-icon music-nav-albums material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
     <button type="button" data-music-target="Songs" onclick="navigateMusicTheme('Songs')"><span class="music-nav-icon music-nav-songs material-icons" aria-hidden="true">music_note</span><span data-i18n="songs">Canciones</span></button>
     <button type="button" data-music-target="favorites" onclick="navigateMusicTheme('favorites')"><span class="music-nav-icon music-nav-favorites material-icons" aria-hidden="true">star</span><span data-i18n="favorites">Favoritos</span></button>
+    <button type="button" data-music-target="Folders" onclick="navigateMusicTheme('Folders')"><span class="music-nav-icon music-nav-folders material-icons" aria-hidden="true">folder</span><span data-i18n="folders">Carpetas</span></button>
     <button type="button" data-music-target="settings" onclick="navigateMusicTheme('settings')"><span class="music-nav-icon music-nav-settings material-icons" aria-hidden="true">settings</span><span data-i18n="settings">Ajustes</span></button>
   </nav>
 
@@ -149,7 +150,7 @@
       <span class="material-icons">code</span>
       GitHub: djmanri3/walkman-server
     </a>
-    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
+    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
   </div>
 
 
@@ -219,6 +220,12 @@
           <span class="playing-theme-caption"><span>Music</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
         </button>
       </div>
+    </div>
+
+    <div class="settings-group music-only" id="music-background-settings">
+      <div class="settings-group-label" data-i18n="musicLibraryBackground">Fondo de carátula · Music</div>
+      <label class="music-background-option"><input type="checkbox" id="music-home-background" onchange="setMusicLibraryBackground('home', this.checked)"><span data-i18n="musicHome">Inicio</span></label>
+      <label class="music-background-option"><input type="checkbox" id="music-library-background" onchange="setMusicLibraryBackground('library', this.checked)"><span data-i18n="musicMyLibrary">Mi biblioteca</span></label>
     </div>
 
     <div class="settings-group">
@@ -818,6 +825,7 @@
       <button type="button" role="tab" data-music-category="Albums" onclick="navigateMusicTheme('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
       <button type="button" role="tab" data-music-category="Songs" onclick="navigateMusicTheme('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
       <button type="button" role="tab" data-music-category="Favorites" onclick="navigateMusicTheme('favorites')" data-i18n="favorites" aria-selected="false">Favoritos</button>
+      <button type="button" role="tab" data-music-category="Folders" onclick="navigateMusicTheme('Folders')" data-i18n="folders" aria-selected="false">Carpetas</button>
     </div>
     <div id="category-view">
       <div id="home-featured" class="featured-section">
@@ -857,6 +865,12 @@
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="playlists">Playlists</div>
             <div class="grid-card-sub" id="count-playlists">--</div>
+          </div>
+        </div>
+        <div class="grid-card" data-category="folders" style="background-image: linear-gradient(135deg, #4e6572, #263238);" onclick="loadCategory('Folders')">
+          <div class="grid-card-content">
+            <div class="grid-card-title" data-i18n="folders">Carpetas</div>
+            <div class="grid-card-sub" id="count-folders">--</div>
           </div>
         </div>
         <div class="grid-card" data-category="favorites" style="background-image: linear-gradient(135deg, #f43f5e, #7c3aed);" onclick="showFavoritesMenu()">
@@ -1022,7 +1036,7 @@
       <div style="font-size: 36px; margin-bottom: 8px;">🎵</div>
       <div style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px;">Walkman Server</div>
       <div style="font-size: 12px; color: #aaa; margin-bottom: 18px;">by djmanri3</div>
-      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
+      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
       <a href="https://github.com/djmanri3/walkman-server/tree/main" target="_blank" rel="noopener" style="display: inline-block; background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver en GitHub</a>
   </div>
     </div>
@@ -1114,6 +1128,7 @@
   <script src="js/queue.js"></script>
   <script src="js/favorites.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/folders.js"></script>
   <script src="js/music-theme.js"></script>
   <script src="js/app.js"></script>
 

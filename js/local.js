@@ -415,7 +415,8 @@
       }
     }
 
-    async function scanDirectory(dirHandle, albumName, coverUrl) {      const dirAlbumName = albumName || dirHandle.name || 'Desconocido';
+    async function scanDirectory(dirHandle, albumName, coverUrl, relativePath = '') {
+      const dirAlbumName = albumName || dirHandle.name || 'Desconocido';
 
       let dirCoverUrl = coverUrl || '';
       const coverCandidates = ['cover.jpg','cover.jpeg','cover.png','folder.jpg','folder.jpeg','folder.png','album.jpg','album.jpeg','front.jpg','front.png'];
@@ -440,7 +441,7 @@
 
       for (const entry of entries) {
         if (entry.kind === 'directory') {
-          await scanDirectory(entry, entry.name, '');
+          await scanDirectory(entry, entry.name, '', [relativePath, entry.name].filter(Boolean).join('/'));
         } else if (entry.kind === 'file') {
           const lower = entry.name.toLowerCase();
           const ext = lower.split('.').pop();
@@ -456,7 +457,7 @@
               Album: dirAlbumName || 'Local',
               Type: 'Audio',
               Duration: 0,
-              Path: entry.name,
+              Path: [relativePath, entry.name].filter(Boolean).join('/'),
               objUrl: objUrl,
               coverUrl: dirCoverUrl || '',
               // La fecha del archivo sirve para ordenar por "fecha añadida"

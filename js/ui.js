@@ -885,6 +885,7 @@
 
 
     async function loadCategory(category) {
+      if (category === 'Folders') return loadFolderView();
       const musicRequest = beginMusicLibraryRequest('category:' + category);
       favoritesViewKind = '';
       subItems = null;
@@ -1172,6 +1173,11 @@
     }
 
     function backToCategories() {
+      if (currentCategory === 'Folders' && navStack.at(-1)?.type === 'folder') {
+        const parts = navStack.at(-1).path.split('/');
+        parts.pop();
+        return loadFolderView(parts.join('/'), false);
+      }
       beginMusicLibraryRequest();
       // Si venimos de un sub-elemento (álbum/artista/playlist), volvemos a la lista de esa categoría
       if (navStack.length > 1) {
