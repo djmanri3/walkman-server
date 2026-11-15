@@ -1367,7 +1367,7 @@
       const overlay = document.getElementById('album-actions-overlay');
       overlay.classList.add('open');
       overlay.style.display = 'flex';
-      setContextMenuAnchor(overlay, event?.currentTarget || null);
+      setContextMenuAnchor(overlay, document.getElementById('card-current'));
     }
 
     function closeAlbumActionsMenu() {

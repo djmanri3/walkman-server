@@ -125,8 +125,11 @@
       const height = menu.offsetHeight;
       let left = rect.right - width;
       let top = rect.bottom + gap;
-      // Prefer the side of the button when there is room; otherwise open below or above it.
-      if (rect.left - gap - width >= margin) {
+      // Cover actions sit over the album; button menus open beside their trigger.
+      if (menu.classList.contains('context-menu-album-actions')) {
+        left = rect.left + (rect.width - width) / 2;
+        top = rect.top + (rect.height - height) / 2;
+      } else if (rect.left - gap - width >= margin) {
         left = rect.left - gap - width;
         top = rect.top;
       } else if (rect.right + gap + width <= overlay.clientWidth - margin) {

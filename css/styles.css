@@ -1795,6 +1795,10 @@
       transform-origin: top right;
     }
 
+    .anchored-context-menu .context-menu-album-actions {
+      transform-origin: center;
+    }
+
     /* Easter Egg (3 toques a WALKMAN): efecto cristal glass exagerado estilo iOS */
     .context-menu.github-popup-card,
     .context-menu-album-actions {
