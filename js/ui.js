@@ -885,7 +885,7 @@
 
 
     async function loadCategory(category) {
-      const musicRequest = beginMusicLibraryRequest();
+      const musicRequest = beginMusicLibraryRequest('category:' + category);
       favoritesViewKind = '';
       subItems = null;
       currentCategory = category;
@@ -979,6 +979,7 @@
       });
       container.appendChild(fragment);
       updateMusicLibraryChrome();
+      restoreMusicLibraryScroll();
     }
 
     // --- FAVORITOS ---
@@ -997,7 +998,7 @@
     }
 
     async function loadFavorites(kind) {
-      const musicRequest = beginMusicLibraryRequest();
+      const musicRequest = beginMusicLibraryRequest('favorites:' + kind);
       currentCategory = '';
       currentCategoryItems = null;
       subItems = null;
@@ -1023,6 +1024,7 @@
       container.innerHTML = '';
       if (items.length === 0) {
         container.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:20px;">' + t('noFavorites') + '</div>';
+        restoreMusicLibraryScroll();
         return;
       }
       const fragment = document.createDocumentFragment();
@@ -1074,10 +1076,11 @@
       });
       container.appendChild(fragment);
       updateMusicLibraryChrome();
+      restoreMusicLibraryScroll();
     }
 
     async function loadSubItems(parentId, title, parentKind) {
-      const musicRequest = beginMusicLibraryRequest();
+      const musicRequest = beginMusicLibraryRequest('detail:' + parentKind + ':' + parentId);
       const parentItem = [...document.querySelectorAll('#items-container .list-item')]
         .map(row => row._musicPresentation?.[0]).find(item => item && String(item.Id) === String(parentId));
       subItems = null;
@@ -1165,6 +1168,7 @@
       });
       container.appendChild(fragment);
       updateMusicLibraryChrome();
+      restoreMusicLibraryScroll();
     }
 
     function backToCategories() {
@@ -1187,6 +1191,7 @@
         }
       }
       // Si no hay historial, volvemos al menú principal de My music
+      if (document.body.dataset.theme === 'music') return navigateMusicTheme('home');
       navStack = [];
       favoritesViewKind = '';
       document.getElementById('category-view').style.display = 'block';

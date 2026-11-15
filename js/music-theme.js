@@ -236,10 +236,9 @@ function navigateMusicTheme(target) {
   if (target === 'settings') { toggleSettingsMenu(); return; }
   if (target === 'queue') { openMusicQueue(); return; }
   switchTab('music');
-  document.getElementById('view-music').scrollTop = 0;
   if (target === 'favorites') return loadFavorites('Songs');
   if (target !== 'home') return loadCategory(target);
-  beginMusicLibraryRequest();
+  const request = beginMusicLibraryRequest('home');
   navStack = [];
   favoritesViewKind = '';
   document.getElementById('category-view').style.display = 'block';
@@ -249,6 +248,9 @@ function navigateMusicTheme(target) {
   applyFeaturedVisibility();
   renderMusicLibrary();
   updateMusicLibraryChrome();
+  return loadMusicRecentTracks().then(() => {
+    if (isCurrentMusicLibraryRequest(request)) restoreMusicLibraryScroll();
+  });
 }
 
 function refreshMusicHome() {
@@ -287,7 +289,35 @@ let musicLibraryRequestId = 0;
 let musicRowsRenderState = null;
 let musicCenteredCategory = '';
 
-function beginMusicLibraryRequest() {
+// Keep navigation positions per library/source, including individual detail pages.
+const musicLibraryScrollPositions = new Map();
+let musicLibraryScrollKey = 'home';
+let musicLibraryScrollSource = '';
+let musicLibraryScrollPending = false;
+
+function restoreMusicLibraryScroll() {
+  if (document.body.dataset.theme !== 'music' || !musicLibraryScrollPending) return;
+  const view = document.getElementById('view-music');
+  view.scrollTop = musicLibraryScrollPositions.get(musicLibraryScrollKey) || 0;
+  musicLibraryScrollPending = false;
+}
+
+function beginMusicLibraryRequest(nextScrollKey = '') {
+  if (document.body.dataset.theme === 'music') {
+    const source = musicLibrarySource();
+    if (source !== musicLibraryScrollSource) {
+      musicLibraryScrollPositions.clear();
+      // The first navigation also remembers Home, before any request was made.
+      if (!musicLibraryScrollSource && musicLibraryScrollKey && !musicLibraryScrollPending) {
+        musicLibraryScrollPositions.set(musicLibraryScrollKey, document.getElementById('view-music').scrollTop);
+      }
+      musicLibraryScrollSource = source;
+    } else if (musicLibraryScrollKey && !musicLibraryScrollPending) {
+      musicLibraryScrollPositions.set(musicLibraryScrollKey, document.getElementById('view-music').scrollTop);
+    }
+    musicLibraryScrollKey = nextScrollKey;
+    musicLibraryScrollPending = !!nextScrollKey;
+  }
   const id = ++musicLibraryRequestId;
   return document.body.dataset.theme === 'music' ? { id, source: musicLibrarySource() } : null;
 }
