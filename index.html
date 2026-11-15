@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
+  <meta name="walkman-version" content="4.0">
+  <meta name="walkman-cache-version" content="walkman-v66">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -41,27 +43,54 @@
 </head>
 <body>
 
-  <div id="bg-container"></div>
+  <div id="bg-container"><img id="music-album-background" class="music-only" alt="" aria-hidden="true"></div>
 
   <!-- Header Xperia -->
   <header>
     <div id="app-logo" onclick="walkmanTap()" role="button" tabindex="0" aria-label="WALKMAN">WALKMAN</div>
-    <button class="z1-header-back" type="button" onclick="switchTab('music')" aria-label="Volver a My music"><span class="material-icons">chevron_left</span></button>
+    <button class="z1-header-back" type="button" onclick="handlePlayerBack()" aria-label="Volver a My music"><span class="material-icons">chevron_left</span></button>
+    <div class="music-only" id="music-header-title" data-i18n="musicMyLibrary">Mi biblioteca</div>
     <div class="top-nav" role="tablist">
       <div id="nav-playing" class="active" onclick="switchTab('playing')" data-i18n="playing" role="tab" aria-selected="true" tabindex="0">Playing</div>
       <div id="nav-music" onclick="switchTab('music')" data-i18n="myMusic" role="tab" aria-selected="false" tabindex="0">My music</div>
     </div>
     <div class="header-icons">
-      <span class="material-icons" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
+      <span class="material-icons header-search" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
+      <button class="music-only music-header-queue" type="button" onclick="openMusicQueue()" data-i18n-title="musicPlayQueue" aria-label="Play queue" aria-controls="queue-drawer"><span class="material-icons">queue_music</span></button>
+      <button class="music-only music-header-sort" type="button" onclick="toggleMusicLibrarySort()" data-i18n-title="sortBy" aria-label="Ordenar por" aria-expanded="false" hidden><span class="material-icons">sort</span></button>
       <div class="header-secondary-actions" onclick="closeZ1HeaderMenu()">
+      <span class="material-icons music-only music-home-action" onclick="refreshMusicHome()" data-i18n-title="musicRefreshHome" role="button" tabindex="0">refresh</span>
+      <span class="material-icons music-only" id="music-albums-view-action" onclick="toggleMusicAlbumsGrid()" role="button" tabindex="0" hidden>grid_view</span>
+      <label class="music-only music-grid-columns-control" id="music-albums-columns-control" for="music-albums-columns" onclick="event.stopPropagation()" hidden>
+        <span class="material-icons" aria-hidden="true">view_column</span>
+        <span data-i18n="musicGridColumns">Columns</span>
+        <select id="music-albums-columns" onchange="setMusicAlbumsColumns(this.value)">
+          <option value="auto" data-i18n="musicGridAuto">Auto</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </label>
+      <span class="material-icons music-only" onclick="openMusicLyrics()" data-i18n-title="lyrics" role="button" tabindex="0">menu_book</span>
       <span class="material-icons" onclick="toggleVisualizerView()" title="Visualizador" data-i18n-title="visualizer" role="button" tabindex="0" aria-label="Visualizador">blur_on</span>
-      <span class="material-icons" id="eq-btn" onclick="toggleEqualizer()" title="Mejoras de Sonido / Ecualizador" data-i18n-title="soundEnhancements" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Mejoras de Sonido / Ecualizador">equalizer</span>
+      <span class="material-icons" id="eq-btn" onclick="toggleEqualizer()" title="Ecualizador" data-i18n-title="soundEnhancements" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Ecualizador" data-i18n-aria-label="equalizer">equalizer</span>
       <span class="material-icons" onclick="showServerModal()" title="Ajustes de Servidor" data-i18n-title="serverSettings" role="button" tabindex="0" aria-label="Ajustes de Servidor">storage</span>
       <span class="material-icons" id="settings-btn" onclick="toggleSettingsMenu()" title="Ajustes" data-i18n-title="settings" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-label="Ajustes">settings</span>
       </div>
       <button class="z1-header-more" type="button" onclick="toggleZ1HeaderMenu()" aria-label="Más opciones" aria-expanded="false" aria-haspopup="true"><span class="material-icons">more_vert</span></button>
     </div>
   </header>
+
+  <button id="music-navigation-overlay" class="music-only music-navigation-overlay" type="button" onclick="closeMusicNavigation()" aria-label="Cerrar menú" hidden></button>
+  <nav id="music-navigation" class="music-only" aria-label="Music" hidden>
+    <button type="button" data-music-target="home" onclick="navigateMusicTheme('home')"><span class="music-nav-icon music-nav-home material-icons" aria-hidden="true">dashboard</span><span data-i18n="musicHome">Inicio</span></button>
+    <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span data-i18n="musicPlayQueue">Cola de reproducción</span></button>
+    <button type="button" data-music-target="Playlists" onclick="navigateMusicTheme('Playlists')"><span class="music-nav-icon music-nav-playlists material-icons" aria-hidden="true">format_list_bulleted</span><span data-i18n="playlists">Listas</span></button>
+    <button type="button" data-music-target="Artists" onclick="navigateMusicTheme('Artists')"><span class="music-nav-icon music-nav-artists material-icons" aria-hidden="true">person</span><span data-i18n="artists">Artistas</span></button>
+    <button type="button" data-music-target="Albums" onclick="navigateMusicTheme('Albums')"><span class="music-nav-icon music-nav-albums material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
+    <button type="button" data-music-target="Songs" onclick="navigateMusicTheme('Songs')"><span class="music-nav-icon music-nav-songs material-icons" aria-hidden="true">music_note</span><span data-i18n="songs">Canciones</span></button>
+    <button type="button" data-music-target="favorites" onclick="navigateMusicTheme('favorites')"><span class="music-nav-icon music-nav-favorites material-icons" aria-hidden="true">star</span><span data-i18n="favorites">Favoritos</span></button>
+    <button type="button" data-music-target="settings" onclick="navigateMusicTheme('settings')"><span class="music-nav-icon music-nav-settings material-icons" aria-hidden="true">settings</span><span data-i18n="settings">Ajustes</span></button>
+  </nav>
 
   <!-- MENÚ DE AJUSTES DERECHO -->
   <div id="settings-overlay" class="settings-overlay" onclick="closeSettingsMenu()"></div>
@@ -120,7 +149,7 @@
       <span class="material-icons">code</span>
       GitHub: djmanri3/walkman-server
     </a>
-    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>3.0</span></div>
+    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
   </div>
 
 
@@ -174,6 +203,20 @@
             <path d="M42 100h76" stroke="white" stroke-width="2"/>
           </svg>
           <span class="playing-theme-caption"><span>Z1</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
+        <button type="button" class="playing-theme-option" data-playing-theme="music" aria-pressed="false" onclick="setPlayingTheme('music')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <defs><linearGradient id="music-theme-preview-bg" x2="1" y2="1"><stop stop-color="#a5a8a6"/><stop offset="1" stop-color="#92784d"/></linearGradient></defs>
+            <rect width="160" height="104" fill="url(#music-theme-preview-bg)"/>
+            <path d="m8 7 3 3 3-3m126 0h6m-3-3v6" stroke="white" fill="none"/>
+            <rect x="12" y="24" width="58" height="58" fill="#ece9e1"/>
+            <circle cx="41" cy="53" r="21" fill="#2a2a2a"/><circle cx="41" cy="53" r="7" fill="#c3ac8c"/>
+            <path d="M92 32h37" stroke="#f5d77e" stroke-width="2"/>
+            <path d="M85 43h50m-39 9h28m-26 8h25m-43 9h62" stroke="white" stroke-width="2"/>
+            <g stroke="white" fill="none"><circle cx="97" cy="85" r="5"/><circle cx="113" cy="85" r="7"/><circle cx="129" cy="85" r="5"/></g>
+            <path d="m111 81 6 4-6 4z" fill="white"/>
+          </svg>
+          <span class="playing-theme-caption"><span>Music</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
         </button>
       </div>
     </div>
@@ -255,6 +298,46 @@
       <span class="submenu-title" data-i18n="effects">Efectos</span>
     </div>
     
+    <div class="settings-group">
+      <button class="settings-btn" id="progress-particles-btn" type="button" onclick="toggleProgressParticles()" aria-pressed="false">
+        <span class="material-icons">grain</span>
+        <span id="progress-particles-label" data-i18n="progressParticles">Partículas en la barra de progreso</span>
+      </button>
+      <div class="featured-size-wrap" id="progress-particles-color-options" role="group" aria-labelledby="progress-particles-label" style="display:none;">
+        <div class="settings-group">
+          <div class="settings-group-label" id="particles-shape-label" data-i18n="particlesShape">Forma</div>
+          <div class="accent-options" role="group" aria-labelledby="particles-shape-label">
+            <button class="accent-option" id="particles-shape-round" type="button" onclick="setProgressParticlesShape('round')" data-i18n="particlesRound" aria-pressed="true">Redondas</button>
+            <button class="accent-option" id="particles-shape-square" type="button" onclick="setProgressParticlesShape('square')" data-i18n="particlesSquare" aria-pressed="false">Cuadradas</button>
+          </div>
+        </div>
+        <div class="accent-options">
+          <button class="accent-option" id="particles-color-dynamic" type="button" onclick="setProgressParticlesColorMode('dynamic')" data-i18n="dynamic" aria-pressed="true">Dinámico</button>
+          <button class="accent-option" id="particles-color-custom" type="button" onclick="setProgressParticlesColorMode('custom')" data-i18n="custom" aria-pressed="false">Personalizado</button>
+        </div>
+        <div class="accent-color-row" id="particles-custom-color-row" style="display:none;">
+          <input type="color" id="particles-color-input" value="#aa00ff" oninput="setProgressParticlesCustomColor(this.value)" aria-labelledby="particles-pick-color-label">
+          <span id="particles-pick-color-label" data-i18n="pickColor">Elige un color</span>
+        </div>
+        <div id="particles-rgb-options" style="display:none;">
+          <button class="settings-btn" id="particles-rgb-btn" type="button" onclick="toggleProgressParticlesRgb()" aria-pressed="false">
+            <span class="material-icons">palette</span>
+            <span data-i18n="particlesRgb">Modo RGB</span>
+            <span class="particles-rgb-switch" aria-hidden="true"></span>
+          </button>
+          <div id="particles-rgb-effect-row" style="display:none;">
+            <label for="particles-rgb-effect" data-i18n="particlesRgbEffect">Efecto RGB</label>
+            <select id="particles-rgb-effect" onchange="setProgressParticlesRgbEffect(this.value)">
+              <option value="rainbow" data-i18n="particlesRgbRainbow">Arcoíris</option>
+              <option value="cycle" data-i18n="particlesRgbCycle">Cambio gradual</option>
+              <option value="breathing" data-i18n="particlesRgbBreathing">Respiración</option>
+              <option value="wave" data-i18n="particlesRgbWave">Onda</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-group">
       <div class="settings-btn" id="beatglow-btn" onclick="toggleBeatGlow()">
         <span class="material-icons">auto_awesome</span>
@@ -562,14 +645,14 @@
             <span class="vis-time-sep">/</span>
             <span id="vis-time-total" class="vis-time-label">0:00</span>
           </div>
-          <input type="range" id="vis-progress-bar" class="vis-progress-bar" value="0" min="0" max="100" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)">
+          <input type="range" id="vis-progress-bar" class="vis-progress-bar" value="0" min="0" max="100" step="0.01" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)">
         </div>
       </div>
 
       <div class="visualizer-controls">
-        <div class="vis-control-btn" onclick="prevTrack()"><span class="material-icons">skip_previous</span></div>
+        <div class="vis-control-btn" onclick="prevTrack()" data-seek-direction="-1"><span class="material-icons">skip_previous</span></div>
         <div class="vis-control-btn" onclick="togglePlay()"><span class="material-icons" id="vis-play-icon">pause</span></div>
-        <div class="vis-control-btn" onclick="nextTrack()"><span class="material-icons">skip_next</span></div>
+        <div class="vis-control-btn" onclick="nextTrack()" data-seek-direction="1"><span class="material-icons">skip_next</span></div>
       </div>
   </div>
     </div>
@@ -578,7 +661,9 @@
   <div id="view-playing" class="view active">
     
     <div class="track-header-wrapper">
+      <button class="music-only music-track-action" id="music-track-favorite" type="button" onclick="toggleMusicTrackFavorite()" aria-label="Añadir a favoritos" aria-pressed="false"><span class="material-icons">star_border</span></button>
       <div class="track-info">
+        <div class="music-only" id="music-track-quality" hidden></div>
         <div class="track-title" id="track-title"><span class="track-title-text" id="track-title-text" data-i18n="selectTrack">Selecciona una canción</span></div>
         <div class="track-artist" id="track-artist">Emby Server</div>
         <div class="track-album classic-only" id="track-album"></div>
@@ -588,10 +673,11 @@
         <div class="queue-btn-top" id="lyrics-btn" onclick="toggleLyricsView()" title="Letras (Lyrics)">
           <span class="material-icons">menu_book</span>
         </div>
-        <div class="queue-btn-top" onclick="toggleQueueDrawer()" title="Lista de reproducción en curso">
+        <div class="queue-btn-top" onclick="toggleQueueDrawer()" title="Lista de reproducción en curso" aria-controls="queue-drawer">
           <span class="material-icons">queue_music</span>
         </div>
       </div>
+      <button class="music-only music-track-action" id="music-track-add" type="button" onclick="addMusicTrackToPlaylist()" data-i18n-title="addToPlaylist" aria-label="Añadir a lista de reproducción"><span class="material-icons">add_circle_outline</span></button>
     </div>
 
     <!-- CARRUSEL DE PORTADAS -->
@@ -600,7 +686,7 @@
         <div class="art-card prev" id="card-prev" onclick="playCarouselSide(1)">
           <img draggable="false" id="img-prev" src="" />
         </div>
-        <div class="art-card current" id="card-current" onclick="openAlbumActionsMenu()">
+        <div class="art-card current" id="card-current" onclick="openAlbumActionsMenu(event)">
           <img draggable="false" id="img-current" src="images/default-album-cover.png" />
           <span class="hires-badge hidden" id="hires-badge" role="img" aria-label="Hi-Res Audio">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48.425 48.425" preserveAspectRatio="xMidYMid meet">
@@ -693,9 +779,9 @@
 
     <div class="controls-wrapper">
       <div class="controls">
-        <div class="control-btn" onclick="prevTrack()" role="button" tabindex="0" aria-label="Canción anterior" data-a11y="prevTrack"><span class="material-icons">skip_previous</span></div>
+        <div class="control-btn" onclick="prevTrack()" data-seek-direction="-1" role="button" tabindex="0" aria-label="Canción anterior" data-a11y="prevTrack"><span class="material-icons">skip_previous</span></div>
         <div class="control-btn play" onclick="togglePlay()" role="button" tabindex="0" aria-label="Reproducir / Pausar" data-a11y="togglePlay"><span class="material-icons" id="play-icon">play_arrow</span></div>
-        <div class="control-btn" onclick="nextTrack()" role="button" tabindex="0" aria-label="Canción siguiente" data-a11y="nextTrack"><span class="material-icons">skip_next</span></div>
+        <div class="control-btn" onclick="nextTrack()" data-seek-direction="1" role="button" tabindex="0" aria-label="Canción siguiente" data-a11y="nextTrack"><span class="material-icons">skip_next</span></div>
       </div>
 
       <!-- BOTONES DE REPETIR Y ALEATORIO EN LA ESQUINA INFERIOR DERECHA -->
@@ -711,7 +797,7 @@
 
       <div class="progress-container">
         <span id="time-current">00:00</span>
-        <input type="range" id="progress-bar" class="progress-bar" value="0" max="100" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)" aria-label="Progreso de la canción">
+        <input type="range" id="progress-bar" class="progress-bar" value="0" max="100" step="0.01" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)" aria-label="Progreso de la canción">
         <span id="time-total">00:00</span>
         <span class="classic-only playing-queue-position" id="playing-queue-position">0/0</span>
       </div>
@@ -726,6 +812,13 @@
 
   <!-- VISTA: MY MUSIC -->
   <div id="view-music" class="view">
+    <div class="music-only" id="music-library-tabs" role="tablist" data-i18n-title="musicMyLibrary">
+      <button type="button" role="tab" data-music-category="Playlists" onclick="navigateMusicTheme('Playlists')" data-i18n="playlists" aria-selected="false">Listas</button>
+      <button type="button" role="tab" data-music-category="Artists" onclick="navigateMusicTheme('Artists')" data-i18n="artists" aria-selected="false">Artistas</button>
+      <button type="button" role="tab" data-music-category="Albums" onclick="navigateMusicTheme('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
+      <button type="button" role="tab" data-music-category="Songs" onclick="navigateMusicTheme('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
+      <button type="button" role="tab" data-music-category="Favorites" onclick="navigateMusicTheme('favorites')" data-i18n="favorites" aria-selected="false">Favoritos</button>
+    </div>
     <div id="category-view">
       <div id="home-featured" class="featured-section">
         <div class="featured-slideshow" id="featured-slideshow">
@@ -733,6 +826,14 @@
         </div>
         <span class="featured-refresh material-icons" title="Recargar side show" data-i18n-title="refreshSlideshow" onclick="refreshFeatured()">refresh</span>
       </div>
+      <section class="music-only" id="music-library-queue">
+        <div class="music-library-heading"><h2 data-i18n="musicPlayQueue">Cola de reproducción</h2><button type="button" onclick="openMusicQueue()" data-i18n="musicOpenQueue" aria-controls="queue-drawer">Abrir</button></div>
+        <div id="music-library-cards"></div>
+      </section>
+      <section class="music-only" id="music-recently-added" aria-labelledby="music-recent-title">
+        <div class="music-library-heading"><h2 id="music-recent-title" data-i18n="musicRecentlyAdded">Recientemente añadidas</h2></div>
+        <div id="music-recent-cards" aria-live="polite"></div>
+      </section>
       <div class="grid-menu" id="home-grid">
         <div class="grid-card" data-category="songs" style="background-image: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="loadCategory('Songs')">
           <div class="grid-card-content">
@@ -790,6 +891,11 @@
     </div>
 
     <div id="list-view" style="display: none;">
+      <div class="music-only" id="music-favorite-tabs" role="tablist" data-i18n-title="favorites">
+        <button type="button" role="tab" data-music-favorites="Songs" onclick="loadFavorites('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
+        <button type="button" role="tab" data-music-favorites="Albums" onclick="loadFavorites('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
+      </div>
+      <section class="music-only" id="music-detail-header" hidden></section>
       <div class="back-btn" onclick="backToCategories()">
         <span class="material-icons">arrow_back</span> <span data-i18n="back">Volver</span>
       </div>
@@ -822,15 +928,15 @@
     </div>
 
   <div class="z1-mini-player" id="z1-mini-player" hidden>
-    <input id="z1-mini-progress" class="z1-mini-progress" type="range" min="0" max="100" step="0.1" value="0" disabled aria-label="Progreso de la canción" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)">
+    <input id="z1-mini-progress" class="z1-mini-progress" type="range" min="0" max="100" step="0.01" value="0" disabled aria-label="Progreso de la canción" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)">
     <button class="z1-mini-track" type="button" onclick="switchTab('playing')" aria-label="Reproduciendo">
       <img id="z1-mini-cover" alt="">
       <span class="z1-mini-info"><span id="z1-mini-title"></span><span id="z1-mini-artist"></span></span>
     </button>
     <div class="z1-mini-controls">
-      <button type="button" onclick="prevTrack()" aria-label="Canción anterior"><span class="material-icons">skip_previous</span></button>
+      <button type="button" onclick="prevTrack()" data-seek-direction="-1" aria-label="Canción anterior"><span class="material-icons">skip_previous</span></button>
       <button class="z1-mini-play" type="button" onclick="togglePlay()" aria-label="Reproducir / Pausar"><span class="material-icons" id="z1-mini-play-icon">play_arrow</span></button>
-      <button type="button" onclick="nextTrack()" aria-label="Canción siguiente"><span class="material-icons">skip_next</span></button>
+      <button type="button" onclick="nextTrack()" data-seek-direction="1" aria-label="Canción siguiente"><span class="material-icons">skip_next</span></button>
     </div>
   </div>
 
@@ -916,7 +1022,7 @@
       <div style="font-size: 36px; margin-bottom: 8px;">🎵</div>
       <div style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px;">Walkman Server</div>
       <div style="font-size: 12px; color: #aaa; margin-bottom: 18px;">by djmanri3</div>
-      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>3.0</span></div>
+      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
       <a href="https://github.com/djmanri3/walkman-server/tree/main" target="_blank" rel="noopener" style="display: inline-block; background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver en GitHub</a>
   </div>
     </div>
@@ -988,6 +1094,10 @@
   </div>
     </div>
 
+  <div id="track-seek-popup" class="track-seek-popup" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span id="track-seek-time">+0:00</span>
+  </div>
+
   <audio id="audio-player" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></audio>
 
     <!-- Módulos de la aplicación (divididos desde el monolito original) -->
@@ -1004,6 +1114,7 @@
   <script src="js/queue.js"></script>
   <script src="js/favorites.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/music-theme.js"></script>
   <script src="js/app.js"></script>
 
   <div id="local-banner" class="local-wait-banner" style="display:none;">
@@ -1028,5 +1139,19 @@
     </div>
   </div>
 
+  <section id="app-update-banner" class="app-update-banner" role="region" aria-labelledby="app-update-title" aria-live="polite" hidden>
+    <div class="app-update-copy">
+      <h2 id="app-update-title" data-i18n="appUpdateAvailable">¡Hay una nueva actualización!</h2>
+      <p data-i18n="appUpdateCacheMessage">Es necesario borrar la caché de la app para actualizar.</p>
+      <p><span data-i18n="appUpdateMoreInfo">Más información en</span> <a href="https://github.com/djmanri3/walkman-server" target="_blank" rel="noopener noreferrer">github.com/djmanri3/walkman-server</a></p>
+      <p id="app-update-versions" class="app-update-versions"></p>
+      <p id="app-update-error" role="alert" data-i18n="appUpdateFailed" hidden>No se ha podido actualizar. Comprueba tu conexión y vuelve a intentarlo.</p>
+    </div>
+    <div class="app-update-actions">
+      <button id="app-update-now" type="button" onclick="applyAppUpdate()" data-i18n="appUpdateNow">Actualizar</button>
+      <button id="app-update-later" type="button" onclick="deferAppUpdate()" data-i18n="appUpdateLater">En otro momento</button>
+    </div>
+  </section>
+  <script src="js/updates.js"></script>
 </body>
 </html>

@@ -2,23 +2,49 @@
 
     // --- Cola de reproducción persistente ---
     const QUEUE_LS_KEY = 'walkman_queue';
+    const PLAYBACK_LS_KEY = 'walkman_playback';
     let _saveQueueTimer = null;
+    let _lastPlaybackSave = 0;
+    let playbackPersistenceEnabled = true;
+
+    function suspendPlaybackPersistence() {
+      playbackPersistenceEnabled = false;
+      clearTimeout(_saveQueueTimer);
+      _saveQueueTimer = null;
+    }
+
+    function playbackSource() {
+      return JSON.stringify([embyConfig.serverType, embyConfig.host || '', embyConfig.libraryId || '']);
+    }
+
+    function savePlaybackState() {
+      if (!playbackPersistenceEnabled) return;
+      const track = playlist[currentTrackIndex];
+      if (!track || !audio.src || audio._loadedTrackId !== String(track.Id)) return;
+      const position = audio._restorePosition ?? audio.currentTime;
+      saveLS(PLAYBACK_LS_KEY, {
+        source: playbackSource(), trackId: String(track.Id),
+        position: Number.isFinite(position) ? Math.max(0, position) : 0,
+        playing: !audio._userPaused && !audio.ended && (!!audio._resumeWanted || !audio.paused)
+      });
+      _lastPlaybackSave = performance.now();
+    }
+
+    function saveQueueNow() {
+      if (!playbackPersistenceEnabled) return;
+      clearTimeout(_saveQueueTimer);
+      _saveQueueTimer = null;
+      saveLS(QUEUE_LS_KEY, {
+        v: 3, source: playbackSource(), playlist, originalPlaylist,
+        currentTrackIndex, isShuffle, repeatMode
+      });
+      savePlaybackState();
+    }
+
     function saveQueue() {
+      if (!playbackPersistenceEnabled) return;
       if (_saveQueueTimer) return;
-      _saveQueueTimer = setTimeout(() => {
-        _saveQueueTimer = null;
-        try {
-          const state = {
-            v: 2,
-            playlist: playlist,
-            originalPlaylist: originalPlaylist,
-            currentTrackIndex: currentTrackIndex,
-            isShuffle: isShuffle,
-            repeatMode: repeatMode
-          };
-          saveLS(QUEUE_LS_KEY, state);
-        } catch (e) {}
-      }, 300);
+      _saveQueueTimer = setTimeout(saveQueueNow, 300);
     }
 
     function restoreQueue() {
@@ -27,6 +53,7 @@
         if (!raw) return false;
         const state = JSON.parse(raw);
         if (!state || !Array.isArray(state.playlist) || state.playlist.length === 0) return false;
+        if (state.source && state.source !== playbackSource()) return false;
         playlist = state.playlist;
         originalPlaylist = Array.isArray(state.originalPlaylist) ? state.originalPlaylist : [...playlist];
         currentTrackIndex = Math.min(Math.max(0, state.currentTrackIndex || 0), playlist.length - 1);
@@ -36,10 +63,88 @@
       } catch (e) { return false; }
     }
 
+    function restoreQueuedPlayback() {
+      const track = playlist[currentTrackIndex];
+      if (!track || track.IsLocal) return;
+      let saved = null;
+      try { saved = JSON.parse(loadLS(PLAYBACK_LS_KEY)); } catch (e) {}
+      const matching = saved && saved.source === playbackSource() && saved.trackId === String(track.Id);
+      playTrack(currentTrackIndex, true, {
+        autoplay: !!(matching && saved.playing),
+        position: matching && Number.isFinite(saved.position) ? Math.max(0, saved.position) : 0,
+        restoring: true
+      });
+    }
+
+    audio.addEventListener('timeupdate', () => {
+      if (performance.now() - _lastPlaybackSave >= 1500) savePlaybackState();
+    });
+    ['playing', 'pause', 'seeked', 'ended'].forEach(event => audio.addEventListener(event, savePlaybackState));
+    // Flush synchronously: a debounced save may never run during a reload.
+    function flushQueueForNavigation() {
+      // Do not erase an existing queue if the page is reloaded again while
+      // the saved server configuration is still being restored.
+      if (playlist.length || _saveQueueTimer) saveQueueNow();
+    }
+    window.addEventListener('pagehide', flushQueueForNavigation);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) flushQueueForNavigation();
+    });
+
     // ---- Seguridad: Sanitización de URLs de servidores ----
 
     let ctxMenuItem = null;
     let ctxQueueIdx = -1;
+    const contextMenuAnchors = new Map();
+    const contextMenuResizeObserver = new ResizeObserver(entries => {
+      entries.forEach(entry => positionContextMenu(entry.target.parentElement));
+    });
+
+    function setContextMenuAnchor(overlay, anchor) {
+      const menu = overlay.querySelector('.context-menu');
+      contextMenuAnchors.delete(overlay);
+      contextMenuResizeObserver.unobserve(menu);
+      overlay.classList.toggle('anchored-context-menu', !!anchor);
+      menu.style.left = '';
+      menu.style.top = '';
+      if (anchor) {
+        contextMenuAnchors.set(overlay, anchor);
+        contextMenuResizeObserver.observe(menu);
+        positionContextMenu(overlay);
+      }
+    }
+
+    function positionContextMenu(overlay) {
+      const anchor = contextMenuAnchors.get(overlay);
+      if (!anchor || !overlay.classList.contains('open')) return;
+      const menu = overlay.querySelector('.context-menu');
+      const rect = anchor.getBoundingClientRect();
+      const margin = 8;
+      const gap = 6;
+      const width = menu.offsetWidth;
+      const height = menu.offsetHeight;
+      let left = rect.right - width;
+      let top = rect.bottom + gap;
+      // Cover actions sit over the album; button menus open beside their trigger.
+      if (menu.classList.contains('context-menu-album-actions')) {
+        left = rect.left + (rect.width - width) / 2;
+        top = rect.top + (rect.height - height) / 2;
+      } else if (rect.left - gap - width >= margin) {
+        left = rect.left - gap - width;
+        top = rect.top;
+      } else if (rect.right + gap + width <= overlay.clientWidth - margin) {
+        left = rect.right + gap;
+        top = rect.top;
+      } else if (top + height > overlay.clientHeight - margin) {
+        top = rect.top - gap - height;
+      }
+      menu.style.left = Math.max(margin, Math.min(left, overlay.clientWidth - width - margin)) + 'px';
+      menu.style.top = Math.max(margin, Math.min(top, overlay.clientHeight - height - margin)) + 'px';
+    }
+
+    window.addEventListener('resize', () => {
+      contextMenuAnchors.forEach((anchor, overlay) => positionContextMenu(overlay));
+    });
 
     function openContextMenu(event, item, queueIdx = -1) {
       ctxMenuItem = item;
@@ -58,10 +163,13 @@
       updateFavoriteMenuOption();
       updateAddToPlaylistOption();
       overlay.classList.add('open');
+      setContextMenuAnchor(overlay, event?.currentTarget || null);
     }
 
     function closeContextMenu() {
-      document.getElementById('context-menu-overlay').classList.remove('open');
+      const overlay = document.getElementById('context-menu-overlay');
+      overlay.classList.remove('open');
+      setContextMenuAnchor(overlay, null);
       ctxMenuItem = null;
       ctxQueueIdx = -1;
     }
@@ -191,6 +299,13 @@
     }
 
 
+    document.addEventListener('click', event => {
+      const drawer = document.getElementById('queue-drawer');
+      if (!drawer.classList.contains('open')) return;
+      if (event.target.closest('#queue-drawer, [aria-controls="queue-drawer"], .context-menu')) return;
+      drawer.classList.remove('open');
+    }, true);
+
     function toggleQueueDrawer() {
       const drawer = document.getElementById('queue-drawer');
       if (!drawer.classList.toggle('open')) return;
@@ -206,6 +321,7 @@
     }
 
     function renderQueueList() {
+      if (typeof renderMusicLibrary === 'function') renderMusicLibrary();
       const container = document.getElementById('queue-list-container');
       container.innerHTML = '';
 
@@ -400,7 +516,10 @@
         opt.onclick = function() { addToSelectedPlaylist(p); };
         list.appendChild(opt);
       });
-      if (overlay) overlay.classList.add("open");
+      if (overlay) {
+        overlay.classList.add("open");
+        setContextMenuAnchor(overlay, contextMenuAnchors.get(document.getElementById('context-menu-overlay')));
+      }
     }
 
     async function addToSelectedPlaylist(playlist) {
@@ -422,6 +541,9 @@
 
     function closePlaylistSelectMenu() {
       const overlay = document.getElementById("playlist-select-overlay");
-      if (overlay) overlay.classList.remove("open");
+      if (overlay) {
+        overlay.classList.remove("open");
+        setContextMenuAnchor(overlay, null);
+      }
       _plSelItem = null;
     }

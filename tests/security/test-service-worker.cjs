@@ -2,10 +2,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const listeners={},stores=new Map(),scope='https://walkman.test/player/';
 const key=request=>typeof request==='string'?new URL(request,scope).href:request.url;
 function cache(name){if(!stores.has(name))stores.set(name,new Map());const data=stores.get(name);return {async put(request,response){data.set(key(request),response)},async match(request){return data.get(key(request))?.clone()},async addAll(urls){for(const url of urls)data.set(key(url),new Response('static'))}}}
-let offline=false,nextHeaders={},redirected=false,fetches=0;
+let offline=false,nextHeaders={},redirected=false,fetches=0,activations=0;
 const caches={async open(name){return cache(name)},async keys(){return [...stores.keys()]},async delete(name){return stores.delete(name)},async match(request){for(const name of stores.keys()){const value=await cache(name).match(request);if(value)return value}}};
-const context=vm.createContext({URL,Request,Response,Set,caches,fetch:async request=>{fetches++;if(offline)throw Error('offline');const response=new Response('network',{headers:nextHeaders});if(redirected)Object.defineProperty(response,'redirected',{value:true});return response},self:{registration:{scope},skipWaiting(){},clients:{claim(){}},addEventListener(type,handler){listeners[type]=handler}}});
+const context=vm.createContext({URL,Request,Response,Set,caches,fetch:async request=>{fetches++;if(offline)throw Error('offline');const response=new Response('network',{headers:nextHeaders});if(redirected)Object.defineProperty(response,'redirected',{value:true});return response},self:{registration:{scope},skipWaiting(){activations++;return Promise.resolve()},clients:{claim(){}},addEventListener(type,handler){listeners[type]=handler}}});
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../../sw.js'),'utf8'),context);
+const currentCache=vm.runInContext('CACHE_NAME',context);
+assert.equal(JSON.parse(fs.readFileSync(path.join(__dirname,'../../version.json'),'utf8')).cacheVersion,currentCache,'Release metadata and service worker cache must match');
+assert(fs.readFileSync(path.join(__dirname,'../../index.html'),'utf8').includes('name="walkman-cache-version" content="'+currentCache+'"'),'Local bundle metadata and service worker cache must match');
 async function dispatch(url,{headers={},method='GET',navigate=false,cacheMode='default'}={}){
  const pending=[];let reply;
  const request=new Request(new URL(url,scope),{headers,method,cache:cacheMode});
@@ -16,6 +19,10 @@ async function dispatch(url,{headers={},method='GET',navigate=false,cacheMode='d
  return response;
 }
 (async()=>{
+ let installPending=[];listeners.install({waitUntil(promise){installPending.push(promise)}});await Promise.all(installPending);
+ assert.equal(activations,0,'Installation activated an update without user approval');
+ listeners.message({data:{type:'UNKNOWN'},waitUntil(){throw Error('Unexpected activation')}});assert.equal(activations,0);
+ let activation;listeners.message({data:{type:'ACTIVATE_UPDATE'},waitUntil(promise){activation=promise}});await activation;assert.equal(activations,1);
  const old=await caches.open('walkman-v40');await old.put('https://media.test/UserFavoriteItems?api_key=private',new Response('private'));
  await caches.open('another-app-cache');let pending=[];
  listeners.activate({waitUntil(promise){pending.push(promise)}});await Promise.all(pending);
@@ -40,7 +47,7 @@ async function dispatch(url,{headers={},method='GET',navigate=false,cacheMode='d
   await dispatch(url);assert.equal(await caches.match(new URL(url,scope).href),undefined);nextHeaders={};
  }
  redirected=true;await dispatch('js/audio.js?redirected=1');assert.equal(await caches.match(scope+'js/audio.js?redirected=1'),undefined);redirected=false;
- await (await caches.open('walkman-v44')).put(scope+'index.html',new Response('offline index'));
+ await (await caches.open(currentCache)).put(scope+'index.html',new Response('offline index'));
  offline=true;assert.equal(await (await dispatch('./',{navigate:true})).text(),'offline index');
  const missing=await dispatch('vendor/sony-visualizer/visualizer.js?uncached=1');assert.equal(missing.type,'error','WASM/script fallback must not return HTML');
  assert.equal(await dispatch('jellyfin/UserFavoriteItems',{navigate:true}),null);

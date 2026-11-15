@@ -97,6 +97,7 @@
       item.IsFavorite = on;
       saveFavoritesStore();
       updateFavoritesCount();
+      if (typeof updateMusicThemeData === 'function') updateMusicThemeData();
       return true;
     }
 

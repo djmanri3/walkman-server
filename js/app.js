@@ -78,6 +78,80 @@
     }
     initKeyboardNav();
 
+    // Mantener anterior/siguiente desplaza la pista en saltos de cinco segundos.
+    function initTrackHoldControls() {
+      const popup = document.getElementById('track-seek-popup');
+      document.querySelectorAll('[data-seek-direction]').forEach(button => {
+        let timer = null;
+        let pointerId = null;
+        let held = false;
+        let seekTotal = 0;
+        const direction = Number(button.dataset.seekDirection);
+        const cover = document.getElementById(button.closest('.visualizer-controls')
+          ? 'vis-thumb' : button.closest('.z1-mini-controls') ? 'z1-mini-cover' : 'card-current');
+
+        function updatePopup() {
+          const seconds = Math.round(seekTotal);
+          document.getElementById('track-seek-time').textContent =
+            `${direction < 0 ? '−' : '+'}${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+          const rect = cover.getBoundingClientRect();
+          popup.hidden = false;
+          const half = popup.offsetWidth / 2;
+          const halfHeight = popup.offsetHeight / 2;
+          popup.style.left = `${Math.max(half + 8, Math.min(window.innerWidth - half - 8, rect.left + rect.width / 2))}px`;
+          popup.style.top = `${Math.max(halfHeight + 8, Math.min(window.innerHeight - halfHeight - 8, rect.top + rect.height / 2))}px`;
+        }
+
+
+        function stop() {
+          clearTimeout(timer);
+          timer = null;
+          if (pointerId !== null) popup.hidden = true;
+          const capturedPointer = pointerId;
+          pointerId = null;
+          if (capturedPointer !== null && button.hasPointerCapture(capturedPointer)) {
+            button.releasePointerCapture(capturedPointer);
+          }
+        }
+
+        function seekStep() {
+          held = true;
+          if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            const before = audio.currentTime;
+            audio.currentTime = Math.max(0, Math.min(audio.duration, before + direction * 5));
+            seekTotal += Math.abs(audio.currentTime - before);
+            updatePopup();
+          }
+          timer = setTimeout(seekStep, 500);
+        }
+
+        button.addEventListener('pointerdown', event => {
+          if (!event.isPrimary || event.button !== 0 || pointerId !== null) return;
+          held = false;
+          seekTotal = 0;
+          pointerId = event.pointerId;
+          button.setPointerCapture(pointerId);
+          timer = setTimeout(seekStep, 500);
+        });
+        button.addEventListener('pointerup', stop);
+        button.addEventListener('pointercancel', stop);
+        button.addEventListener('lostpointercapture', stop);
+        button.addEventListener('contextmenu', event => event.preventDefault());
+        button.addEventListener('click', event => {
+          if (!held || event.detail === 0) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          held = false;
+        }, true);
+        window.addEventListener('blur', stop);
+        window.addEventListener('pagehide', stop);
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) stop();
+        });
+      });
+    }
+    initTrackHoldControls();
+
     window.onload = async () => {
       currentLang = getLang();
       applyI18n();
@@ -98,6 +172,7 @@
       applySavedAudioSettings();
       restoreAccentSettings();
       initBeatGlow();
+      initProgressParticles();
       initXpspLeds();
       initFullscreen();
       fitHeader();
@@ -121,26 +196,7 @@
           if (shufBtn) { if (isShuffle) shufBtn.classList.add('active'); else shufBtn.classList.remove('active'); }
           renderQueueList();
           refreshCarouselImages();
-          if (playlist.length > 0 && currentTrackIndex >= 0) {
-            const track = playlist[currentTrackIndex];
-            document.getElementById('track-title').textContent = track.Name || '';
-            const artistText = track.Artists && track.Artists.length ? track.Artists.join(', ') : (track.AlbumArtist || '');
-            document.getElementById('track-artist').textContent = artistText;
-            const img = getEmbyImageUrl(track);
-            setCardImg(document.getElementById('img-current'), img);
-            setCardImg(document.getElementById('img-prev'), currentTrackIndex > 0 ? getEmbyImageUrl(playlist[currentTrackIndex - 1]) : '');
-            setCardImg(document.getElementById('img-next'), currentTrackIndex < playlist.length - 1 ? getEmbyImageUrl(playlist[currentTrackIndex + 1]) : '');
-            document.getElementById('card-prev').style.display = currentTrackIndex > 0 ? '' : 'none';
-            document.getElementById('card-next').style.display = currentTrackIndex < playlist.length - 1 ? '' : 'none';
-            if ('mediaSession' in navigator) {
-              navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.Name,
-                artist: artistText,
-                album: track.Album || 'Walkman Web',
-                artwork: img ? [{ src: img, sizes: '512x512', type: 'image/jpeg' }] : []
-              });
-            }
-          }
+          restoreQueuedPlayback();
         }
       }
     };
@@ -248,26 +304,6 @@
         n.onclick = () => { try { window.focus(); n.close(); } catch (e) {} };
         window.setTimeout(() => { try { n.close(); } catch (e) {} }, 8000);
       } catch (e) {}
-    }
-
-    // Registrar el Service Worker para PWA (el SW navega siempre contra la red
-    // con cache: 'no-cache', así nunca sirve un index.html viejo).
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => {
-            console.log('WALKMAN PWA Service Worker registrado con éxito:', reg.scope);
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
-                  console.log('WALKMAN PWA actualizado. Recarga para ver los cambios.');
-                }
-              });
-            });
-          })
-          .catch(err => console.error('Error al registrar Service Worker:', err));
-      });
     }
 
     // Capturar evento de instalación PWA para mejor UX

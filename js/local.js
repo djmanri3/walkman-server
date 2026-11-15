@@ -220,6 +220,9 @@
           }
         }
 
+        const lyricFiles = new Map(files.filter(file => /\.(?:lrc|txt)$/i.test(file.name))
+          .map(file => [(file.webkitRelativePath || file.name).toLowerCase(), file]));
+
         // Constructor de pistas: rápido, sin leer tags (solo asignamos la portada de carpeta si existe)
         for (const file of files) {
           const lower = file.name.toLowerCase();
@@ -245,6 +248,7 @@
             // La fecha del archivo sirve para ordenar por "fecha añadida"
             CreateDate: file.lastModified ? new Date(file.lastModified).toISOString() : null,
             IsLocal: true,
+            _lyricsFiles: ['lrc', 'txt'].map(ext => lyricFiles.get((file.webkitRelativePath || file.name).replace(/\.[^.]+$/, '.' + ext).toLowerCase())).filter(Boolean),
             _file: file
           });
         }
@@ -457,7 +461,13 @@
               coverUrl: dirCoverUrl || '',
               // La fecha del archivo sirve para ordenar por "fecha añadida"
               CreateDate: file.lastModified ? new Date(file.lastModified).toISOString() : null,
-              IsLocal: true
+              IsLocal: true,
+              _file: file,
+              _lyricsFiles: await Promise.all(['lrc', 'txt'].map(async ext => {
+                const name = entry.name.replace(/\.[^.]+$/, '.' + ext).toLowerCase();
+                const companion = entries.find(e => e.kind === 'file' && e.name.toLowerCase() === name);
+                return companion ? companion.getFile() : null;
+              })).then(files => files.filter(Boolean))
             });
           }
         }
@@ -472,4 +482,5 @@
       invalidateFavoritesCache();
       invalidateAlbumDates();
       updateFavoritesCount();
+      if (typeof renderMusicLibrary === 'function') renderMusicLibrary(true);
     }
