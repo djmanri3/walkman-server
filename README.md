@@ -108,7 +108,7 @@ docker-compose up -d
 - Add default image when music haven't album cover
 - Add new Z1 theme change all of UI Playing and My Music tab
 
-### Version 3.1
+### Version 4.0
 - Add progress bar particles to Modern, Classic and Z1, including the visualizer and Z1 mini-player
 - Add album-based or custom particle colors, plus RGB rainbow, color cycle, breathing and wave effects
 - Add round and square particle shapes and save effect preferences
@@ -119,6 +119,8 @@ docker-compose up -d
 - Add translated update notices with Update and Later actions, preserving settings
 - Detect installed and available cache revisions on hosted installations and local file bundles
 - Add hold bottons of next and prev song to rewind or avance song 5 seconds to 5 seconds
+- Add lyrics get servers first next search on internet
+- Add menu song open near
 
 ### App update notices
 When hosted over HTTP(S), the app checks `version.json` without using the cached response on each page load. It compares the installed cache revision with the available one and shows an update notice in the selected language. **Update** activates the downloaded service worker, removes obsolete app caches and reloads; server configuration, preferences and local-library storage are preserved. **Later** hides the notice until the next page load. Offline checks leave the current installation unchanged.
@@ -142,6 +144,9 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Z1.png?raw=true" />
 
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Player_Music.png?raw=true" />
+
 ### Settings
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/dev/Demo_images/Settings.png?raw=true" />
 
@@ -157,6 +162,9 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Z1.png?raw=true" />
+
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-server/blob/main/Demo_images/Lyris_Music.png?raw=true" />
 
 ## Ecualizer
 ### Clear bass
@@ -175,12 +183,20 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Library_Z1.png?raw=true" />
 
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Library_Music_1.png?raw=true" />
+
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Library_Music_2.png?raw=true" />
+
 ### Songs
 ### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Songs.png?raw=true" />
 
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Songs_Z1.png?raw=true" />
+
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Songs_Music.png?raw=true" />
 
 ### Artists
 ### Theme Modern and Classic
@@ -189,11 +205,17 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Artists_Z1.png?raw=true" />
 
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Artists_Music.png?raw=true" />
+
 ### Albums
 ### Theme Modern and Classic
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums.png?raw=true" />
 
 ### Theme Z1
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Z1.png?raw=true" />
+
+### Theme Music
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Albums_Z1.png?raw=true" />
 
 ### Playlist
@@ -203,9 +225,15 @@ When opened with `file://`, the app compares the bundle version embedded in `ind
 ### Theme Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Playlist_Z1.png?raw=true" />
 
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Playlist_Music.png?raw=true" />
+
 ### Inside of playlists
-### Theme Modern and Classic
+### Theme Modern, Classic and Z1
 <img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Inside_playlist.png?raw=true" />
+
+### Theme Music
+<img width="1915" height="952" alt="image" src="https://github.com/djmanri3/walkman-emby/blob/main/Demo_images/Inside_playlist_Music.png?raw=true" />
 
 ### Connect to server or local
 #### Emby
