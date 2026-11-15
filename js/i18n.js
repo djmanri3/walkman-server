@@ -44,7 +44,7 @@
         visSonyUpdate: 'The Sony effects are outdated. Close this tab and reopen the updated index.html.', visSonyOriginal: 'Sony Visualizer', visSonyLoading: 'Loading Sony effects…', visSonyError: 'Could not load this effect. Select another style or reload the page.',
         playing: 'Playing', myMusic: 'My music', visualizer: 'Visualizer', search: 'Search',
         myMusicHome: 'My Music', songs: 'Songs', albums: 'Albums', artists: 'Artists', playlists: 'Playlists',
-        soundEnhancements: 'Sound Enhancements / EQ', serverSettings: 'Server Settings',
+        soundEnhancements: 'Equalizer', serverSettings: 'Server Settings',
         selectTrack: 'Select a song', lyrics: 'Lyrics', original: 'Original', spanish: 'Spanish',
         english: 'English', german: 'German', french: 'French', italian: 'Italian', portuguese: 'Portuguese',
         japanese: 'Japanese', chinese: 'Chinese', russian: 'Russian', arabic: 'Arabic',
@@ -141,7 +141,7 @@
         visSonyUpdate: 'Los efectos de Sony no se han actualizado. Cierra esta pestaña y vuelve a abrir el index.html actualizado.', visSonyOriginal: 'Sony Visualizer', visSonyLoading: 'Cargando efectos de Sony…', visSonyError: 'No se pudo cargar este efecto. Selecciona otro estilo o recarga la página.',
         playing: 'Reproduciendo', myMusic: 'Mi música', visualizer: 'Visualizador', search: 'Buscar',
         myMusicHome: 'Mi Música', songs: 'Canciones', albums: 'Álbumes', artists: 'Artistas', playlists: 'Listas de reproducción',
-        soundEnhancements: 'Mejoras de Sonido / Ecualizador', serverSettings: 'Ajustes de Servidor',
+        soundEnhancements: 'Ecualizador', serverSettings: 'Ajustes de Servidor',
         selectTrack: 'Selecciona una canción', lyrics: 'Letras', original: 'Original', spanish: 'Español',
         english: 'Inglés', german: 'Alemán', french: 'Francés', italian: 'Italiano', portuguese: 'Portugués',
         japanese: 'Japonés', chinese: 'Chino', russian: 'Ruso', arabic: 'Árabe',
@@ -236,6 +236,7 @@
         serverSettings: 'Paramètres du Serveur', language: 'Langue', original: 'Original', spanish: 'Espagnol',
         english: 'Anglais', french: 'Français', german: 'Allemand', italian: 'Italien', portuguese: 'Portugais',
         lyrics: 'Paroles', translating: 'Traduction...', noLyrics: 'Aucune parole trouvée pour cette chanson',
+        soundEnhancements: 'Égaliseur',
         equalizer: 'Égaliseur', eqVptTab: 'Réglages / VPT', vptAmbient: 'Son ambiant (VPT)',
         vptOff: 'Désactivé', vptOffDesc: 'Aucun effet sonore ambiant immersif',
         vptStudio: 'Studio', vptStudioDesc: 'Crée le son d\'un studio d\'enregistrement acoustique',
@@ -320,6 +321,7 @@
         myMusicHome: 'Meine Musik', songs: 'Songs', albums: 'Alben', artists: 'Künstler', playlists: 'Wiedergabelisten',
         original: 'Original', spanish: 'Spanisch', english: 'Englisch', german: 'Deutsch', french: 'Französisch',
         italian: 'Italienisch', portuguese: 'Portugiesisch', lyrics: 'Liedtexte', translating: 'Übersetzen...',
+        soundEnhancements: 'Equalizer',
         equalizer: 'Equalizer', eqVptTab: 'Einstellungen / VPT', vptAmbient: 'Umgebungsklang (VPT)',
         vptOff: 'Deaktiviert', vptOffDesc: 'Keine immersiven Umgebungsklang-Effekte',
         vptStudio: 'Studio', vptStudioDesc: 'Erzeugt den Klang eines akustischen Aufnahmestudios',
@@ -404,6 +406,7 @@
         myMusicHome: 'La mia musica', songs: 'Canzoni', albums: 'Album', artists: 'Artisti', playlists: 'Playlist',
         original: 'Originale', spanish: 'Spagnolo', english: 'Inglese', german: 'Tedesco', french: 'Francese',
         italian: 'Italiano', portuguese: 'Portoghese', lyrics: 'Testi', translating: 'Traduzione...',
+        soundEnhancements: 'Equalizzatore',
         equalizer: 'Equalizzatore', eqVptTab: 'Impostazioni / VPT', vptAmbient: 'Audio ambientale (VPT)',
         vptOff: 'Disattivato', vptOffDesc: 'Nessun effetto sonoro ambientale immersivo',
         vptStudio: 'Studio', vptStudioDesc: 'Crea il suono di uno studio di registrazione acustico',
@@ -488,6 +491,7 @@
         myMusicHome: 'Minha música', songs: 'Músicas', albums: 'Álbuns', artists: 'Artistas', playlists: 'Listas de reprodução',
         original: 'Original', spanish: 'Espanhol', english: 'Inglês', german: 'Alemão', french: 'Francês',
         italian: 'Italiano', portuguese: 'Português', lyrics: 'Letras', translating: 'A traduzir...',
+        soundEnhancements: 'Equalizador',
         equalizer: 'Equalizador', eqVptTab: 'Configurações / VPT', vptAmbient: 'Som ambiente (VPT)',
         vptOff: 'Desativado', vptOffDesc: 'Sem efeitos de som ambiente imersivos',
         vptStudio: 'Estúdio', vptStudioDesc: 'Cria o som de um estúdio de gravação acústico',
@@ -584,6 +588,9 @@
       document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const key = el.getAttribute('data-i18n-title');
         el.setAttribute('title', t(key));
+      });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
       });
       if (typeof renderVptCards === 'function' && document.getElementById('vpt-current-name')) {
         renderVptCards();
