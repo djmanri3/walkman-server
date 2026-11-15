@@ -38,3 +38,23 @@ assert.deepEqual(names(build(['/data/music/Music/Artist/Album/song.mp3'])), ['Ar
 context.availableLibraries = [];
 assert.deepEqual(names(build(['/data/music/Rock/song.mp3', '/data/music/Jazz/song.mp3'])), ['Jazz', 'Rock']);
 console.log('PASS Folders opens inside the selected library, preserving artists, root songs and multiple locations');
+
+// Android playback URLs carry no folder information. SAF paths are explicitly
+// relative to the selected directory and must survive all root heuristics.
+const localTracks = [
+  { Id: 'one', IsLocal: true, RelativePath: 'Artist A/Album/song.flac', Path: 'http://127.0.0.1:9999/a1' },
+  { Id: 'two', IsLocal: true, RelativePath: 'Artist B/Album/song.flac', Path: 'http://127.0.0.1:9999/a2' },
+  { Id: 'root', IsLocal: true, RelativePath: 'direct.mp3', Path: 'http://127.0.0.1:9999/a3' }
+];
+tree = context.buildFolderTree(localTracks, {});
+assert.deepEqual(names(tree), ['Artist A', 'Artist B']);
+assert.equal(tree.tracks[0].Id, 'root');
+assert.equal(tree.folders.get('Artist A').folders.get('Album').tracks[0].Path, localTracks[0].Path);
+assert.deepEqual(names(context.buildFolderTree([localTracks[0]], {})), ['Artist A']);
+assert.deepEqual(names(context.buildFolderTree([
+  { IsLocal: true, RelativePath: 'Music/Album/song.mp3', Path: 'http://127.0.0.1:9999/a4' }
+], {})), ['Music']);
+assert.deepEqual(names(context.buildFolderTree([
+  { IsLocal: true, RelativePath: 'Álbum #1/100% + música.flac', Path: 'http://127.0.0.1:9999/a5' }
+], {})), ['Álbum #1']);
+console.log('PASS Android relative folders preserve hierarchy, duplicate album names and playback URLs');

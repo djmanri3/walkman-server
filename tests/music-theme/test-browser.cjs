@@ -353,6 +353,17 @@ await run(`(async()=>{
  const root={kind:'directory',name:'Root',async *values(){yield artist}};
  await scanDirectory(root);
  if(localTracks[0].Path!=='Artist/Album/track.mp3') throw Error('Importer lost relative folder paths');
+ // Android provides playback URLs and explicit SAF-relative paths independently.
+ window.onAndroidLocalTracks([
+  {Id:'android-a',Type:'Audio',IsLocal:true,Name:'Song A',Album:'Album',Artists:['A'],RelativePath:'Artist A/Album/song.flac',Path:'http://127.0.0.1:9999/a',objUrl:'http://127.0.0.1:9999/a'},
+  {Id:'android-b',Type:'Audio',IsLocal:true,Name:'Song B',Album:'Album',Artists:['B'],RelativePath:'Artist B/Album/song.flac',Path:'http://127.0.0.1:9999/b',objUrl:'http://127.0.0.1:9999/b'}
+ ]);
+ await loadFolderView();
+ const folders=[...document.querySelectorAll('.folder-row .list-item-title')].map(el=>el.textContent);
+ if(folders.join('|')!=='Artist A|Artist B') throw Error('Android import flattened the local folders');
+ await loadFolderView('Artist A/Album',false);
+ if(document.querySelectorAll('#items-container .list-item:not(.folder-row)').length!==1) throw Error('Android folder mixed tracks from different artists');
+ if(folderLibrary.tree.folders.get('Artist A').folders.get('Album').tracks[0].objUrl!=='http://127.0.0.1:9999/a') throw Error('Android folder changed playback URL');
  localTracks=preFolderTracks;folderLibrary=null;setPlayingTheme('music');await navigateMusicTheme('home');
 })()`);
 console.log('PASS Folder navigation, safe paths, playback, Android Back, scroll, all themes and directory import');

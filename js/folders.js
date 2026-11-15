@@ -11,13 +11,18 @@ function buildFolderTree(tracks, selectedLibrary) {
   let resolvedLibraryRoot = false;
   for (const track of tracks) {
     // Stream/content URLs do not expose a physical folder hierarchy.
-    const path = String(track.Path || track.MediaSources?.[0]?.Path || '');
+    const relative = track.IsLocal && typeof track.RelativePath === 'string' ? track.RelativePath : null;
+    const path = relative ?? String(track.Path || track.MediaSources?.[0]?.Path || '');
     let parts = /^(?!file:)[a-z][a-z\d+.-]*:\/\//i.test(path) ? [] : splitPath(path).slice(0, -1);
     const configuredRoot = roots.find(prefix => prefix.every((name, index) => parts[index] === name));
     const musicRootIndex = parts.findIndex(name => name.toLowerCase() === 'music');
     const libraryNameIndex = libraryName ? parts.findIndex((name, index) =>
       name.toLowerCase() === libraryName && index > musicRootIndex) : -1;
-    if (configuredRoot) {
+    if (relative !== null) {
+      // Android reports paths relative to the selected SAF folder, separately
+      // from the localhost playback URL. Preserve every folder, even Music.
+      resolvedLibraryRoot = true;
+    } else if (configuredRoot) {
       parts = parts.slice(configuredRoot.length);
       if (libraryName && parts[0]?.toLowerCase() === libraryName) parts = parts.slice(1);
       resolvedLibraryRoot = true;
@@ -132,7 +137,7 @@ async function loadFolderView(path = '', refresh = !path) {
           Locations: (selected.Location || []).map(location => location.path) }) };
       } else {
         const data = await fetchItems(SERVER_TYPES[embyConfig.serverType].Audio);
-        library = { source, tree: buildFolderTree(data.Items || []), localTracks, localCount: localTracks.length };
+        library = { source, tree: buildFolderTree(data.Items || [], {}), localTracks, localCount: localTracks.length };
       }
     }
     if (requestId !== musicLibraryRequestId || source !== musicLibrarySource()) return;
