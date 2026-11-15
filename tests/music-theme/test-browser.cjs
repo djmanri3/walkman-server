@@ -202,7 +202,15 @@ assert(await run("!document.querySelector('.music-home-action').hidden"));
 await screenshot('music-home-overflow');await run('closeZ1HeaderMenu()');
 await run("document.querySelector('.z1-header-back').click()");
 assert.equal(await run("document.querySelectorAll('#music-navigation .music-nav-icon').length"),9);
+assert(await run("document.querySelector('#music-navigation-brand #app-logo') && getComputedStyle(document.getElementById('app-logo')).display!=='none'"),'Music drawer logo is missing');
+assert(await run("document.getElementById('app-logo').getBoundingClientRect().bottom<=document.querySelector('#music-navigation [data-music-target]').getBoundingClientRect().top"),'Music logo must be above navigation items');
 await screenshot('music-navigation-icons');await run('closeMusicNavigation()');
+for(const theme of ['modern','classic','z1']) {
+ await run("setPlayingTheme('"+theme+"')");
+ assert(await run("document.querySelector('header > #app-logo') && document.querySelectorAll('#app-logo').length===1"),'Logo was not restored to the header in '+theme);
+}
+await run("setPlayingTheme('music')");
+
 // One Music artwork switch controls both Home and library, including upgrades.
 await run("navigateMusicTheme('home');toggleSettingsMenu();openSettingsSection('customization')");
 assert.equal(await run("getComputedStyle(document.getElementById('music-background-settings')).display"),'block');

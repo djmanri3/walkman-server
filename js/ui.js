@@ -326,7 +326,11 @@
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.body.dataset.theme = selected;
-      document.getElementById('app-logo').textContent = 'WALKMAN';
+      const appLogo = document.getElementById('app-logo');
+      appLogo.textContent = 'WALKMAN';
+      const logoContainer = selected === 'music'
+        ? document.getElementById('music-navigation-brand') : document.querySelector('header');
+      if (appLogo.parentElement !== logoContainer) logoContainer.prepend(appLogo);
       closeZ1HeaderMenu();
       closeMusicNavigation(false);
       document.querySelectorAll('[data-playing-theme]').forEach(button => {

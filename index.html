@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
   <meta name="walkman-version" content="4.1">
-  <meta name="walkman-cache-version" content="walkman-v70">
+  <meta name="walkman-cache-version" content="walkman-v71">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -82,6 +82,7 @@
 
   <button id="music-navigation-overlay" class="music-only music-navigation-overlay" type="button" onclick="closeMusicNavigation()" aria-label="Cerrar menú" hidden></button>
   <nav id="music-navigation" class="music-only" aria-label="Music" hidden>
+    <div id="music-navigation-brand"></div>
     <button type="button" data-music-target="home" onclick="navigateMusicTheme('home')"><span class="music-nav-icon music-nav-home material-icons" aria-hidden="true">dashboard</span><span data-i18n="musicHome">Inicio</span></button>
     <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span data-i18n="musicPlayQueue">Cola de reproducción</span></button>
     <button type="button" data-music-target="Playlists" onclick="navigateMusicTheme('Playlists')"><span class="music-nav-icon music-nav-playlists material-icons" aria-hidden="true">format_list_bulleted</span><span data-i18n="playlists">Listas</span></button>

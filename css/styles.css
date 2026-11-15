@@ -3790,7 +3790,13 @@ body[data-theme="music"] .z1-mini-controls .z1-mini-play { width: 42px; height: 
 body[data-theme="music"] .z1-mini-controls .material-icons { font-size: 24px; }
 body[data-theme="music"] #z1-mini-title { font-size: 20px; }
 body[data-theme="music"] #music-navigation-overlay { display: block; position: fixed; inset: 0; border: 0; background: #0007; z-index: 420; }
-body[data-theme="music"] #music-navigation { display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; width: min(280px,82vw); padding: calc(56px + var(--music-safe-top)) 0 calc(24px + var(--music-safe-bottom)); z-index: 421; overflow-y: auto; }
+body[data-theme="music"] #music-navigation { display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; width: min(280px,82vw); padding: calc(16px + var(--music-safe-top)) 0 calc(24px + var(--music-safe-bottom)); z-index: 421; overflow-y: auto; }
+body[data-theme="music"] #github-popup-overlay { z-index: 430; }
+body[data-theme="music"] #music-navigation-brand { width: 100%; align-self: stretch; }
+body[data-theme="music"] #music-navigation #app-logo {
+  display: flex; width: 100%; box-sizing: border-box; min-height: 64px; margin-bottom: 8px; padding: 12px 24px 24px;
+  font-size: 26px; font-weight: 300; color: #fff; border-bottom: 1px solid #ffffff1a;
+}
 #music-navigation button { border: 0; padding: 18px 24px; color: #fff; background: none; text-align: left; font: inherit; font-size: 18px; cursor: pointer; }
 #music-navigation button:hover { background: #ffffff12; }
 body[data-theme="music"] :is(.settings-menu,.settings-submenu,.audio-enhancements-menu,.queue-drawer,.library-picker,.vis-style-menu) { background: #303030; border-radius: 2px; }
