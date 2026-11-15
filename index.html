@@ -56,7 +56,7 @@
     </div>
     <div class="header-icons">
       <span class="material-icons header-search" onclick="toggleSearchOverlay()" title="Buscar" data-i18n-title="search" role="button" tabindex="0" aria-label="Buscar">search</span>
-      <button class="music-only music-header-queue" type="button" onclick="openMusicQueue()" data-i18n-title="musicPlayQueue" aria-label="Play queue"><span class="material-icons">queue_music</span></button>
+      <button class="music-only music-header-queue" type="button" onclick="openMusicQueue()" data-i18n-title="musicPlayQueue" aria-label="Play queue" aria-controls="queue-drawer"><span class="material-icons">queue_music</span></button>
       <button class="music-only music-header-sort" type="button" onclick="toggleMusicLibrarySort()" data-i18n-title="sortBy" aria-label="Ordenar por" aria-expanded="false" hidden><span class="material-icons">sort</span></button>
       <div class="header-secondary-actions" onclick="closeZ1HeaderMenu()">
       <span class="material-icons music-only music-home-action" onclick="refreshMusicHome()" data-i18n-title="musicRefreshHome" role="button" tabindex="0">refresh</span>
@@ -673,7 +673,7 @@
         <div class="queue-btn-top" id="lyrics-btn" onclick="toggleLyricsView()" title="Letras (Lyrics)">
           <span class="material-icons">menu_book</span>
         </div>
-        <div class="queue-btn-top" onclick="toggleQueueDrawer()" title="Lista de reproducción en curso">
+        <div class="queue-btn-top" onclick="toggleQueueDrawer()" title="Lista de reproducción en curso" aria-controls="queue-drawer">
           <span class="material-icons">queue_music</span>
         </div>
       </div>
@@ -686,7 +686,7 @@
         <div class="art-card prev" id="card-prev" onclick="playCarouselSide(1)">
           <img draggable="false" id="img-prev" src="" />
         </div>
-        <div class="art-card current" id="card-current" onclick="openAlbumActionsMenu()">
+        <div class="art-card current" id="card-current" onclick="openAlbumActionsMenu(event)">
           <img draggable="false" id="img-current" src="images/default-album-cover.png" />
           <span class="hires-badge hidden" id="hires-badge" role="img" aria-label="Hi-Res Audio">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48.425 48.425" preserveAspectRatio="xMidYMid meet">
@@ -827,7 +827,7 @@
         <span class="featured-refresh material-icons" title="Recargar side show" data-i18n-title="refreshSlideshow" onclick="refreshFeatured()">refresh</span>
       </div>
       <section class="music-only" id="music-library-queue">
-        <div class="music-library-heading"><h2 data-i18n="musicPlayQueue">Cola de reproducción</h2><button type="button" onclick="openMusicQueue()" data-i18n="musicOpenQueue">Abrir</button></div>
+        <div class="music-library-heading"><h2 data-i18n="musicPlayQueue">Cola de reproducción</h2><button type="button" onclick="openMusicQueue()" data-i18n="musicOpenQueue" aria-controls="queue-drawer">Abrir</button></div>
         <div id="music-library-cards"></div>
       </section>
       <section class="music-only" id="music-recently-added" aria-labelledby="music-recent-title">

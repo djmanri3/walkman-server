@@ -1354,7 +1354,7 @@
       return playlist && playlist[currentTrackIndex] ? playlist[currentTrackIndex] : null;
     }
 
-    function openAlbumActionsMenu() {
+    function openAlbumActionsMenu(event) {
       const track = getCurrentTrack();
       if (!track) {
         showToast('No hay ninguna canción en reproducción');
@@ -1367,12 +1367,14 @@
       const overlay = document.getElementById('album-actions-overlay');
       overlay.classList.add('open');
       overlay.style.display = 'flex';
+      setContextMenuAnchor(overlay, event?.currentTarget || null);
     }
 
     function closeAlbumActionsMenu() {
       const overlay = document.getElementById('album-actions-overlay');
       overlay.classList.remove('open');
       overlay.style.display = 'none';
+      setContextMenuAnchor(overlay, null);
     }
 
     function currentTrackSearchTerms() {

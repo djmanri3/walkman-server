@@ -95,6 +95,53 @@
 
     let ctxMenuItem = null;
     let ctxQueueIdx = -1;
+    const contextMenuAnchors = new Map();
+    const contextMenuResizeObserver = new ResizeObserver(entries => {
+      entries.forEach(entry => positionContextMenu(entry.target.parentElement));
+    });
+
+    function setContextMenuAnchor(overlay, anchor) {
+      const menu = overlay.querySelector('.context-menu');
+      contextMenuAnchors.delete(overlay);
+      contextMenuResizeObserver.unobserve(menu);
+      overlay.classList.toggle('anchored-context-menu', !!anchor);
+      menu.style.left = '';
+      menu.style.top = '';
+      if (anchor) {
+        contextMenuAnchors.set(overlay, anchor);
+        contextMenuResizeObserver.observe(menu);
+        positionContextMenu(overlay);
+      }
+    }
+
+    function positionContextMenu(overlay) {
+      const anchor = contextMenuAnchors.get(overlay);
+      if (!anchor || !overlay.classList.contains('open')) return;
+      const menu = overlay.querySelector('.context-menu');
+      const rect = anchor.getBoundingClientRect();
+      const margin = 8;
+      const gap = 6;
+      const width = menu.offsetWidth;
+      const height = menu.offsetHeight;
+      let left = rect.right - width;
+      let top = rect.bottom + gap;
+      // Prefer the side of the button when there is room; otherwise open below or above it.
+      if (rect.left - gap - width >= margin) {
+        left = rect.left - gap - width;
+        top = rect.top;
+      } else if (rect.right + gap + width <= overlay.clientWidth - margin) {
+        left = rect.right + gap;
+        top = rect.top;
+      } else if (top + height > overlay.clientHeight - margin) {
+        top = rect.top - gap - height;
+      }
+      menu.style.left = Math.max(margin, Math.min(left, overlay.clientWidth - width - margin)) + 'px';
+      menu.style.top = Math.max(margin, Math.min(top, overlay.clientHeight - height - margin)) + 'px';
+    }
+
+    window.addEventListener('resize', () => {
+      contextMenuAnchors.forEach((anchor, overlay) => positionContextMenu(overlay));
+    });
 
     function openContextMenu(event, item, queueIdx = -1) {
       ctxMenuItem = item;
@@ -113,10 +160,13 @@
       updateFavoriteMenuOption();
       updateAddToPlaylistOption();
       overlay.classList.add('open');
+      setContextMenuAnchor(overlay, event?.currentTarget || null);
     }
 
     function closeContextMenu() {
-      document.getElementById('context-menu-overlay').classList.remove('open');
+      const overlay = document.getElementById('context-menu-overlay');
+      overlay.classList.remove('open');
+      setContextMenuAnchor(overlay, null);
       ctxMenuItem = null;
       ctxQueueIdx = -1;
     }
@@ -245,6 +295,13 @@
       closeContextMenu();
     }
 
+
+    document.addEventListener('click', event => {
+      const drawer = document.getElementById('queue-drawer');
+      if (!drawer.classList.contains('open')) return;
+      if (event.target.closest('#queue-drawer, [aria-controls="queue-drawer"], .context-menu')) return;
+      drawer.classList.remove('open');
+    }, true);
 
     function toggleQueueDrawer() {
       const drawer = document.getElementById('queue-drawer');
@@ -456,7 +513,10 @@
         opt.onclick = function() { addToSelectedPlaylist(p); };
         list.appendChild(opt);
       });
-      if (overlay) overlay.classList.add("open");
+      if (overlay) {
+        overlay.classList.add("open");
+        setContextMenuAnchor(overlay, contextMenuAnchors.get(document.getElementById('context-menu-overlay')));
+      }
     }
 
     async function addToSelectedPlaylist(playlist) {
@@ -478,6 +538,9 @@
 
     function closePlaylistSelectMenu() {
       const overlay = document.getElementById("playlist-select-overlay");
-      if (overlay) overlay.classList.remove("open");
+      if (overlay) {
+        overlay.classList.remove("open");
+        setContextMenuAnchor(overlay, null);
+      }
       _plSelItem = null;
     }
