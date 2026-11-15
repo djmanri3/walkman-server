@@ -203,11 +203,17 @@ await screenshot('music-home-overflow');await run('closeZ1HeaderMenu()');
 await run("document.querySelector('.z1-header-back').click()");
 assert.equal(await run("document.querySelectorAll('#music-navigation .music-nav-icon').length"),9);
 await screenshot('music-navigation-icons');await run('closeMusicNavigation()');
-// Music artwork backgrounds have independent, persistent switches.
+// One Music artwork switch controls both Home and library, including upgrades.
 await run("navigateMusicTheme('home');toggleSettingsMenu();openSettingsSection('customization')");
 assert.equal(await run("getComputedStyle(document.getElementById('music-background-settings')).display"),'block');
-await run("document.getElementById('music-home-background').click();closeSettingsMenu()");
-assert.equal(await run("loadLS('walkman_music_home_background')"),'on');
+assert.equal(await run("document.querySelectorAll('#music-background-settings button').length"),1);
+assert.equal(await run("document.querySelectorAll('#music-background-settings input').length"),0);
+await run("document.getElementById('music-background-btn').click()");
+assert.equal(await run("loadLS('walkman_music_artwork_background')"),'on');
+await run("document.getElementById('music-background-btn').scrollIntoView({block:'center'})");
+await screenshot('music-artwork-setting-mobile');
+assert(await run("document.getElementById('music-background-btn').getBoundingClientRect().right<=innerWidth"),'Artwork toggle overflows mobile settings');
+await run("closeSettingsMenu()");
 for(const [width,height] of [[390,844],[1341,772]]) {
  await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
  await run("navigateMusicTheme('home')");
@@ -215,19 +221,65 @@ for(const [width,height] of [[390,844],[1341,772]]) {
  assert(await run("document.getElementById('music-album-background').getAttribute('src')===getEmbyImageUrl(playlist[currentTrackIndex])"));
  await screenshot('music-artwork-home-'+width);
  await run("navigateMusicTheme('Songs')");
- assert.notEqual(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)','Home preference leaked into library');
- await run("setMusicLibraryBackground('library',true)");
  assert.equal(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)');
  await screenshot('music-artwork-library-'+width);
- await run("setMusicLibraryBackground('library',false)");
+ await run("toggleMusicLibraryBackground()");
+ for(const destination of ['home','Songs']) {
+  await run("navigateMusicTheme('"+destination+"')");
+  assert.notEqual(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)','Unified artwork switch did not disable both views');
+ }
+ await run("toggleMusicLibraryBackground()");
 }
 await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
 await run("setPlayingTheme('classic')");
 assert.equal(await run("getComputedStyle(document.getElementById('music-background-settings')).display"),'none');
 await run("setPlayingTheme('music');navigateMusicTheme('home')");
 assert.equal(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)','Artwork preference did not survive a theme switch');
-await run("setMusicLibraryBackground('home',false)");
-console.log('PASS Independent Music Home/library artwork preferences, mobile/desktop and theme isolation');
+await run("localStorage.removeItem('walkman_music_artwork_background');saveLS('walkman_music_home_background','off');saveLS('walkman_music_library_background','on');updateMusicLibraryChrome()");
+assert.equal(await run("loadLS('walkman_music_artwork_background')"),'on','Existing library artwork preference was lost during migration');
+await run("toggleMusicLibraryBackground();updateMusicLibraryChrome()");
+assert.equal(await run("document.getElementById('music-background-btn').getAttribute('aria-pressed')"),'false','Legacy preference re-enabled a disabled unified switch');
+assert(await run("!document.body.classList.contains('music-home-artwork')&&!document.body.classList.contains('music-library-artwork')"));
+console.log('PASS Unified Music artwork preference, migration, mobile/desktop, both views and theme isolation');
+
+// A single Music-only switch follows the existing dynamic/custom accent.
+await run("switchTab('playing');updateMusicThemeData();toggleSettingsMenu();openSettingsSection('customization')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-playing-accent-settings')).display"),'block');
+assert.equal(await run("document.getElementById('music-playing-accent-btn').getAttribute('aria-pressed')"),'false');
+await run("document.getElementById('music-playing-accent-btn').click();setCustomAccent('#e53267');closeSettingsMenu()");
+assert.equal(await run("loadLS('walkman_music_playing_accent')"),'on');
+assert(await run(`(async()=>{
+ const color=id=>getComputedStyle(document.getElementById(id)).color;
+ const probe=document.createElement('span');probe.style.color='color-mix(in srgb, #e53267 60%, white)';document.body.append(probe);
+ window.musicPlayingExpectedColor=getComputedStyle(probe).color;probe.remove();
+ if(window.musicPlayingExpectedColor==='rgb(229, 50, 103)')throw Error('Player accent was not lightened');
+ if(getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim()!=='#e53267')throw Error('Shared accent changed');
+ if(document.getElementById('repeat-btn').classList.contains('active')) {toggleRepeat();if(document.getElementById('repeat-btn').classList.contains('active'))toggleRepeat();}
+ if(document.getElementById('shuffle-btn').classList.contains('active'))toggleShuffle();
+ await new Promise(r=>setTimeout(r,350));
+ if(color('repeat-btn')===window.musicPlayingExpectedColor || color('shuffle-btn')===window.musicPlayingExpectedColor)return false;
+ toggleRepeat();toggleShuffle();
+ await new Promise(r=>setTimeout(r,350));
+ return color('repeat-btn')===window.musicPlayingExpectedColor && color('shuffle-btn')===window.musicPlayingExpectedColor;
+})()`),'Music active modes did not follow the accent or inactive modes were tinted');
+await run("(async()=>{window.musicAccentFavoriteWasOn=isFavorite(playlist[currentTrackIndex]);await setFavorite(playlist[currentTrackIndex],true);updateMusicThemeData()})()");
+assert.equal(await run("getComputedStyle(document.getElementById('music-track-favorite')).color"),await run("window.musicPlayingExpectedColor"));
+await run("(async()=>{await setFavorite(playlist[currentTrackIndex],false);updateMusicThemeData()})()");
+assert.equal(await run("getComputedStyle(document.getElementById('music-track-favorite')).color"),'rgb(255, 255, 255)');
+assert(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').includes('#e53267')"));
+await run("(async()=>{const add=document.getElementById('music-track-add');const disabled=add.disabled;add.disabled=false;await new Promise(r=>setTimeout(r,350));if(getComputedStyle(add).color!==window.musicPlayingExpectedColor)throw Error('Add to playlist did not follow accent');add.disabled=disabled;await setFavorite(playlist[currentTrackIndex],window.musicAccentFavoriteWasOn);updateMusicThemeData();setAccentMode('dynamic')})()");
+assert(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').includes(getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim())"),'Dynamic accent did not propagate to Music progress');
+await run("document.getElementById('view-playing').classList.remove('music-playing-accent');updateMusicLibraryChrome()");
+assert(await run("document.getElementById('view-playing').classList.contains('music-playing-accent')"),'Music playing preference was not restored');
+await run('new Promise(r=>setTimeout(r,350))');
+await screenshot('music-playing-accent');
+await run("setPlayingTheme('classic')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-playing-accent-settings')).display"),'none');
+assert.equal(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').trim()"),'');
+await run("setPlayingTheme('music');toggleMusicPlayingAccent();toggleRepeat();if(document.getElementById('repeat-btn').classList.contains('active'))toggleRepeat();toggleShuffle();navigateMusicTheme('home')");
+assert.equal(await run("document.getElementById('music-playing-accent-btn').getAttribute('aria-pressed')"),'false');
+console.log('PASS Music Playing accent: single switch, dynamic/custom colors, active states, persistence and theme isolation');
+
 
 assert(await run(`(()=>{
  const tracks=['/data/music/Rock/one.mp3','/data/music/Jazz/two.mp3'].map((Path,index)=>({Path,Id:String(index)}));

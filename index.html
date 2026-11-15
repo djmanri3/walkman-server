@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
   <meta name="walkman-version" content="4.1">
-  <meta name="walkman-cache-version" content="walkman-v69">
+  <meta name="walkman-cache-version" content="walkman-v70">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -223,9 +223,19 @@
     </div>
 
     <div class="settings-group music-only" id="music-background-settings">
-      <div class="settings-group-label" data-i18n="musicLibraryBackground">Fondo de carátula · Music</div>
-      <label class="music-background-option"><input type="checkbox" id="music-home-background" onchange="setMusicLibraryBackground('home', this.checked)"><span data-i18n="musicHome">Inicio</span></label>
-      <label class="music-background-option"><input type="checkbox" id="music-library-background" onchange="setMusicLibraryBackground('library', this.checked)"><span data-i18n="musicMyLibrary">Mi biblioteca</span></label>
+      <button class="settings-btn" id="music-background-btn" type="button" onclick="toggleMusicLibraryBackground()" aria-pressed="false" aria-describedby="music-background-hint">
+        <span class="material-icons" aria-hidden="true">album</span>
+        <span data-i18n="musicLibraryBackground">Fondo de carátula</span>
+      </button>
+      <p class="music-playing-accent-hint" id="music-background-hint" data-i18n="musicLibraryBackgroundHint">La carátula desenfocada en Inicio y Mi biblioteca</p>
+    </div>
+
+    <div class="settings-group music-only" id="music-playing-accent-settings">
+      <button class="settings-btn" id="music-playing-accent-btn" type="button" onclick="toggleMusicPlayingAccent()" aria-pressed="false" aria-describedby="music-playing-accent-hint">
+        <span class="material-icons" aria-hidden="true">palette</span>
+        <span data-i18n="musicPlayingAccent">Color de acento en reproducción · Music</span>
+      </button>
+      <p class="music-playing-accent-hint" id="music-playing-accent-hint" data-i18n="musicPlayingAccentHint">Colorea el progreso, repetir y aleatorio activos, favoritos y añadir a lista. Usa el color de la carátula en Dinámico o el elegido en Personalizado.</p>
     </div>
 
     <div class="settings-group">

@@ -330,18 +330,43 @@ function rememberMusicFavorites(kind, items) {
   musicFavoriteCollection = { kind, items };
 }
 
-function setMusicLibraryBackground(area, enabled) {
-  if (!['home', 'library'].includes(area)) return;
-  saveLS('walkman_music_' + area + '_background', enabled ? 'on' : 'off');
+function isMusicLibraryBackgroundEnabled() {
+  const saved = loadLS('walkman_music_artwork_background');
+  if (saved !== null) return saved === 'on';
+  // Preserve an enabled artwork preference when upgrading from separate switches.
+  const enabled = ['home', 'library'].some(area => loadLS('walkman_music_' + area + '_background') === 'on');
+  saveLS('walkman_music_artwork_background', enabled ? 'on' : 'off');
+  return enabled;
+}
+
+function toggleMusicLibraryBackground() {
+  saveLS('walkman_music_artwork_background', isMusicLibraryBackgroundEnabled() ? 'off' : 'on');
   updateMusicLibraryChrome();
 }
 
+function toggleMusicPlayingAccent() {
+  const enabled = loadLS('walkman_music_playing_accent') !== 'on';
+  saveLS('walkman_music_playing_accent', enabled ? 'on' : 'off');
+  updateMusicPlayingAccent();
+}
+
+function updateMusicPlayingAccent() {
+  const enabled = loadLS('walkman_music_playing_accent') === 'on';
+  document.getElementById('view-playing').classList.toggle('music-playing-accent', enabled);
+  const button = document.getElementById('music-playing-accent-btn');
+  button.classList.toggle('on', enabled);
+  button.setAttribute('aria-pressed', String(enabled));
+}
+
 function updateMusicLibraryChrome() {
+  updateMusicPlayingAccent();
+  const artwork = isMusicLibraryBackgroundEnabled();
   for (const area of ['home', 'library']) {
-    const enabled = loadLS('walkman_music_' + area + '_background') === 'on';
-    document.body.classList.toggle('music-' + area + '-artwork', enabled);
-    document.getElementById('music-' + area + '-background').checked = enabled;
+    document.body.classList.toggle('music-' + area + '-artwork', artwork);
   }
+  const backgroundButton = document.getElementById('music-background-btn');
+  backgroundButton.classList.toggle('on', artwork);
+  backgroundButton.setAttribute('aria-pressed', String(artwork));
   const music = document.body.dataset.theme === 'music';
   const playing = document.getElementById('view-playing').classList.contains('active');
   const list = document.getElementById('list-view').style.display !== 'none';

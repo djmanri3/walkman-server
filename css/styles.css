@@ -3723,9 +3723,17 @@ body[data-theme="music"]:not(.music-playing) :is(.music-header-queue,.z1-header-
   #view-playing[data-theme="music"] .controls-wrapper { grid-template-columns: 32px minmax(0,1fr) 32px; column-gap: 4px; }
   #view-playing[data-theme="music"] .controls { gap: 8px; }
 }
-#view-playing[data-theme="music"] #progress-bar::-webkit-slider-runnable-track { background: linear-gradient(to right, #ffffffaa var(--music-progress,0%), #ffffff40 var(--music-progress,0%)); }
+#view-playing[data-theme="music"] #progress-bar::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--music-progress-fill, #ffffffaa) var(--music-progress,0%), #ffffff40 var(--music-progress,0%)); }
 #view-playing[data-theme="music"] #progress-bar::-webkit-slider-thumb { width: 12px; height: 12px; box-shadow: none; }
-#view-playing[data-theme="music"] #progress-bar::-moz-range-progress { background: #ffffffaa; height: 3px; }
+#view-playing[data-theme="music"] #progress-bar::-moz-range-progress { background: var(--music-progress-fill, #ffffffaa); height: 3px; }
+/* Lift the player accent above the artwork without changing the shared accent. */
+#view-playing[data-theme="music"].music-playing-accent {
+  --music-playing-accent-color: color-mix(in srgb, var(--accent-color) 60%, white);
+  --music-progress-fill: var(--music-playing-accent-color);
+}
+#view-playing[data-theme="music"].music-playing-accent :is(#repeat-btn.active, #shuffle-btn.active, #music-track-favorite[aria-pressed="true"], #music-track-add:not(:disabled)) { color: var(--music-playing-accent-color); }
+#view-playing[data-theme="music"].music-playing-accent #progress-bar::-webkit-slider-thumb { background: var(--music-playing-accent-color); }
+#view-playing[data-theme="music"].music-playing-accent #progress-bar::-moz-range-thumb { background: var(--music-playing-accent-color); }
 @media (min-width: 640px) and (min-aspect-ratio: 6/5) {
   #view-playing[data-theme="music"] {
     --album-size: min(calc(34vw * var(--carousel-size)), calc(100dvh - 125px - var(--music-safe-top) - var(--music-safe-bottom)), 600px);
@@ -4025,9 +4033,9 @@ body[data-theme="music"].music-library-artwork.music-library-open :is(header,#mu
   -webkit-backdrop-filter: blur(24px) saturate(130%);
   backdrop-filter: blur(24px) saturate(130%);
 }
-.music-background-option { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
-body[data-theme="music"] #music-background-settings { display: block; }
-.music-background-option input { width: 18px; height: 18px; accent-color: var(--accent-color); }
+body[data-theme="music"] :is(#music-background-settings, #music-playing-accent-settings) { display: block; }
+body[data-theme="music"] :is(#music-background-btn, #music-playing-accent-btn) { width: 100%; box-sizing: border-box; }
+.music-playing-accent-hint { margin: 10px 0 0; color: #bbb; font-size: 12px; line-height: 1.5; }
 .folder-row { width: 100%; border: 0; color: inherit; text-align: left; font: inherit; }
 .folder-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 50px; width: 50px; height: 50px; font-size: 34px; color: var(--accent-color); }
 body[data-theme="music"] #items-container .folder-icon { flex-basis: 64px; width: 64px; height: 64px; }
