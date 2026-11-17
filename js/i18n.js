@@ -2,6 +2,7 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        visSettings: 'Visualizer settings', visAutoHide: 'Hide controls after 5 seconds',
         musicLibraryBackgroundHint: "Blurred album artwork in Home and My Library",
         musicPlayingAccent: "Accent color in Playing · Music", musicPlayingAccentHint: "Colors played progress, active repeat and shuffle, favorites and add to playlist. Uses the album color in Dynamic or your chosen color in Custom.",
         folders: "Folders", musicLibraryBackground: "Album artwork background", foldersEmpty: "This folder is empty.", foldersLoadError: "Could not load folders.",
@@ -102,6 +103,7 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        visSettings: 'Ajustes del visualizador', visAutoHide: 'Ocultar controles tras 5 segundos',
         musicLibraryBackgroundHint: "La carátula desenfocada en Inicio y Mi biblioteca",
         musicPlayingAccent: "Color de acento en reproducción · Music", musicPlayingAccentHint: "Colorea el progreso, repetir y aleatorio activos, favoritos y añadir a lista. Usa el color de la carátula en Dinámico o el elegido en Personalizado.",
         folders: "Carpetas", musicLibraryBackground: "Fondo de carátula", foldersEmpty: "Esta carpeta está vacía.", foldersLoadError: "No se pudieron cargar las carpetas.",

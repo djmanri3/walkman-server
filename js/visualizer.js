@@ -17,9 +17,66 @@
     const canvas = document.getElementById('visualizer-canvas');
     const ctx = canvas.getContext('2d');
 
+    const visOverlay = document.getElementById('visualizer-overlay');
+    let visAutoHide = loadLS('walkman_vis_auto_hide') !== 'false';
+    let visControlsTimer = null;
+    let visSettingsMenuOpen = false;
+    document.getElementById('vis-auto-hide').checked = visAutoHide;
+
+    function showVisControls() {
+      clearTimeout(visControlsTimer);
+      visOverlay.classList.remove('controls-hidden');
+      if (!visAutoHide || !visOverlay.classList.contains('open')) return;
+      visControlsTimer = setTimeout(() => {
+        if (visStyleMenuOpen || visSettingsMenuOpen) return;
+        // Keep controls available while seeking or using the keyboard.
+        if (visOverlay.querySelector(':active, :focus-visible')) {
+          showVisControls();
+          return;
+        }
+        visOverlay.classList.add('controls-hidden');
+      }, 5000);
+    }
+
+    function setVisAutoHide(enabled) {
+      visAutoHide = enabled;
+      saveLS('walkman_vis_auto_hide', enabled);
+      document.getElementById('vis-auto-hide').checked = enabled;
+      showVisControls();
+    }
+
+    function closeVisSettingsMenu() {
+      visSettingsMenuOpen = false;
+      document.getElementById('vis-settings-menu').classList.remove('open');
+      document.getElementById('vis-settings-button').setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleVisSettingsMenu() {
+      visSettingsMenuOpen = !visSettingsMenuOpen;
+      document.getElementById('vis-settings-menu').classList.toggle('open', visSettingsMenuOpen);
+      document.getElementById('vis-settings-button').setAttribute('aria-expanded', String(visSettingsMenuOpen));
+      visStyleMenuOpen = false;
+      document.getElementById('vis-style-menu').classList.remove('open');
+      showVisControls();
+    }
+
+    // Capture also sees interactions inside menus that stop propagation.
+    ['pointerdown', 'pointerup', 'click', 'keydown', 'focusin'].forEach(type => {
+      visOverlay.addEventListener(type, showVisControls, true);
+    });
+    visOverlay.addEventListener('click', event => {
+      if (!event.target.closest('.visualizer-header, .vis-style-menu')) {
+        closeVisSettingsMenu();
+        visStyleMenuOpen = false;
+        document.getElementById('vis-style-menu').classList.remove('open');
+      }
+    });
+
     function toggleVisStyleMenu() {
+      closeVisSettingsMenu();
       visStyleMenuOpen = !visStyleMenuOpen;
       document.getElementById('vis-style-menu').classList.toggle('open', visStyleMenuOpen);
+      showVisControls();
     }
 
     function setVisStyle(style) {
@@ -31,6 +88,7 @@
         o.classList.toggle('active', o.dataset.vis === style);
       });
       saveLS('walkman_vis_style', style);
+      showVisControls();
     }
 
     // Array conveniente de pares (frecuencia media, valor 0-1)
@@ -694,6 +752,7 @@
       const visOverlay = document.getElementById('visualizer-overlay');
       if (!visOverlay.classList.contains('open')) closeLyricsIfOpen();
       visOverlay.classList.toggle('open');
+      showVisControls();
 
       if (visOverlay.classList.contains('open')) {
         // Marcar el estilo activo en el menú
@@ -705,6 +764,7 @@
         updateVisualizerOverlayData();
         renderVisualizer();
       } else {
+        closeVisSettingsMenu();
         visStyleMenuOpen = false;
         document.getElementById('vis-style-menu').classList.remove('open');
         if (visAnimationId) cancelAnimationFrame(visAnimationId);

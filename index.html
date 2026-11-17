@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
   <meta name="walkman-version" content="4.1">
-  <meta name="walkman-cache-version" content="walkman-v71">
+  <meta name="walkman-cache-version" content="walkman-v72">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -607,7 +607,18 @@
         <span class="material-icons" style="cursor: pointer;" onclick="toggleVisualizerView()">arrow_back</span>
         <span data-i18n="visualizer">Visualizador</span>
       </div>
-      <span class="material-icons" style="cursor: pointer;" onclick="toggleVisStyleMenu()">more_vert</span>
+      <div class="visualizer-header-actions">
+        <button id="vis-settings-button" class="vis-header-button" type="button" onclick="toggleVisSettingsMenu()" aria-controls="vis-settings-menu" aria-expanded="false" data-i18n-aria-label="visSettings" aria-label="Ajustes del visualizador"><span class="material-icons">settings</span></button>
+        <button class="vis-header-button" type="button" onclick="toggleVisStyleMenu()" data-i18n-aria-label="visStyle" aria-label="Estilo del visualizador"><span class="material-icons">more_vert</span></button>
+      </div>
+    </div>
+
+    <div class="vis-style-menu" id="vis-settings-menu">
+      <div class="vis-style-title" data-i18n="visSettings">Ajustes del visualizador</div>
+      <label class="vis-auto-hide-option">
+        <span data-i18n="visAutoHide">Ocultar controles tras 5 segundos</span>
+        <input id="vis-auto-hide" type="checkbox" checked onchange="setVisAutoHide(this.checked)">
+      </label>
     </div>
 
     <div class="vis-style-menu" id="vis-style-menu" onclick="event.stopPropagation()">
