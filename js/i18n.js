@@ -2,6 +2,10 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        visSettings: 'Visualizer settings', visAutoHide: 'Hide controls after 5 seconds',
+        musicLibraryBackgroundHint: "Blurred album artwork in Home and My Library",
+        musicPlayingAccent: "Accent color in Playing · Music", musicPlayingAccentHint: "Colors played progress, active repeat and shuffle, favorites and add to playlist. Uses the album color in Dynamic or your chosen color in Custom.",
+        folders: "Folders", musicLibraryBackground: "Album artwork background", foldersEmpty: "This folder is empty.", foldersLoadError: "Could not load folders.",
         musicMyLibrary: "My Library",
         musicShowGrid: "Show grid", musicShowList: "Show list",
         musicGridColumns: "Columns", musicGridAuto: "Auto",
@@ -99,6 +103,10 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        visSettings: 'Ajustes del visualizador', visAutoHide: 'Ocultar controles tras 5 segundos',
+        musicLibraryBackgroundHint: "La carátula desenfocada en Inicio y Mi biblioteca",
+        musicPlayingAccent: "Color de acento en reproducción · Music", musicPlayingAccentHint: "Colorea el progreso, repetir y aleatorio activos, favoritos y añadir a lista. Usa el color de la carátula en Dinámico o el elegido en Personalizado.",
+        folders: "Carpetas", musicLibraryBackground: "Fondo de carátula", foldersEmpty: "Esta carpeta está vacía.", foldersLoadError: "No se pudieron cargar las carpetas.",
         musicMyLibrary: "Mi biblioteca",
         musicShowGrid: "Mostrar cuadrícula", musicShowList: "Mostrar lista",
         musicGridColumns: "Columnas", musicGridAuto: "Automático",
@@ -196,6 +204,9 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        musicLibraryBackgroundHint: "La pochette floutée dans Accueil et Ma bibliothèque",
+        musicPlayingAccent: "Couleur d’accent en lecture · Music", musicPlayingAccentHint: "Colore la progression, la répétition et le mode aléatoire actifs, les favoris et l’ajout à une playlist. Utilise la pochette en mode Dynamique ou la couleur choisie en mode Personnalisé.",
+        folders: "Dossiers", musicLibraryBackground: "Pochette en arrière-plan", foldersEmpty: "Ce dossier est vide.", foldersLoadError: "Impossible de charger les dossiers.",
         musicMyLibrary: "Ma bibliothèque",
         musicShowGrid: "Afficher la grille", musicShowList: "Afficher la liste",
         musicGridColumns: "Colonnes", musicGridAuto: "Auto",
@@ -282,6 +293,9 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        musicLibraryBackgroundHint: "Unscharfes Albumcover auf Startseite und in Meine Bibliothek",
+        musicPlayingAccent: "Akzentfarbe bei der Wiedergabe · Music", musicPlayingAccentHint: "Färbt den abgespielten Fortschritt, aktive Wiederholung und Zufallswiedergabe, Favoriten und das Hinzufügen zur Playlist. Dynamisch nutzt die Coverfarbe, Benutzerdefiniert die gewählte Farbe.",
+        folders: "Ordner", musicLibraryBackground: "Albumcover als Hintergrund", foldersEmpty: "Dieser Ordner ist leer.", foldersLoadError: "Ordner konnten nicht geladen werden.",
         musicMyLibrary: "Meine Bibliothek",
         musicShowGrid: "Raster anzeigen", musicShowList: "Liste anzeigen",
         musicGridColumns: "Spalten", musicGridAuto: "Automatisch",
@@ -367,6 +381,9 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        musicLibraryBackgroundHint: "La copertina sfocata in Home e La mia libreria",
+        musicPlayingAccent: "Colore accento in riproduzione · Music", musicPlayingAccentHint: "Colora l’avanzamento, ripetizione e riproduzione casuale attive, preferiti e aggiunta alla playlist. Usa il colore della copertina in Dinamico o quello scelto in Personalizzato.",
+        folders: "Cartelle", musicLibraryBackground: "Copertina come sfondo", foldersEmpty: "Questa cartella è vuota.", foldersLoadError: "Impossibile caricare le cartelle.",
         musicMyLibrary: "La mia libreria",
         musicShowGrid: "Mostra griglia", musicShowList: "Mostra elenco",
         musicGridColumns: "Colonne", musicGridAuto: "Automatico",
@@ -452,6 +469,9 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        musicLibraryBackgroundHint: "A capa desfocada no Início e na Minha biblioteca",
+        musicPlayingAccent: "Cor de destaque na reprodução · Music", musicPlayingAccentHint: "Aplica cor ao progresso, repetição e modo aleatório ativos, favoritos e adicionar à playlist. Usa a cor da capa em Dinâmico ou a cor escolhida em Personalizado.",
+        folders: "Pastas", musicLibraryBackground: "Capa do álbum como fundo", foldersEmpty: "Esta pasta está vazia.", foldersLoadError: "Não foi possível carregar as pastas.",
         musicMyLibrary: "A minha biblioteca",
         musicShowGrid: "Mostrar grelha", musicShowList: "Mostrar lista",
         musicGridColumns: "Colunas", musicGridAuto: "Automático",
@@ -605,5 +625,5 @@
     currentLang = getLang();
 
 
-    const categoryKeys = { 'Songs': 'songs', 'Albums': 'albums', 'Artists': 'artists', 'Playlists': 'playlists', 'Playlist': 'playlists' };
+    const categoryKeys = { 'Songs': 'songs', 'Albums': 'albums', 'Artists': 'artists', 'Playlists': 'playlists', 'Playlist': 'playlists', 'Folders': 'folders' };
     function tCategory(category) { return t(categoryKeys[category] || category); }

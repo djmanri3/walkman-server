@@ -201,8 +201,233 @@ assert.notEqual(await run("getComputedStyle(document.querySelector('.header-seco
 assert(await run("!document.querySelector('.music-home-action').hidden"));
 await screenshot('music-home-overflow');await run('closeZ1HeaderMenu()');
 await run("document.querySelector('.z1-header-back').click()");
-assert.equal(await run("document.querySelectorAll('#music-navigation .music-nav-icon').length"),8);
+assert.equal(await run("document.querySelectorAll('#music-navigation .music-nav-icon').length"),9);
+assert(await run("document.querySelector('#music-navigation-brand #app-logo') && getComputedStyle(document.getElementById('app-logo')).display!=='none'"),'Music drawer logo is missing');
+assert(await run("document.getElementById('app-logo').getBoundingClientRect().bottom<=document.querySelector('#music-navigation [data-music-target]').getBoundingClientRect().top"),'Music logo must be above navigation items');
 await screenshot('music-navigation-icons');await run('closeMusicNavigation()');
+for(const theme of ['modern','classic','z1']) {
+ await run("setPlayingTheme('"+theme+"')");
+ assert(await run("document.querySelector('header > #app-logo') && document.querySelectorAll('#app-logo').length===1"),'Logo was not restored to the header in '+theme);
+}
+await run("setPlayingTheme('music')");
+
+// One Music artwork switch controls both Home and library, including upgrades.
+await run("navigateMusicTheme('home');toggleSettingsMenu();openSettingsSection('customization')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-background-settings')).display"),'block');
+assert.equal(await run("document.querySelectorAll('#music-background-settings button').length"),1);
+assert.equal(await run("document.querySelectorAll('#music-background-settings input').length"),0);
+await run("document.getElementById('music-background-btn').click()");
+assert.equal(await run("loadLS('walkman_music_artwork_background')"),'on');
+await run("document.getElementById('music-background-btn').scrollIntoView({block:'center'})");
+await screenshot('music-artwork-setting-mobile');
+assert(await run("document.getElementById('music-background-btn').getBoundingClientRect().right<=innerWidth"),'Artwork toggle overflows mobile settings');
+await run("closeSettingsMenu()");
+for(const [width,height] of [[390,844],[1341,772]]) {
+ await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
+ await run("navigateMusicTheme('home')");
+ assert.equal(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)');
+ assert(await run("document.getElementById('music-album-background').getAttribute('src')===getEmbyImageUrl(playlist[currentTrackIndex])"));
+ await screenshot('music-artwork-home-'+width);
+ await run("navigateMusicTheme('Songs')");
+ assert.equal(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)');
+ await screenshot('music-artwork-library-'+width);
+ await run("toggleMusicLibraryBackground()");
+ for(const destination of ['home','Songs']) {
+  await run("navigateMusicTheme('"+destination+"')");
+  assert.notEqual(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)','Unified artwork switch did not disable both views');
+ }
+ await run("toggleMusicLibraryBackground()");
+}
+await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+await run("setPlayingTheme('classic')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-background-settings')).display"),'none');
+await run("setPlayingTheme('music');navigateMusicTheme('home')");
+assert.equal(await run("getComputedStyle(document.getElementById('view-music')).backgroundColor"),'rgba(0, 0, 0, 0)','Artwork preference did not survive a theme switch');
+await run("localStorage.removeItem('walkman_music_artwork_background');saveLS('walkman_music_home_background','off');saveLS('walkman_music_library_background','on');updateMusicLibraryChrome()");
+assert.equal(await run("loadLS('walkman_music_artwork_background')"),'on','Existing library artwork preference was lost during migration');
+await run("toggleMusicLibraryBackground();updateMusicLibraryChrome()");
+assert.equal(await run("document.getElementById('music-background-btn').getAttribute('aria-pressed')"),'false','Legacy preference re-enabled a disabled unified switch');
+assert(await run("!document.body.classList.contains('music-home-artwork')&&!document.body.classList.contains('music-library-artwork')"));
+console.log('PASS Unified Music artwork preference, migration, mobile/desktop, both views and theme isolation');
+
+// A single Music-only switch follows the existing dynamic/custom accent.
+await run("switchTab('playing');updateMusicThemeData();toggleSettingsMenu();openSettingsSection('customization')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-playing-accent-settings')).display"),'block');
+assert.equal(await run("document.getElementById('music-playing-accent-btn').getAttribute('aria-pressed')"),'false');
+await run("document.getElementById('music-playing-accent-btn').click();setCustomAccent('#e53267');closeSettingsMenu()");
+assert.equal(await run("loadLS('walkman_music_playing_accent')"),'on');
+assert(await run(`(async()=>{
+ const color=id=>getComputedStyle(document.getElementById(id)).color;
+ const probe=document.createElement('span');probe.style.color='color-mix(in srgb, #e53267 60%, white)';document.body.append(probe);
+ window.musicPlayingExpectedColor=getComputedStyle(probe).color;probe.remove();
+ if(window.musicPlayingExpectedColor==='rgb(229, 50, 103)')throw Error('Player accent was not lightened');
+ if(getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim()!=='#e53267')throw Error('Shared accent changed');
+ if(document.getElementById('repeat-btn').classList.contains('active')) {toggleRepeat();if(document.getElementById('repeat-btn').classList.contains('active'))toggleRepeat();}
+ if(document.getElementById('shuffle-btn').classList.contains('active'))toggleShuffle();
+ await new Promise(r=>setTimeout(r,350));
+ if(color('repeat-btn')===window.musicPlayingExpectedColor || color('shuffle-btn')===window.musicPlayingExpectedColor)return false;
+ toggleRepeat();toggleShuffle();
+ await new Promise(r=>setTimeout(r,350));
+ return color('repeat-btn')===window.musicPlayingExpectedColor && color('shuffle-btn')===window.musicPlayingExpectedColor;
+})()`),'Music active modes did not follow the accent or inactive modes were tinted');
+await run("(async()=>{window.musicAccentFavoriteWasOn=isFavorite(playlist[currentTrackIndex]);await setFavorite(playlist[currentTrackIndex],true);updateMusicThemeData()})()");
+assert.equal(await run("getComputedStyle(document.getElementById('music-track-favorite')).color"),await run("window.musicPlayingExpectedColor"));
+await run("(async()=>{await setFavorite(playlist[currentTrackIndex],false);updateMusicThemeData()})()");
+assert.equal(await run("getComputedStyle(document.getElementById('music-track-favorite')).color"),'rgb(255, 255, 255)');
+assert(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').includes('#e53267')"));
+await run("(async()=>{const add=document.getElementById('music-track-add');const disabled=add.disabled;add.disabled=false;await new Promise(r=>setTimeout(r,350));if(getComputedStyle(add).color!==window.musicPlayingExpectedColor)throw Error('Add to playlist did not follow accent');add.disabled=disabled;await setFavorite(playlist[currentTrackIndex],window.musicAccentFavoriteWasOn);updateMusicThemeData();setAccentMode('dynamic')})()");
+assert(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').includes(getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim())"),'Dynamic accent did not propagate to Music progress');
+await run("document.getElementById('view-playing').classList.remove('music-playing-accent');updateMusicLibraryChrome()");
+assert(await run("document.getElementById('view-playing').classList.contains('music-playing-accent')"),'Music playing preference was not restored');
+await run('new Promise(r=>setTimeout(r,350))');
+await screenshot('music-playing-accent');
+await run("setPlayingTheme('classic')");
+assert.equal(await run("getComputedStyle(document.getElementById('music-playing-accent-settings')).display"),'none');
+assert.equal(await run("getComputedStyle(document.getElementById('view-playing')).getPropertyValue('--music-progress-fill').trim()"),'');
+await run("setPlayingTheme('music');toggleMusicPlayingAccent();toggleRepeat();if(document.getElementById('repeat-btn').classList.contains('active'))toggleRepeat();toggleShuffle();navigateMusicTheme('home')");
+assert.equal(await run("document.getElementById('music-playing-accent-btn').getAttribute('aria-pressed')"),'false');
+console.log('PASS Music Playing accent: single switch, dynamic/custom colors, active states, persistence and theme isolation');
+
+
+assert(await run(`(()=>{
+ const tracks=['/data/music/Rock/one.mp3','/data/music/Jazz/two.mp3'].map((Path,index)=>({Path,Id:String(index)}));
+ const tree=buildFolderTree(tracks);
+ if([...tree.folders.keys()].sort().join(',')!=='Jazz,Rock') return false;
+ if(tree.folders.get('Rock').path!=='Rock') return false;
+ const multiple=buildFolderTree([...tracks,{Id:'second-root',Path:'/mnt/music/Blues/song.flac'}]);
+ if([...multiple.folders.keys()].sort().join(',')!=='Blues,Jazz,Rock') return false;
+ const artist=buildFolderTree([{Id:'artist',Path:'/data/music/Artist/Album/song.flac'}]);
+ if(!artist.folders.has('Artist')) return false;
+ const single=buildFolderTree([tracks[0]]);
+ if(!single.folders.has('Rock')) return false;
+ const mixed=buildFolderTree([...tracks,{Id:'direct',Path:'/data/music/direct.mp3'},{Id:'unknown'}]);
+ return mixed.folders.has('Rock') && mixed.folders.has('Jazz') && mixed.tracks.length===2;
+})()`),'Shared data/music containers were not omitted safely');
+
+// Browse real paths: mixed files/subfolders, repeated names, Windows separators,
+// unavailable paths, safe text, deep Back, current-folder playback and scroll.
+await run(`(()=>{
+ window.preFolderTracks=localTracks;
+ const seed=localTracks[0];
+ localTracks=[
+  ...Array.from({length:100},(_,i)=>({...seed,Id:'folder-rock-'+i,Name:'Rock '+String(i).padStart(3,'0'),Path:'Collection/Rock/'+i+'.mp3'})),
+  {...seed,Id:'folder-jazz',Name:'Jazz',Path:'Collection/Jazz/same.mp3'},
+  {...seed,Id:'folder-direct',Name:'Direct',Path:'Collection/direct.mp3'},
+  {...seed,Id:'folder-win',Name:'Windows',Path:'C:\\\\Collection\\\\Rock\\\\same.mp3'},
+  {...seed,Id:'folder-unsafe',Name:'Safe text',Path:'<img onerror=alert(1)>/track.mp3'},
+  {...seed,Id:'folder-pathless',Name:'No path',Path:''}
+ ];
+})()`);
+await run("navigateMusicTheme('Folders')");
+assert(await run("document.querySelector('[data-music-category=Folders]').getAttribute('aria-selected')==='true'"));
+assert(await run("[...document.querySelectorAll('.folder-row .list-item-title')].some(el=>el.textContent==='<img onerror=alert(1)>') && !document.querySelector('.folder-row img')"),'Folder paths were interpreted as markup');
+assert(await run("[...document.querySelectorAll('#items-container .music-media-row .list-item-title')].some(el=>el.textContent==='No path')"),'Tracks without a path disappeared');
+await run("loadFolderView('Collection',false)");
+assert.equal(await run("document.querySelectorAll('#items-container .folder-row:not(.list-item-shuffle)').length"),2);
+assert.equal(await run("document.querySelectorAll('#items-container .music-media-row').length"),1);
+await run("loadFolderView('Collection/Rock',false)");
+await run("document.getElementById('view-music').scrollTop=600;window.folderScroll=document.getElementById('view-music').scrollTop");
+assert(await run("folderScroll>0 && document.body.classList.contains('music-detail-open')"));
+assert.equal(await run('handleMusicAndroidBack()'),true);
+for(let i=0;i<100;i++){if(await run("document.querySelector('.folder-breadcrumb [aria-current=page]')?.textContent==='Collection'"))break;await new Promise(r=>setTimeout(r,10));}
+await run("loadFolderView('Collection/Rock',false)");
+assert(await run("Math.abs(document.getElementById('view-music').scrollTop-folderScroll)<2"),'Nested folder scroll was lost');
+await screenshot('music-folders-rock');
+await run("document.querySelector('#items-container .music-media-row .list-item-more').click()");
+assert(await run("document.getElementById('context-menu-overlay').classList.contains('open')"));
+await run("closeContextMenu();document.querySelector('#items-container .music-media-row').click()");
+assert.equal(await run('playlist.length'),100,'Folder playback included other directories');
+assert(await run("playlist.every(track=>track.Path.startsWith('Collection/Rock/'))"));
+await run("navigateMusicTheme('Folders');loadFolderView('C:/Collection/Rock',false)");
+assert.equal(await run("document.querySelectorAll('#items-container .music-media-row').length"),1,'Windows paths lost their folders');
+assert.equal(await run("document.querySelector('#items-container .music-media-row .list-item-title').textContent"),'Windows','Windows folder navigation fell back to the root');
+for(const theme of ['modern','classic','z1']) {
+ await run(`(async()=>{setPlayingTheme('${theme}');await navigateMusicTheme('home');document.querySelector('[data-category=folders]').scrollIntoView({block:'center'})})()`);
+ assert(await run("getComputedStyle(document.querySelector('[data-category=folders]')).backgroundImage.includes('url(')"),'Folder tile lost its theme artwork');
+ assert.equal(await run("getComputedStyle(document.querySelector('[data-category=folders]'),'::after').content"),theme==='z1'?'none':'"folder"');
+ await screenshot('folders-home-'+theme);
+ await run("loadCategory('Folders')");
+ assert(await run(`(()=>{
+  const icon=document.querySelector('#items-container .folder-icon').getBoundingClientRect();
+  const image=document.querySelector('#items-container .list-item img').getBoundingClientRect();
+  return Math.abs(icon.width-image.width)<1 && Math.abs(icon.height-image.height)<1;
+ })()`),'Folder icons do not match library thumbnails in '+theme);
+ await screenshot('folders-list-'+theme);
+
+ assert.notEqual(await run("getComputedStyle(document.querySelector('[data-category=folders]')).display"),'none');
+ await run("loadFolderView('Collection/Jazz',false)");
+ assert.equal(await run("document.querySelectorAll('#items-container .list-item-more').length"),1);
+ await screenshot('folders-detail-'+theme);
+ await run('backToCategories()');
+ assert.equal(await run("navStack.at(-1).path"),'Collection');
+}
+assert(await run(`(async()=>{
+ const originalFetch=fetchItems, originalType=embyConfig.serverType, originalId=embyConfig.libraryId;
+ const originalFolders=fetchServerFolderChildren, originalPlex=fetchPlexJson;
+ embyConfig.libraryId='selected-library';
+ try {
+  for(const type of ['emby','jellyfin']) {
+   embyConfig.serverType=type;
+   const requested=[];
+   fetchItems=async()=>{throw Error('Folder view must not list every song')};
+   fetchServerFolderChildren=async(parentId)=>{
+    requested.push(parentId);
+    if(parentId==='selected-library') return [{Id:'album-id',Name:'Album',IsFolder:true},{Id:'empty-id',Name:'Empty folder',IsFolder:true}];
+    if(parentId==='album-id') return [{...localTracks[0],Id:'remote-folder',Path:'/data/music/Unrelated display name/Album/song.flac'}];
+    throw Error('Wrong library or folder ID');
+   };
+   await loadFolderView();
+   if(document.querySelectorAll('#items-container .folder-row').length!==2) throw Error('Selected library folders were not shown directly');
+   await loadFolderView('album-id',false);
+   if(document.querySelector('.folder-breadcrumb [aria-current=page]').textContent!=='Album') throw Error('Folder IDs leaked into labels');
+   if(document.querySelectorAll('#items-container .list-item:not(.folder-row)').length!==1) throw Error('Native folder tracks missing');
+   await loadFolderView('',false);
+   if(requested.join(',')!=='selected-library,album-id') throw Error('Wrong selected-library scope or cache');
+  }
+  embyConfig.serverType='plex';
+  fetchItems=async()=>({Items:[{...localTracks[0],Id:'plex-folder',Path:'/data/music/Actual root/Album/song.flac'}]});
+  fetchPlexJson=async()=>({MediaContainer:{Directory:[{key:'selected-library',title:'Different display name',Location:[{path:'/data/music/Actual root'}]}]}});
+  await loadFolderView();await loadFolderView('Album',false);
+  if(document.querySelectorAll('#items-container .list-item:not(.folder-row)').length!==1) throw Error('Plex selected library location failed');
+  fetchItems=async()=>{throw Error('Offline')};
+  await loadFolderView('',true);
+  if(!document.querySelector('#items-container .settings-btn')) return false;
+  let finish;
+  fetchItems=()=>new Promise(resolve=>{finish=resolve});
+  const pending=loadFolderView();
+  beginMusicLibraryRequest('home');
+  document.getElementById('items-container').textContent='Keep newer view';
+  finish({Items:[]});await pending;
+  return document.getElementById('items-container').textContent==='Keep newer view';
+ } finally {
+  fetchItems=originalFetch;fetchServerFolderChildren=originalFolders;fetchPlexJson=originalPlex;
+  embyConfig.serverType=originalType;embyConfig.libraryId=originalId;folderLibrary=null;
+ }
+})()`),'Native selected-library browsing, Plex locations, cache, error or stale-request handling failed');
+await run(`(async()=>{
+ // The File System Access importer must retain the full relative path.
+ localTracks=[];
+ const file={kind:'file',name:'track.mp3',getFile:async()=>new File(['audio'],'track.mp3')};
+ const album={kind:'directory',name:'Album',async *values(){yield file}};
+ const artist={kind:'directory',name:'Artist',async *values(){yield album}};
+ const root={kind:'directory',name:'Root',async *values(){yield artist}};
+ await scanDirectory(root);
+ if(localTracks[0].Path!=='Artist/Album/track.mp3') throw Error('Importer lost relative folder paths');
+ // Android provides playback URLs and explicit SAF-relative paths independently.
+ window.onAndroidLocalTracks([
+  {Id:'android-a',Type:'Audio',IsLocal:true,Name:'Song A',Album:'Album',Artists:['A'],RelativePath:'Artist A/Album/song.flac',Path:'http://127.0.0.1:9999/a',objUrl:'http://127.0.0.1:9999/a'},
+  {Id:'android-b',Type:'Audio',IsLocal:true,Name:'Song B',Album:'Album',Artists:['B'],RelativePath:'Artist B/Album/song.flac',Path:'http://127.0.0.1:9999/b',objUrl:'http://127.0.0.1:9999/b'}
+ ]);
+ await loadFolderView();
+ const folders=[...document.querySelectorAll('.folder-row .list-item-title')].map(el=>el.textContent);
+ if(folders.join('|')!=='Artist A|Artist B') throw Error('Android import flattened the local folders');
+ await loadFolderView('Artist A/Album',false);
+ if(document.querySelectorAll('#items-container .list-item:not(.folder-row)').length!==1) throw Error('Android folder mixed tracks from different artists');
+ if(folderLibrary.tree.folders.get('Artist A').folders.get('Album').tracks[0].objUrl!=='http://127.0.0.1:9999/a') throw Error('Android folder changed playback URL');
+ localTracks=preFolderTracks;folderLibrary=null;setPlayingTheme('music');await navigateMusicTheme('home');
+})()`);
+console.log('PASS Folder navigation, safe paths, playback, Android Back, scroll, all themes and directory import');
+
 for(const category of ['Albums','Artists','Playlists','Songs']) {
  await run(`navigateMusicTheme('${category}')`);
  assert(await run('document.body.classList.contains("music-library-open")'));
@@ -336,14 +561,14 @@ await run("setPlayingTheme('music');navigateMusicTheme('home')");
 await run("navigateMusicTheme('Playlists')");
 await swipe('#items-container',120,0);
 assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),'Playlists','Swiping beyond the first tab must stay on Playlists');
-for(const category of ['Artists','Albums','Songs','Favorites']) {
+for(const category of ['Artists','Albums','Songs','Favorites','Folders']) {
  await swipe('#items-container',-120,0);
  assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),category,'Left swipe did not advance to '+category);
  assert(await run("document.getElementById('view-music').classList.contains('active')"),'Tab swipe opened a media row instead');
 }
 await swipe('#items-container',-120,0);
-assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),'Favorites','Swiping beyond the last tab must stay on Favorites');
-for(const category of ['Songs','Albums','Artists','Playlists']) {
+assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),'Folders','Swiping beyond the last tab must stay on Folders');
+for(const category of ['Favorites','Songs','Albums','Artists','Playlists']) {
  await swipe('#items-container',120,0);
  assert.equal(await run("document.querySelector('#music-library-tabs [aria-selected=true]').dataset.musicCategory"),category,'Right swipe did not go back to '+category);
 }

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
-  <meta name="walkman-version" content="4.0">
-  <meta name="walkman-cache-version" content="walkman-v66">
+  <meta name="walkman-version" content="4.1">
+  <meta name="walkman-cache-version" content="walkman-v72">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -82,6 +82,7 @@
 
   <button id="music-navigation-overlay" class="music-only music-navigation-overlay" type="button" onclick="closeMusicNavigation()" aria-label="Cerrar menú" hidden></button>
   <nav id="music-navigation" class="music-only" aria-label="Music" hidden>
+    <div id="music-navigation-brand"></div>
     <button type="button" data-music-target="home" onclick="navigateMusicTheme('home')"><span class="music-nav-icon music-nav-home material-icons" aria-hidden="true">dashboard</span><span data-i18n="musicHome">Inicio</span></button>
     <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span data-i18n="musicPlayQueue">Cola de reproducción</span></button>
     <button type="button" data-music-target="Playlists" onclick="navigateMusicTheme('Playlists')"><span class="music-nav-icon music-nav-playlists material-icons" aria-hidden="true">format_list_bulleted</span><span data-i18n="playlists">Listas</span></button>
@@ -89,6 +90,7 @@
     <button type="button" data-music-target="Albums" onclick="navigateMusicTheme('Albums')"><span class="music-nav-icon music-nav-albums material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
     <button type="button" data-music-target="Songs" onclick="navigateMusicTheme('Songs')"><span class="music-nav-icon music-nav-songs material-icons" aria-hidden="true">music_note</span><span data-i18n="songs">Canciones</span></button>
     <button type="button" data-music-target="favorites" onclick="navigateMusicTheme('favorites')"><span class="music-nav-icon music-nav-favorites material-icons" aria-hidden="true">star</span><span data-i18n="favorites">Favoritos</span></button>
+    <button type="button" data-music-target="Folders" onclick="navigateMusicTheme('Folders')"><span class="music-nav-icon music-nav-folders material-icons" aria-hidden="true">folder</span><span data-i18n="folders">Carpetas</span></button>
     <button type="button" data-music-target="settings" onclick="navigateMusicTheme('settings')"><span class="music-nav-icon music-nav-settings material-icons" aria-hidden="true">settings</span><span data-i18n="settings">Ajustes</span></button>
   </nav>
 
@@ -149,7 +151,7 @@
       <span class="material-icons">code</span>
       GitHub: djmanri3/walkman-server
     </a>
-    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
+    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
   </div>
 
 
@@ -219,6 +221,22 @@
           <span class="playing-theme-caption"><span>Music</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
         </button>
       </div>
+    </div>
+
+    <div class="settings-group music-only" id="music-background-settings">
+      <button class="settings-btn" id="music-background-btn" type="button" onclick="toggleMusicLibraryBackground()" aria-pressed="false" aria-describedby="music-background-hint">
+        <span class="material-icons" aria-hidden="true">album</span>
+        <span data-i18n="musicLibraryBackground">Fondo de carátula</span>
+      </button>
+      <p class="music-playing-accent-hint" id="music-background-hint" data-i18n="musicLibraryBackgroundHint">La carátula desenfocada en Inicio y Mi biblioteca</p>
+    </div>
+
+    <div class="settings-group music-only" id="music-playing-accent-settings">
+      <button class="settings-btn" id="music-playing-accent-btn" type="button" onclick="toggleMusicPlayingAccent()" aria-pressed="false" aria-describedby="music-playing-accent-hint">
+        <span class="material-icons" aria-hidden="true">palette</span>
+        <span data-i18n="musicPlayingAccent">Color de acento en reproducción · Music</span>
+      </button>
+      <p class="music-playing-accent-hint" id="music-playing-accent-hint" data-i18n="musicPlayingAccentHint">Colorea el progreso, repetir y aleatorio activos, favoritos y añadir a lista. Usa el color de la carátula en Dinámico o el elegido en Personalizado.</p>
     </div>
 
     <div class="settings-group">
@@ -589,7 +607,18 @@
         <span class="material-icons" style="cursor: pointer;" onclick="toggleVisualizerView()">arrow_back</span>
         <span data-i18n="visualizer">Visualizador</span>
       </div>
-      <span class="material-icons" style="cursor: pointer;" onclick="toggleVisStyleMenu()">more_vert</span>
+      <div class="visualizer-header-actions">
+        <button id="vis-settings-button" class="vis-header-button" type="button" onclick="toggleVisSettingsMenu()" aria-controls="vis-settings-menu" aria-expanded="false" data-i18n-aria-label="visSettings" aria-label="Ajustes del visualizador"><span class="material-icons">settings</span></button>
+        <button class="vis-header-button" type="button" onclick="toggleVisStyleMenu()" data-i18n-aria-label="visStyle" aria-label="Estilo del visualizador"><span class="material-icons">more_vert</span></button>
+      </div>
+    </div>
+
+    <div class="vis-style-menu" id="vis-settings-menu">
+      <div class="vis-style-title" data-i18n="visSettings">Ajustes del visualizador</div>
+      <label class="vis-auto-hide-option">
+        <span data-i18n="visAutoHide">Ocultar controles tras 5 segundos</span>
+        <input id="vis-auto-hide" type="checkbox" checked onchange="setVisAutoHide(this.checked)">
+      </label>
     </div>
 
     <div class="vis-style-menu" id="vis-style-menu" onclick="event.stopPropagation()">
@@ -818,6 +847,7 @@
       <button type="button" role="tab" data-music-category="Albums" onclick="navigateMusicTheme('Albums')" data-i18n="albums" aria-selected="false">Álbumes</button>
       <button type="button" role="tab" data-music-category="Songs" onclick="navigateMusicTheme('Songs')" data-i18n="songs" aria-selected="false">Canciones</button>
       <button type="button" role="tab" data-music-category="Favorites" onclick="navigateMusicTheme('favorites')" data-i18n="favorites" aria-selected="false">Favoritos</button>
+      <button type="button" role="tab" data-music-category="Folders" onclick="navigateMusicTheme('Folders')" data-i18n="folders" aria-selected="false">Carpetas</button>
     </div>
     <div id="category-view">
       <div id="home-featured" class="featured-section">
@@ -857,6 +887,12 @@
           <div class="grid-card-content">
             <div class="grid-card-title" data-i18n="playlists">Playlists</div>
             <div class="grid-card-sub" id="count-playlists">--</div>
+          </div>
+        </div>
+        <div class="grid-card" data-category="folders" style="background-image: linear-gradient(135deg, #4e6572, #263238);" onclick="loadCategory('Folders')">
+          <div class="grid-card-content">
+            <div class="grid-card-title" data-i18n="folders">Carpetas</div>
+            <div class="grid-card-sub" id="count-folders">--</div>
           </div>
         </div>
         <div class="grid-card" data-category="favorites" style="background-image: linear-gradient(135deg, #f43f5e, #7c3aed);" onclick="showFavoritesMenu()">
@@ -1022,7 +1058,7 @@
       <div style="font-size: 36px; margin-bottom: 8px;">🎵</div>
       <div style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px;">Walkman Server</div>
       <div style="font-size: 12px; color: #aaa; margin-bottom: 18px;">by djmanri3</div>
-      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.0</span></div>
+      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
       <a href="https://github.com/djmanri3/walkman-server/tree/main" target="_blank" rel="noopener" style="display: inline-block; background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver en GitHub</a>
   </div>
     </div>
@@ -1114,6 +1150,7 @@
   <script src="js/queue.js"></script>
   <script src="js/favorites.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/folders.js"></script>
   <script src="js/music-theme.js"></script>
   <script src="js/app.js"></script>
 

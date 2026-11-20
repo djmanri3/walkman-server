@@ -68,4 +68,41 @@ const fallback=await run(`(()=>{
 })()`);
 assert.equal(fallback.length,64);assert(fallback.energy>0);assert(fallback.silent);
 console.log('PASS FFT resize, mobile viewport, fallback and paused silence');
+// Auto-hide must work when paused too, and must never interrupt a settings menu.
+const hidden=()=>run("document.getElementById('visualizer-overlay').classList.contains('controls-hidden')");
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+assert.equal(await run("document.getElementById('vis-auto-hide').checked"),true);
+await run('showVisControls()');
+await wait(4500);assert.equal(await hidden(),false);
+await wait(800);assert.equal(await hidden(),true);
+assert.equal(await run("getComputedStyle(document.querySelector('.visualizer-header')).visibility"),'hidden');
+assert.equal(await run("getComputedStyle(document.querySelector('.visualizer-bottom-panel')).visibility"),'hidden');
+// Real mouse input on the canvas reveals controls without changing playback.
+await command('Input.dispatchMouseEvent',{type:'mousePressed',x:210,y:350,button:'left',clickCount:1});
+await command('Input.dispatchMouseEvent',{type:'mouseReleased',x:210,y:350,button:'left',clickCount:1});
+assert.equal(await hidden(),false);
+await wait(5300);assert.equal(await hidden(),true);
+await command('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:210,y:350}]});
+await command('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+assert.equal(await hidden(),false);
+await run("document.getElementById('vis-settings-button').click()");
+await wait(5300);assert.equal(await hidden(),false);
+await run("document.getElementById('vis-auto-hide').click();toggleVisSettingsMenu()");
+assert.equal(await run("loadLS('walkman_vis_auto_hide')"),'false');
+await wait(5300);assert.equal(await hidden(),false);
+await run('toggleVisualizerView();toggleVisualizerView()');
+assert.equal(await hidden(),false);
+assert.equal(await run("document.getElementById('vis-auto-hide').checked"),false);
+// Restore from storage after a full page reload.
+await command('Page.reload');
+for(let i=0;i<100;i++){
+ if(await run("typeof toggleVisualizerView==='function' && !!document.getElementById('vis-auto-hide') && document.readyState==='complete'"))break;
+ await wait(100);
+}
+assert.equal(await run("document.getElementById('vis-auto-hide').checked"),false);
+await run('toggleVisualizerView();setVisAutoHide(true)');
+await wait(5300);assert.equal(await hidden(),true);
+await run('toggleVisualizerView();toggleVisualizerView()');
+assert.equal(await hidden(),false);
+console.log('PASS auto-hide timing, mouse, touch, settings, persistence and reopening');
 ws.close();}finally{chrome?.kill();server.close();}})().catch(e=>{console.error(e);process.exitCode=1});

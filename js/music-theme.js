@@ -52,7 +52,7 @@ function handleMusicAndroidBack() {
     return true;
   }
   if (!document.getElementById('view-music').classList.contains('active')) return false;
-  if (navStack.at(-1)?.type === 'subitems') {
+  if (['subitems', 'folder'].includes(navStack.at(-1)?.type)) {
     backToCategories();
     return true;
   }
@@ -117,7 +117,7 @@ function initMusicLibraryTabGesture() {
   library.addEventListener('touchstart', event => {
     gesture = null;
     if (!available() || event.touches.length !== 1
-      || event.target.closest('button,input,select,textarea,a,[role="button"],#music-library-tabs,#music-favorite-tabs,#list-sortbar')) return;
+      || event.target.closest('button:not(.folder-row),input,select,textarea,a,[role="button"],#music-library-tabs,#music-favorite-tabs,#list-sortbar')) return;
     const index = selected(), touch = event.touches[0];
     if (index >= 0) gesture = { id: touch.identifier, x: touch.clientX, y: touch.clientY, index, horizontal: false };
   }, { passive: true });
@@ -330,14 +330,50 @@ function rememberMusicFavorites(kind, items) {
   musicFavoriteCollection = { kind, items };
 }
 
+function isMusicLibraryBackgroundEnabled() {
+  const saved = loadLS('walkman_music_artwork_background');
+  if (saved !== null) return saved === 'on';
+  // Preserve an enabled artwork preference when upgrading from separate switches.
+  const enabled = ['home', 'library'].some(area => loadLS('walkman_music_' + area + '_background') === 'on');
+  saveLS('walkman_music_artwork_background', enabled ? 'on' : 'off');
+  return enabled;
+}
+
+function toggleMusicLibraryBackground() {
+  saveLS('walkman_music_artwork_background', isMusicLibraryBackgroundEnabled() ? 'off' : 'on');
+  updateMusicLibraryChrome();
+}
+
+function toggleMusicPlayingAccent() {
+  const enabled = loadLS('walkman_music_playing_accent') !== 'on';
+  saveLS('walkman_music_playing_accent', enabled ? 'on' : 'off');
+  updateMusicPlayingAccent();
+}
+
+function updateMusicPlayingAccent() {
+  const enabled = loadLS('walkman_music_playing_accent') === 'on';
+  document.getElementById('view-playing').classList.toggle('music-playing-accent', enabled);
+  const button = document.getElementById('music-playing-accent-btn');
+  button.classList.toggle('on', enabled);
+  button.setAttribute('aria-pressed', String(enabled));
+}
+
 function updateMusicLibraryChrome() {
+  updateMusicPlayingAccent();
+  const artwork = isMusicLibraryBackgroundEnabled();
+  for (const area of ['home', 'library']) {
+    document.body.classList.toggle('music-' + area + '-artwork', artwork);
+  }
+  const backgroundButton = document.getElementById('music-background-btn');
+  backgroundButton.classList.toggle('on', artwork);
+  backgroundButton.setAttribute('aria-pressed', String(artwork));
   const music = document.body.dataset.theme === 'music';
   const playing = document.getElementById('view-playing').classList.contains('active');
   const list = document.getElementById('list-view').style.display !== 'none';
   const favoriteMenu = document.getElementById('fav-view').style.display !== 'none'
     && document.getElementById('category-view').style.display !== 'none';
   const library = music && !playing && (list || favoriteMenu);
-  const detail = library && list && navStack.at(-1)?.type === 'subitems';
+  const detail = library && list && ['subitems', 'folder'].includes(navStack.at(-1)?.type);
   const favorites = library && !detail && (!!favoritesViewKind || favoriteMenu);
   const category = favorites ? 'Favorites' : currentCategory || navStack.find(entry => entry.type === 'category')?.category;
   const albums = library && !detail && !favorites && category === 'Albums';
@@ -404,7 +440,7 @@ function updateMusicLibraryChrome() {
       musicRowsRenderState = state;
     }
   }
-  renderMusicDetailHeader(detail || (favorites && list), favorites);
+  renderMusicDetailHeader((detail && currentCategory !== 'Folders') || (favorites && list), favorites);
 }
 
 function musicTrackCount(count) {

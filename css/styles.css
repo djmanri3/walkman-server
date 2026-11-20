@@ -294,7 +294,6 @@
     .lyrics-glass {
       width: 100%;
       height: 100%;
-      border-radius: 24px;
       background: rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(28px) saturate(160%);
       -webkit-backdrop-filter: blur(28px) saturate(160%);
@@ -684,6 +683,40 @@
       font-size: 18px;
       font-weight: 300;
       color: #fff;
+    }
+
+    .visualizer-header-actions { display: flex; align-items: center; gap: 8px; }
+    .vis-header-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+    }
+    .vis-auto-hide-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      color: #ddd;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .vis-auto-hide-option input { flex-shrink: 0; }
+    #vis-settings-menu { visibility: hidden; }
+    #vis-settings-menu.open { visibility: visible; }
+    .visualizer-header, .visualizer-bottom-panel {
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .visualizer-overlay.controls-hidden .visualizer-header,
+    .visualizer-overlay.controls-hidden .visualizer-bottom-panel {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .visualizer-canvas-container {
@@ -3373,6 +3406,11 @@ body:is([data-theme="modern"], [data-theme="classic"]) [data-category="favorites
   background-position: center 25% !important;
 }
 
+body:is([data-theme="modern"], [data-theme="classic"]) [data-category="folders"] {
+  --music-preview-image: url('../images/music-previews/folders.png'); --music-preview-icon: 'folder';
+  background-position: center 35% !important;
+}
+
 .header-secondary-actions { display: contents; }
 .z1-header-more, .z1-header-back, .z1-mini-player { display: none; }
 
@@ -3427,6 +3465,8 @@ body[data-theme="z1"] [data-category="songs"] { background-image: url('../images
 body[data-theme="z1"] [data-category="albums"] { background-image: url('../images/z1/albums-variant.png') !important; order: -1; }
 body[data-theme="z1"] [data-category="playlists"] { background-image: url('../images/z1/playlists-variant.png') !important; }
 body[data-theme="z1"] [data-category="favorites"] { background-image: url('../images/z1/favorites-variant.png') !important; }
+body[data-theme="z1"] [data-category="folders"] { background-image: url('../images/music-previews/folders.png') !important; }
+
 body[data-theme="z1"] [data-category="favorites"]::after { content: '♥'; position: absolute; inset: 15% 0 auto; text-align: center; font-size: 48px; color: white; text-shadow: 0 1px 5px #000; }
 body[data-theme="z1"] #fav-view { grid-column: 1 / -1; }
 body[data-theme="z1"] #fav-view .grid-menu { max-width: 560px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -3716,9 +3756,17 @@ body[data-theme="music"]:not(.music-playing) :is(.music-header-queue,.z1-header-
   #view-playing[data-theme="music"] .controls-wrapper { grid-template-columns: 32px minmax(0,1fr) 32px; column-gap: 4px; }
   #view-playing[data-theme="music"] .controls { gap: 8px; }
 }
-#view-playing[data-theme="music"] #progress-bar::-webkit-slider-runnable-track { background: linear-gradient(to right, #ffffffaa var(--music-progress,0%), #ffffff40 var(--music-progress,0%)); }
+#view-playing[data-theme="music"] #progress-bar::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--music-progress-fill, #ffffffaa) var(--music-progress,0%), #ffffff40 var(--music-progress,0%)); }
 #view-playing[data-theme="music"] #progress-bar::-webkit-slider-thumb { width: 12px; height: 12px; box-shadow: none; }
-#view-playing[data-theme="music"] #progress-bar::-moz-range-progress { background: #ffffffaa; height: 3px; }
+#view-playing[data-theme="music"] #progress-bar::-moz-range-progress { background: var(--music-progress-fill, #ffffffaa); height: 3px; }
+/* Lift the player accent above the artwork without changing the shared accent. */
+#view-playing[data-theme="music"].music-playing-accent {
+  --music-playing-accent-color: color-mix(in srgb, var(--accent-color) 60%, white);
+  --music-progress-fill: var(--music-playing-accent-color);
+}
+#view-playing[data-theme="music"].music-playing-accent :is(#repeat-btn.active, #shuffle-btn.active, #music-track-favorite[aria-pressed="true"], #music-track-add:not(:disabled)) { color: var(--music-playing-accent-color); }
+#view-playing[data-theme="music"].music-playing-accent #progress-bar::-webkit-slider-thumb { background: var(--music-playing-accent-color); }
+#view-playing[data-theme="music"].music-playing-accent #progress-bar::-moz-range-thumb { background: var(--music-playing-accent-color); }
 @media (min-width: 640px) and (min-aspect-ratio: 6/5) {
   #view-playing[data-theme="music"] {
     --album-size: min(calc(34vw * var(--carousel-size)), calc(100dvh - 125px - var(--music-safe-top) - var(--music-safe-bottom)), 600px);
@@ -3775,7 +3823,13 @@ body[data-theme="music"] .z1-mini-controls .z1-mini-play { width: 42px; height: 
 body[data-theme="music"] .z1-mini-controls .material-icons { font-size: 24px; }
 body[data-theme="music"] #z1-mini-title { font-size: 20px; }
 body[data-theme="music"] #music-navigation-overlay { display: block; position: fixed; inset: 0; border: 0; background: #0007; z-index: 420; }
-body[data-theme="music"] #music-navigation { display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; width: min(280px,82vw); padding: calc(56px + var(--music-safe-top)) 0 calc(24px + var(--music-safe-bottom)); z-index: 421; overflow-y: auto; }
+body[data-theme="music"] #music-navigation { display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; width: min(280px,82vw); padding: calc(16px + var(--music-safe-top)) 0 calc(24px + var(--music-safe-bottom)); z-index: 421; overflow-y: auto; }
+body[data-theme="music"] #github-popup-overlay { z-index: 430; }
+body[data-theme="music"] #music-navigation-brand { width: 100%; align-self: stretch; }
+body[data-theme="music"] #music-navigation #app-logo {
+  display: flex; width: 100%; box-sizing: border-box; min-height: 64px; margin-bottom: 8px; padding: 12px 24px 24px;
+  font-size: 26px; font-weight: 300; color: #fff; border-bottom: 1px solid #ffffff1a;
+}
 #music-navigation button { border: 0; padding: 18px 24px; color: #fff; background: none; text-align: left; font: inherit; font-size: 18px; cursor: pointer; }
 #music-navigation button:hover { background: #ffffff12; }
 body[data-theme="music"] :is(.settings-menu,.settings-submenu,.audio-enhancements-menu,.queue-drawer,.library-picker,.vis-style-menu) { background: #303030; border-radius: 2px; }
@@ -4004,3 +4058,50 @@ body .context-menu-overlay .context-menu:not(.github-popup-card) {
 body .context-menu-overlay .context-menu-header-sub {
   color: rgba(255,255,255,.78);
 }
+
+/* Optional artwork on Music's Home and library, sharing Playing's background. */
+body[data-theme="music"].music-home-artwork:not(.music-library-open) #view-music,
+body[data-theme="music"].music-library-artwork.music-library-open #view-music {
+  background: transparent;
+}
+body[data-theme="music"].music-home-artwork .music-library-card {
+  background: rgba(30,30,30,.45);
+}
+body[data-theme="music"].music-library-artwork.music-library-open :is(header,#music-library-tabs,#music-favorite-tabs,#music-detail-header,#list-sortbar) {
+  background: rgba(25,35,37,.45);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+}
+body[data-theme="music"] :is(#music-background-settings, #music-playing-accent-settings) { display: block; }
+body[data-theme="music"] :is(#music-background-btn, #music-playing-accent-btn) { width: 100%; box-sizing: border-box; }
+.music-playing-accent-hint { margin: 10px 0 0; color: #bbb; font-size: 12px; line-height: 1.5; }
+.folder-row { width: 100%; border: 0; color: inherit; text-align: left; font: inherit; }
+.folder-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 50px; width: 50px; height: 50px; font-size: 34px; color: var(--accent-color); }
+body[data-theme="music"] #items-container .folder-icon { flex-basis: 64px; width: 64px; height: 64px; }
+#music-navigation .music-nav-folders { color: #eab44c; }
+.folder-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 8px; }
+.folder-breadcrumb button { border: 0; border-radius: 4px; padding: 10px; background: #ffffff14; color: inherit; font: inherit; cursor: pointer; }
+
+/* Folder navigation follows the same thumbnail and row treatments as each library. */
+body:is([data-theme="modern"], [data-theme="classic"]) .folder-row:not(.list-item-shuffle) .folder-icon {
+  border-radius: 3px; background: rgba(255,255,255,.08); font-size: 30px;
+}
+body[data-theme="z1"] .folder-row:not(.list-item-shuffle) .folder-icon {
+  flex-basis: 60px; width: 60px; height: 60px; color: #c4d0d0; font-size: 40px;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb {
+  gap: 0; padding: 0 0 12px; color: #aaa;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb:has(> :only-child) { display: none; }
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button {
+  display: inline-flex; align-items: center; min-height: 44px; min-width: 0;
+  max-width: 100%; padding: 6px 8px; background: transparent;
+  font-size: 14px; overflow-wrap: anywhere; text-align: left;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button + button::before {
+  content: 'chevron_right'; font-family: 'Material Icons'; font-size: 20px; margin-right: 8px; color: #aaa;
+}
+body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folder-breadcrumb button[aria-current="page"] { color: #fff; }
+body:is([data-theme="modern"], [data-theme="classic"]) .folder-breadcrumb button:hover { color: var(--accent-color); }
+body[data-theme="z1"] .folder-breadcrumb button { border-radius: 0; font-size: 18px; font-weight: 300; }
+body[data-theme="z1"] .folder-breadcrumb button:hover { background: #ffffff0d; color: white; }

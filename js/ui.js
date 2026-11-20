@@ -326,7 +326,11 @@
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.body.dataset.theme = selected;
-      document.getElementById('app-logo').textContent = 'WALKMAN';
+      const appLogo = document.getElementById('app-logo');
+      appLogo.textContent = 'WALKMAN';
+      const logoContainer = selected === 'music'
+        ? document.getElementById('music-navigation-brand') : document.querySelector('header');
+      if (appLogo.parentElement !== logoContainer) logoContainer.prepend(appLogo);
       closeZ1HeaderMenu();
       closeMusicNavigation(false);
       document.querySelectorAll('[data-playing-theme]').forEach(button => {
@@ -885,6 +889,7 @@
 
 
     async function loadCategory(category) {
+      if (category === 'Folders') return loadFolderView();
       const musicRequest = beginMusicLibraryRequest('category:' + category);
       favoritesViewKind = '';
       subItems = null;
@@ -1172,6 +1177,11 @@
     }
 
     function backToCategories() {
+      if (currentCategory === 'Folders' && navStack.at(-1)?.type === 'folder') {
+        const parts = navStack.at(-1).path.split('/');
+        parts.pop();
+        return loadFolderView(parts.join('/'), false);
+      }
       beginMusicLibraryRequest();
       // Si venimos de un sub-elemento (álbum/artista/playlist), volvemos a la lista de esa categoría
       if (navStack.length > 1) {
