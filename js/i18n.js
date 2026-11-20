@@ -2,6 +2,9 @@
     // ---- Sistema de idiomas (i18n) ----
     const I18N = {
       en: {
+        hiresCassetteToggle: "Show cassette playback screen", hiresCassetteDelay: "Show after", hiresCassetteSeconds: "seconds", hiresCassetteHint: "Appears during playback after no interaction. Tap the cassette to return.", hiresCassetteReturn: "Tap to return", hiresCassetteScreen: "Cassette playback screen",
+        hiresLibrary: "Library", hiresAllSongs: "All songs", hiresRecent: "Recently added", hiresResolution: "High resolution", hiresGenres: "Genres", hiresUnknownGenre: "Unknown genre", hiresNoTracks: "No songs in this category.", hiresLoadError: "Could not load this category.",
+        pause: "Pause", trackProgress: "Song progress",
         visSettings: 'Visualizer settings', visAutoHide: 'Hide controls after 5 seconds',
         musicLibraryBackgroundHint: "Blurred album artwork in Home and My Library",
         musicPlayingAccent: "Accent color in Playing · Music", musicPlayingAccentHint: "Colors played progress, active repeat and shuffle, favorites and add to playlist. Uses the album color in Dynamic or your chosen color in Custom.",
@@ -103,6 +106,9 @@
         httpWarning: 'Warning: all HTTP traffic will be allowed, but it is very insecure, since everything may become visible to other users on the network.'
       },
       es: {
+        hiresCassetteToggle: "Mostrar pantalla repr. de casete", hiresCassetteDelay: "Mostrar después de", hiresCassetteSeconds: "segundos", hiresCassetteHint: "Durante la reproducción, tras unos segundos sin interacción. Toca el casete para volver.", hiresCassetteReturn: "Toca para volver", hiresCassetteScreen: "Pantalla de reproducción de casete",
+        hiresLibrary: "Biblioteca", hiresAllSongs: "Todas las canciones", hiresRecent: "Más recientes", hiresResolution: "Alta resolución", hiresGenres: "Géneros", hiresUnknownGenre: "Sin género", hiresNoTracks: "No hay canciones en esta categoría.", hiresLoadError: "No se pudo cargar esta categoría.",
+        pause: "Pausar", trackProgress: "Progreso de la canción",
         visSettings: 'Ajustes del visualizador', visAutoHide: 'Ocultar controles tras 5 segundos',
         musicLibraryBackgroundHint: "La carátula desenfocada en Inicio y Mi biblioteca",
         musicPlayingAccent: "Color de acento en reproducción · Music", musicPlayingAccentHint: "Colorea el progreso, repetir y aleatorio activos, favoritos y añadir a lista. Usa el color de la carátula en Dinámico o el elegido en Personalizado.",
@@ -204,6 +210,9 @@
         httpWarning: 'Aviso: todo el tráfico que sea http a partir de ahora será permitido, pero es muy inseguro, ya que todo puede llegar a ser visible para otros usuarios de la red.'
       },
       fr: {
+        hiresCassetteToggle: "Afficher l’écran cassette", hiresCassetteDelay: "Afficher après", hiresCassetteSeconds: "secondes", hiresCassetteHint: "S’affiche pendant la lecture après une période sans interaction. Touchez la cassette pour revenir.", hiresCassetteReturn: "Touchez pour revenir", hiresCassetteScreen: "Écran de lecture cassette",
+        hiresLibrary: "Bibliothèque", hiresAllSongs: "Tous les morceaux", hiresRecent: "Ajouts récents", hiresResolution: "Haute résolution", hiresGenres: "Genres", hiresUnknownGenre: "Genre inconnu", hiresNoTracks: "Aucun morceau dans cette catégorie.", hiresLoadError: "Impossible de charger cette catégorie.",
+        pause: "Pause", trackProgress: "Progression du morceau",
         musicLibraryBackgroundHint: "La pochette floutée dans Accueil et Ma bibliothèque",
         musicPlayingAccent: "Couleur d’accent en lecture · Music", musicPlayingAccentHint: "Colore la progression, la répétition et le mode aléatoire actifs, les favoris et l’ajout à une playlist. Utilise la pochette en mode Dynamique ou la couleur choisie en mode Personnalisé.",
         folders: "Dossiers", musicLibraryBackground: "Pochette en arrière-plan", foldersEmpty: "Ce dossier est vide.", foldersLoadError: "Impossible de charger les dossiers.",
@@ -293,6 +302,9 @@
         httpWarning: 'Attention : tout le trafic HTTP sera autorisé, mais c\'est très peu sûr, car tout peut devenir visible pour d\'autres utilisateurs du réseau.'
       },
       de: {
+        hiresCassetteToggle: "Kassettenwiedergabe anzeigen", hiresCassetteDelay: "Anzeigen nach", hiresCassetteSeconds: "Sekunden", hiresCassetteHint: "Erscheint bei Wiedergabe ohne Interaktion. Zum Zurückkehren auf die Kassette tippen.", hiresCassetteReturn: "Zum Zurückkehren tippen", hiresCassetteScreen: "Kassettenwiedergabe",
+        hiresLibrary: "Bibliothek", hiresAllSongs: "Alle Titel", hiresRecent: "Zuletzt hinzugefügt", hiresResolution: "Hohe Auflösung", hiresGenres: "Genres", hiresUnknownGenre: "Unbekanntes Genre", hiresNoTracks: "Keine Titel in dieser Kategorie.", hiresLoadError: "Diese Kategorie konnte nicht geladen werden.",
+        pause: "Pausieren", trackProgress: "Titelfortschritt",
         musicLibraryBackgroundHint: "Unscharfes Albumcover auf Startseite und in Meine Bibliothek",
         musicPlayingAccent: "Akzentfarbe bei der Wiedergabe · Music", musicPlayingAccentHint: "Färbt den abgespielten Fortschritt, aktive Wiederholung und Zufallswiedergabe, Favoriten und das Hinzufügen zur Playlist. Dynamisch nutzt die Coverfarbe, Benutzerdefiniert die gewählte Farbe.",
         folders: "Ordner", musicLibraryBackground: "Albumcover als Hintergrund", foldersEmpty: "Dieser Ordner ist leer.", foldersLoadError: "Ordner konnten nicht geladen werden.",
@@ -381,6 +393,9 @@
         httpWarning: 'Warnung: Der gesamte HTTP-Verkehr wird erlaubt, aber das ist sehr unsicher, da alles für andere Benutzer im Netzwerk sichtbar werden kann.'
       },
       it: {
+        hiresCassetteToggle: "Mostra schermata cassetta", hiresCassetteDelay: "Mostra dopo", hiresCassetteSeconds: "secondi", hiresCassetteHint: "Appare durante la riproduzione senza interazioni. Tocca la cassetta per tornare.", hiresCassetteReturn: "Tocca per tornare", hiresCassetteScreen: "Schermata riproduzione cassetta",
+        hiresLibrary: "Libreria", hiresAllSongs: "Tutti i brani", hiresRecent: "Aggiunti di recente", hiresResolution: "Alta risoluzione", hiresGenres: "Generi", hiresUnknownGenre: "Genere sconosciuto", hiresNoTracks: "Nessun brano in questa categoria.", hiresLoadError: "Impossibile caricare questa categoria.",
+        pause: "Pausa", trackProgress: "Avanzamento del brano",
         musicLibraryBackgroundHint: "La copertina sfocata in Home e La mia libreria",
         musicPlayingAccent: "Colore accento in riproduzione · Music", musicPlayingAccentHint: "Colora l’avanzamento, ripetizione e riproduzione casuale attive, preferiti e aggiunta alla playlist. Usa il colore della copertina in Dinamico o quello scelto in Personalizzato.",
         folders: "Cartelle", musicLibraryBackground: "Copertina come sfondo", foldersEmpty: "Questa cartella è vuota.", foldersLoadError: "Impossibile caricare le cartelle.",
@@ -469,6 +484,9 @@
         httpWarning: 'Avviso: tutto il traffico HTTP sarà consentito, ma è molto insicuro, poiché tutto può diventare visibile ad altri utenti della rete.'
       },
       pt: {
+        hiresCassetteToggle: "Mostrar tela de reprodução de cassete", hiresCassetteDelay: "Mostrar após", hiresCassetteSeconds: "segundos", hiresCassetteHint: "Aparece durante a reprodução sem interação. Toque no cassete para voltar.", hiresCassetteReturn: "Toque para voltar", hiresCassetteScreen: "Tela de reprodução de cassete",
+        hiresLibrary: "Biblioteca", hiresAllSongs: "Todas as músicas", hiresRecent: "Adicionadas recentemente", hiresResolution: "Alta resolução", hiresGenres: "Gêneros", hiresUnknownGenre: "Gênero desconhecido", hiresNoTracks: "Nenhuma música nesta categoria.", hiresLoadError: "Não foi possível carregar esta categoria.",
+        pause: "Pausar", trackProgress: "Progresso da música",
         musicLibraryBackgroundHint: "A capa desfocada no Início e na Minha biblioteca",
         musicPlayingAccent: "Cor de destaque na reprodução · Music", musicPlayingAccentHint: "Aplica cor ao progresso, repetição e modo aleatório ativos, favoritos e adicionar à playlist. Usa a cor da capa em Dinâmico ou a cor escolhida em Personalizado.",
         folders: "Pastas", musicLibraryBackground: "Capa do álbum como fundo", foldersEmpty: "Esta pasta está vazia.", foldersLoadError: "Não foi possível carregar as pastas.",

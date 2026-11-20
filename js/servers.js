@@ -543,6 +543,7 @@ let audioQuality = null;
         Artists: item.type === 10 ? [decodePlexEntities(item.grandparentTitle || '')].filter(Boolean) : [],
         AlbumArtist: decodePlexEntities(item.grandparentTitle || item.parentTitle || ''),
         Album: decodePlexEntities(item.parentTitle || ''),
+        Genres: (item.Genre || []).map(genre => decodePlexEntities(genre.tag || '')).filter(Boolean),
         Duration: item.duration ? Math.round(item.duration / 1000) : 0,
         Path: item.Media?.[0]?.Part?.[0]?.file || '',
         ImageTags: item.thumb ? { Primary: item.thumb } : {},
@@ -859,7 +860,7 @@ let audioQuality = null;
       // DateCreated es opt-in en Emby/Jellyfin (está en el enum ItemFields):
       // sin pedirlo aquí no viene y "Ordenar por Fecha añadida" no puede
       // funcionar. PremiereDate y ProductionYear en cambio son campos base.
-      const fields = "Path,PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,DateCreated,MediaSources,MediaStreams";
+      const fields = "Path,PrimaryImageAspectRatio,BasicSyncInfo,ImageTags,PrimaryImageTag,AlbumPrimaryImageTag,AlbumId,DateCreated,MediaSources,MediaStreams" + (document.body.dataset.theme === 'walkmanhires' ? ',Genres' : '');
       let url;
       if (type === 'Audio' && artistName) {
         // Buscar todas las canciones de un artista por nombre

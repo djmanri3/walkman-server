@@ -4105,3 +4105,406 @@ body:is([data-theme="modern"], [data-theme="classic"], [data-theme="z1"]) .folde
 body:is([data-theme="modern"], [data-theme="classic"]) .folder-breadcrumb button:hover { color: var(--accent-color); }
 body[data-theme="z1"] .folder-breadcrumb button { border-radius: 0; font-size: 18px; font-weight: 300; }
 body[data-theme="z1"] .folder-breadcrumb button:hover { background: #ffffff0d; color: white; }
+
+/* Sony Ericsson's early Android player: square sleeve and silver transport. */
+.ericsony-only { display: none; }
+body[data-theme="ericsony"] { --ericsony-silver: #aaa6a5; --ericsony-accent: #b4b4b4; }
+body[data-theme="ericsony"] header { background: rgba(0,0,0,.16); }
+#view-playing[data-theme="ericsony"] {
+  --album-size: min(calc(76vw * var(--carousel-size)), 420px, max(120px, calc(100dvh - 360px)));
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto;
+  justify-items: center; align-content: safe center; gap: 18px;
+}
+#view-playing[data-theme="ericsony"].active { display: grid; }
+#view-playing[data-theme="ericsony"] .carousel-wrapper { grid-row: 1; min-width: 0; }
+#view-playing[data-theme="ericsony"] .carousel-container { height: var(--album-size); margin: 0; }
+#view-playing[data-theme="ericsony"] .art-card { border-radius: 0; box-shadow: 0 3px 4px #0009; }
+#view-playing[data-theme="ericsony"] .art-card:is(.prev,.next) { display: none; }
+#view-playing[data-theme="ericsony"] .track-header-wrapper { grid-row: 2; margin: 0; max-width: 560px; align-items: start; }
+#view-playing[data-theme="ericsony"] .track-info { display: flex; flex-direction: column; border: 0; padding: 0; text-shadow: 0 2px 2px #0009; }
+#view-playing[data-theme="ericsony"] .track-artist { order: -1; font-size: clamp(18px, 2.2vw, 32px); color: #eee; margin-bottom: 8px; }
+#view-playing[data-theme="ericsony"] .track-title { font-size: clamp(25px, 3vw, 44px); color: var(--ericsony-accent); font-weight: 400; }
+#view-playing[data-theme="ericsony"] .top-btns .queue-btn-top { border: 0; background: none; box-shadow: none; backdrop-filter: none; color: #aaa; }
+#view-playing[data-theme="ericsony"] .top-btns .queue-btn-top[aria-controls] { display: none; }
+#view-playing[data-theme="ericsony"] .controls-wrapper {
+  grid-row: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%; max-width: 560px; min-width: 0; gap: 12px; align-items: center;
+}
+#view-playing[data-theme="ericsony"] .controls { grid-column: 1 / -1; grid-row: 1; justify-content: center; gap: clamp(24px, 4vw, 48px); margin: 0; }
+#view-playing[data-theme="ericsony"] .control-btn {
+  width: clamp(56px, 6vw, 90px); height: clamp(56px, 6vw, 90px); flex-shrink: 0;
+  border: 6px solid var(--ericsony-silver); background: linear-gradient(145deg, #ffffff05, #00000014);
+  opacity: .78;
+  box-shadow: inset 0 1px 2px #fff9, 0 2px 3px #000b, 0 -1px 1px #fffb;
+  color: var(--ericsony-silver); border-radius: 50%;
+}
+#view-playing[data-theme="ericsony"] .control-btn.play { width: clamp(84px, 9.5vw, 140px); height: clamp(84px, 9.5vw, 140px); border-width: 9px; }
+#view-playing[data-theme="ericsony"] .control-btn span { font-size: clamp(36px, 4.5vw, 60px); color: inherit; text-shadow: 0 1px 1px #fff9, 0 3px 2px #000; }
+#view-playing[data-theme="ericsony"] .control-btn.play span { font-size: clamp(54px, 6.5vw, 90px); }
+#view-playing[data-theme="ericsony"] .progress-container { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 0; font-size: 18px; color: #eee; }
+#view-playing[data-theme="ericsony"] #time-current { grid-row: 1; grid-column: 1; }
+#view-playing[data-theme="ericsony"] #time-total { grid-row: 1; grid-column: 2; text-align: right; }
+#view-playing[data-theme="ericsony"] #progress-bar {
+  /* Three engraved grips over a translucent, bevelled silver disc. */
+  --ericsony-knob-face:
+    linear-gradient(90deg, #ffffff08, #d7d7d755, #00000014) calc(50% - 5px) 50% / 2px 12px no-repeat,
+    linear-gradient(90deg, #ffffff08, #dedede66, #00000014) 50% 50% / 2px 17px no-repeat,
+    linear-gradient(90deg, #ffffff08, #d7d7d755, #00000014) calc(50% + 5px) 50% / 2px 12px no-repeat,
+    linear-gradient(180deg, #616161da 0%, #515151cc 49%, #666666cc 52%, #a0a0a0e6 100%);
+  --ericsony-knob-shadow: inset 0 1px 2px #ffffff88, inset 0 -1px 2px #ffffff33, 0 2px 3px #000000aa;
+  --ericsony-track-face:
+    linear-gradient(var(--ericsony-accent), color-mix(in srgb, var(--ericsony-accent) 30%, #181818))
+      left center / calc(13px + (100% - 26px) * var(--played-fraction, 0)) 100% no-repeat,
+    linear-gradient(180deg, #90909066 0%, #48484888 25%, #171717aa 55%, #62626266 100%);
+  grid-row: 2; grid-column: 1 / -1; min-width: 0; width: 100%; height: 32px; background: transparent;
+}
+#view-playing[data-theme="ericsony"] #progress-bar::-webkit-slider-runnable-track {
+  height: 6px; border: 1px solid #88888866; border-radius: 0;
+  background: var(--ericsony-track-face);
+  box-shadow: inset 0 1px 1px #ffffff22, inset 0 -1px 1px #00000099, 0 1px 1px #00000088;
+}
+#view-playing[data-theme="ericsony"] #progress-bar::-moz-range-track {
+  height: 6px; border: 1px solid #88888866; border-radius: 0;
+  background: var(--ericsony-track-face);
+  box-shadow: inset 0 1px 1px #ffffff22, inset 0 -1px 1px #00000099, 0 1px 1px #00000088;
+}
+#view-playing[data-theme="ericsony"] #progress-bar::-webkit-slider-thumb {
+  width: 26px; height: 26px; margin-top: -11px; border: 1px solid #b6b6b699;
+  background: var(--ericsony-knob-face); border-radius: 50%; box-shadow: var(--ericsony-knob-shadow);
+}
+#view-playing[data-theme="ericsony"] #progress-bar::-moz-range-thumb {
+  width: 26px; height: 26px; border: 1px solid #b6b6b699;
+  background: var(--ericsony-knob-face); border-radius: 50%; box-shadow: var(--ericsony-knob-shadow);
+}
+#view-playing[data-theme="ericsony"] .ericsony-shortcuts { display: flex; grid-column: 1 / -1; grid-row: 3; justify-content: space-between; pointer-events: none; }
+#view-playing[data-theme="ericsony"] .ericsony-shortcuts button { pointer-events: auto; border: 0; background: none; color: var(--ericsony-silver); cursor: pointer; width: 48px; height: 48px; }
+#view-playing[data-theme="ericsony"] .ericsony-shortcuts span { font-size: 44px; text-shadow: 0 1px 1px #fff9, 0 3px 2px #000; }
+#view-playing[data-theme="ericsony"] .extra-controls-right { position: static; grid-row: 3; grid-column: 1 / -1; justify-self: center; gap: 16px; margin-right: 40px; }
+#view-playing[data-theme="ericsony"] .mode-btn { color: #aaa; }
+#view-playing[data-theme="ericsony"] .mode-btn.active { color: var(--ericsony-accent); }
+#view-playing[data-theme="ericsony"] .volume-container { grid-row: 3; grid-column: 1 / -1; justify-self: center; margin: 0 0 0 100px; width: 28px; position: relative; color: #aaa; }
+#view-playing[data-theme="ericsony"] .volume-bar { position: absolute; bottom: 30px; right: 0; width: 110px; visibility: hidden; opacity: 0; }
+#view-playing[data-theme="ericsony"] .volume-container:is(:hover,:focus-within) .volume-bar { visibility: visible; opacity: 1; }
+/* The portrait player places transport across the sleeve's lower edge. */
+@media (max-aspect-ratio: 6/5) {
+  #view-playing[data-theme="ericsony"] {
+    --album-size: min(calc(92vw * var(--carousel-size)), 560px, max(120px, calc(100dvh - 280px)));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    align-content: stretch; align-items: center;
+    padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); gap: 14px;
+  }
+  #view-playing[data-theme="ericsony"] .track-header-wrapper {
+    grid-column: 1; grid-row: 1; align-self: start; max-width: none;
+  }
+  #view-playing[data-theme="ericsony"] .track-artist { font-size: clamp(17px, 4.6vw, 26px); margin-bottom: 6px; }
+  #view-playing[data-theme="ericsony"] .track-title { font-size: clamp(24px, 6vw, 36px); }
+  #view-playing[data-theme="ericsony"] .carousel-wrapper {
+    grid-column: 1; grid-row: 2; transform: translateY(-5dvh);
+  }
+  #view-playing[data-theme="ericsony"] .controls-wrapper { display: contents; }
+  #view-playing[data-theme="ericsony"] .controls {
+    grid-column: 1; grid-row: 2; align-self: center; justify-self: center;
+    transform: translateY(calc(var(--album-size) / 2 - 5dvh));
+    position: relative; z-index: 6; gap: min(7vw, 32px); width: auto;
+  }
+  #view-playing[data-theme="ericsony"] .control-btn { width: min(15vw, 64px); height: min(15vw, 64px); border-width: 5px; }
+  #view-playing[data-theme="ericsony"] .control-btn.play { width: min(23vw, 96px); height: min(23vw, 96px); border-width: 7px; }
+  #view-playing[data-theme="ericsony"] .progress-container {
+    grid-column: 1; grid-row: 3; width: 100%; padding: 0 6px;
+  }
+  #view-playing[data-theme="ericsony"] #time-current { grid-column: 2; text-align: right; }
+  #view-playing[data-theme="ericsony"] #time-total { display: none; }
+  #view-playing[data-theme="ericsony"] .ericsony-shortcuts { grid-column: 1; grid-row: 4; width: 100%; }
+  #view-playing[data-theme="ericsony"] :is(.extra-controls-right,.volume-container) { display: none; }
+}
+@media (min-aspect-ratio: 6/5) {
+  #view-playing[data-theme="ericsony"] {
+    --album-size: min(calc(38vw * var(--carousel-size)), calc(100dvh - 115px), 720px);
+    grid-template-columns: var(--album-size) minmax(0, 1fr); grid-template-rows: minmax(60px, 1fr) auto;
+    align-content: stretch; align-items: start; gap: 14px 28px; padding: 20px 28px;
+  }
+  #view-playing[data-theme="ericsony"] .carousel-wrapper { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  #view-playing[data-theme="ericsony"] .track-header-wrapper { grid-column: 2; grid-row: 1; max-width: none; padding-top: 10px; }
+  #view-playing[data-theme="ericsony"] .controls-wrapper { grid-column: 2; grid-row: 2; max-width: none; align-self: end; gap: 10px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  #view-playing[data-theme="ericsony"] { --album-size: min(calc(36vw * var(--carousel-size)), calc(100dvh - 85px)); padding: 10px 18px; gap: 8px 22px; }
+  #view-playing[data-theme="ericsony"] .control-btn { width: 52px; height: 52px; border-width: 4px; }
+  #view-playing[data-theme="ericsony"] .control-btn.play { width: 76px; height: 76px; border-width: 6px; }
+  #view-playing[data-theme="ericsony"] .controls-wrapper { gap: 4px; }
+  #view-playing[data-theme="ericsony"] .track-artist { margin-bottom: 4px; }
+}
+
+#view-playing[data-theme="ericsony"] .control-btn:not(.play) span { display: none; }
+#view-playing[data-theme="ericsony"] .control-btn:not(.play)::after {
+  content: ''; width: 60%; height: 60%;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23aaa6a5' stroke='%23c5c2c1' stroke-width='.7' d='M5 10h4v28H5zm5 14 16-13v26zm16 0 16-13v26z'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 2px 1px #000);
+}
+#view-playing[data-theme="ericsony"] .control-btn:last-child::after { transform: scaleX(-1); }
+#view-playing[data-theme="ericsony"] .ericsony-shortcuts button:first-child { position: relative; }
+#view-playing[data-theme="ericsony"] .ericsony-shortcuts button:first-child::after {
+  content: '♪'; position: absolute; left: 17px; top: 12px; font: bold 25px Georgia, serif; color: #342823; text-shadow: 0 1px 1px #ddd;
+}
+
+/* Walkman Hi-Res: white transport and an artwork wash that fades to black. */
+.walkman-hires-only { display: none; }
+.walkman-hires-only[hidden] { display: none !important; }
+body[data-theme="walkmanhires"] header { background: transparent; }
+body[data-theme="walkmanhires"] #bg-container::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: var(--walkman-hires-wash, linear-gradient(#333, #000));
+  opacity: 0; transition: opacity 850ms ease;
+}
+body[data-theme="walkmanhires"].walkman-hires-playing #bg-container::after { opacity: 1; }
+#view-playing[data-theme="walkmanhires"] {
+  --album-size: min(calc(88vw * var(--carousel-size)), 560px, max(120px, calc(100dvh - 380px)));
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-content: stretch; align-items: center; justify-items: center;
+  gap: 24px; padding: 24px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+#view-playing[data-theme="walkmanhires"].active { display: grid; }
+#view-playing[data-theme="walkmanhires"] .carousel-wrapper { grid-column: 1; grid-row: 1; }
+#view-playing[data-theme="walkmanhires"] .carousel-container { height: var(--album-size); margin: 0; }
+#view-playing[data-theme="walkmanhires"] .art-card { border-radius: 0; box-shadow: 0 0 12px #ffffff26, 0 4px 14px #0007; }
+#view-playing[data-theme="walkmanhires"] .art-card:is(.prev,.next) { display: none; }
+#view-playing[data-theme="walkmanhires"] .track-header-wrapper {
+  grid-column: 1; grid-row: 2; margin: 0; position: relative; max-width: 600px; justify-content: center;
+}
+#view-playing[data-theme="walkmanhires"] .track-info { padding: 0 44px; border: 0; text-align: center; }
+#view-playing[data-theme="walkmanhires"] #walkman-hires-quality { display: block; color: #eee; font-size: 12px; margin: 4px 0 18px; }
+#view-playing[data-theme="walkmanhires"] #walkman-hires-quality.walkman-hires-quality-hr { display: flex; align-items: center; justify-content: center; gap: 6px; color: #d9bd72; }
+#view-playing[data-theme="walkmanhires"] .walkman-hires-quality-badge { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; height: 15px; padding: 0 2px; border: 1.2px solid currentColor; border-radius: 2px; background: transparent; color: inherit; font: bold 12px/1 Arial, sans-serif; }
+#view-playing[data-theme="walkmanhires"] .track-title { color: #eee; font-size: clamp(18px, 2.5vw, 28px); font-weight: 300; margin-bottom: 10px; }
+#view-playing[data-theme="walkmanhires"] .track-artist { font-size: clamp(14px, 1.7vw, 20px); color: #aaa; }
+#view-playing[data-theme="walkmanhires"] .track-album { display: block; color: #999; font-size: clamp(14px, 1.7vw, 20px); margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-playing[data-theme="walkmanhires"] :is(#walkman-hires-favorite, #walkman-hires-queue) {
+  display: flex; align-items: center; justify-content: center; position: absolute; top: 28px;
+  width: 40px; height: 40px; border: 0; background: transparent; color: white; cursor: pointer;
+}
+#view-playing[data-theme="walkmanhires"] #walkman-hires-favorite { left: 0; }
+#view-playing[data-theme="walkmanhires"] #walkman-hires-queue { right: 0; }
+#view-playing[data-theme="walkmanhires"] :is(#walkman-hires-favorite, #walkman-hires-queue) span { font-size: 28px; }
+#view-playing[data-theme="walkmanhires"] .top-btns { display: none; }
+#view-playing[data-theme="walkmanhires"] .controls-wrapper {
+  grid-column: 1; grid-row: 4; display: grid; width: 100%; max-width: 620px; min-width: 0;
+  grid-template-columns: 36px minmax(0, 1fr) 36px; gap: 12px 6px; align-items: center;
+}
+#view-playing[data-theme="walkmanhires"] .progress-container {
+  grid-column: 1 / -1; grid-row: 1; display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px 0; font-size: 12px; color: #ddd;
+}
+#view-playing[data-theme="walkmanhires"] #time-current { grid-row: 1; grid-column: 1; }
+#view-playing[data-theme="walkmanhires"] #time-total { grid-row: 1; grid-column: 3; text-align: right; }
+#view-playing[data-theme="walkmanhires"] .playing-queue-position { display: block; grid-row: 1; grid-column: 2; text-align: center; color: #999; }
+#view-playing[data-theme="walkmanhires"] #progress-bar { grid-row: 2; grid-column: 1 / -1; width: 100%; min-width: 0; }
+#view-playing[data-theme="walkmanhires"] #progress-bar::-webkit-slider-runnable-track {
+  height: 2px; border-radius: 0;
+  background: linear-gradient(white, white) left / calc(6px + (100% - 12px) * var(--played-fraction, 0)) 100% no-repeat, #444;
+}
+#view-playing[data-theme="walkmanhires"] #progress-bar::-moz-range-track { height: 2px; background: #444; }
+#view-playing[data-theme="walkmanhires"] #progress-bar::-moz-range-progress { height: 2px; background: white; }
+#view-playing[data-theme="walkmanhires"] #progress-bar::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -5px; border: 0; background: #fff; border-radius: 50%; box-shadow: none; }
+#view-playing[data-theme="walkmanhires"] #progress-bar::-moz-range-thumb { width: 12px; height: 12px; border: 0; background: #fff; border-radius: 50%; box-shadow: none; }
+#view-playing[data-theme="walkmanhires"] .controls { grid-column: 2; grid-row: 2; gap: clamp(12px, 4vw, 30px); justify-content: center; margin: 0; }
+#view-playing[data-theme="walkmanhires"] .control-btn { width: clamp(44px, 12vw, 60px); height: clamp(44px, 12vw, 60px); border: 1.5px solid #ddd; border-radius: 50%; background: transparent; box-shadow: none; flex-shrink: 0; }
+#view-playing[data-theme="walkmanhires"] .control-btn.play { width: clamp(60px, 16vw, 80px); height: clamp(60px, 16vw, 80px); }
+#view-playing[data-theme="walkmanhires"] .control-btn span { color: white; font-size: 36px; }
+#view-playing[data-theme="walkmanhires"] .control-btn.play span { font-size: 44px; }
+#view-playing[data-theme="walkmanhires"] .control-btn:not(.play) span { display: none; }
+#view-playing[data-theme="walkmanhires"] .control-btn:not(.play)::after {
+  content: ''; width: 60%; height: 60%;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='white' d='M5 10h4v28H5zm5 14 16-13v26zm16 0 16-13v26z'/%3E%3C/svg%3E");
+}
+#view-playing[data-theme="walkmanhires"] .control-btn:last-child::after { transform: scaleX(-1); }
+#view-playing[data-theme="walkmanhires"] .extra-controls-right { display: contents; position: static; }
+#view-playing[data-theme="walkmanhires"] .mode-btn { grid-row: 2; padding: 0; color: #666; width: 36px; height: 44px; }
+#view-playing[data-theme="walkmanhires"] .mode-btn.active { color: white; }
+#view-playing[data-theme="walkmanhires"] #shuffle-btn { grid-column: 1; }
+#view-playing[data-theme="walkmanhires"] #repeat-btn { grid-column: 3; }
+#view-playing[data-theme="walkmanhires"] .volume-container { display: none; }
+@media (min-aspect-ratio: 6/5) {
+  #view-playing[data-theme="walkmanhires"] {
+    --album-size: min(calc(42vw * var(--carousel-size)), calc(100dvh - 112px), calc((100vw - 92px) / 2), 640px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 1fr 1fr;
+    padding: 20px 28px; gap: 24px 36px;
+  }
+  #view-playing[data-theme="walkmanhires"] .carousel-wrapper { grid-column: 1; grid-row: 1 / 3; }
+  #view-playing[data-theme="walkmanhires"] .track-header-wrapper { grid-column: 2; grid-row: 1; align-self: center; }
+  #view-playing[data-theme="walkmanhires"] .controls-wrapper { grid-column: 2; grid-row: 2; align-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-theme="walkmanhires"] #bg-container::after { transition: none; }
+}
+
+/* Walkman Hi-Res queue: full black list, numbered tracks and a docked player. */
+body[data-theme="walkmanhires"] #queue-drawer {
+  position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: #000; backdrop-filter: none; border: 0; box-shadow: none; z-index: 60;
+  transform: translateX(100%); visibility: hidden;
+  transition: transform .3s ease, visibility 0s .3s;
+}
+body[data-theme="walkmanhires"] #queue-drawer.open { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+body[data-theme="walkmanhires"] .queue-header { min-height: 64px; flex-shrink: 0; margin: 0; padding: 12px 16px; border: 0; gap: 12px; font-size: 20px; font-weight: 500; }
+body[data-theme="walkmanhires"] :is(.queue-default-title,.queue-default-close) { display: none; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-heading { display: block; flex: 1; }
+body[data-theme="walkmanhires"] .queue-close { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-library { display: flex; align-items: center; justify-content: center; border: 0; background: none; color: white; width: 40px; height: 40px; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-source { display: flex; align-items: center; flex-shrink: 0; gap: 16px; min-height: 36px; padding: 6px 16px; border-top: 1px solid #777; background: #292929; font-size: 14px; color: #eee; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-count { margin-left: auto; color: #aaa; font-size: 12px; }
+body[data-theme="walkmanhires"] .queue-list { min-height: 0; gap: 0; overscroll-behavior: contain; }
+body[data-theme="walkmanhires"] .queue-item { flex-shrink: 0; min-height: 60px; gap: 8px; padding: 8px 12px 8px 16px; border: 0; border-radius: 0; background: transparent; }
+body[data-theme="walkmanhires"] .queue-item.active { background: transparent; border: 0; }
+body[data-theme="walkmanhires"] .queue-item:hover { background: #ffffff0a; }
+body[data-theme="walkmanhires"] .queue-item > img { display: none; }
+body[data-theme="walkmanhires"] .queue-item-info { flex: 1; min-width: 0; }
+body[data-theme="walkmanhires"] .queue-item-title { color: #eee; font-size: 16px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.45; }
+body[data-theme="walkmanhires"] .queue-item-artist { color: #999; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.45; }
+body[data-theme="walkmanhires"] .queue-drag { width: 32px; min-height: 44px; padding: 0; align-self: stretch; align-items: flex-start; padding-top: 4px; }
+body[data-theme="walkmanhires"] .queue-drag > .material-icons { display: none; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-number { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: #999; }
+body[data-theme="walkmanhires"] .queue-item.active .walkman-hires-queue-number::after { content: 'play_arrow'; font-family: 'Material Icons'; font-size: 14px; line-height: 12px; width: 16px; height: 12px; background: #fff; color: #000; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-audio { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; min-width: 44px; font-size: 13px; line-height: 1.6; color: #ddd; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-duration { color: #999; }
+body[data-theme="walkmanhires"] .queue-item .list-item-more { width: 32px; height: 44px; padding: 0; flex-shrink: 0; color: #aaa; }
+body[data-theme="walkmanhires"] .queue-item.dragging { background: #ffffff15; opacity: .7; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-player { display: flex; position: relative; align-items: center; min-height: 76px; flex-shrink: 0; gap: 16px; padding: 6px 16px 6px 8px; background: #000; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-player button { border: 0; background: none; color: white; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-track { display: flex; align-items: center; flex: 1; min-width: 0; gap: 16px; padding: 0; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-cover { width: 64px; height: 64px; object-fit: cover; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-copy { display: flex; flex-direction: column; flex: 1; min-width: 0; text-align: center; gap: 6px; }
+body[data-theme="walkmanhires"] .walkman-hires-queue-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-title { font-size: 16px; color: #eee; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-artist { font-size: 13px; color: #999; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-play { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border: 1.5px solid #ddd !important; border-radius: 50%; padding: 0; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-play span { font-size: 36px; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress { position: absolute; top: -8px; left: 0; width: 100%; height: 16px; appearance: none; -webkit-appearance: none; background: none; margin: 0; cursor: pointer; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, white var(--queue-progress, 0%), #444 var(--queue-progress, 0%)); }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 0; height: 0; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress::-moz-range-track { height: 2px; background: #444; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress::-moz-range-progress { height: 2px; background: white; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress::-moz-range-thumb { width: 0; height: 0; border: 0; }
+body[data-theme="walkmanhires"] #walkman-hires-queue-progress:focus-visible { outline: 1px solid white; }
+@media (prefers-reduced-motion: reduce) {
+  body[data-theme="walkmanhires"] #queue-drawer { transition: none; }
+}
+
+@media (orientation: landscape) {
+  body[data-theme="walkmanhires"] #queue-drawer {
+    position: absolute; inset: 0 0 0 auto; width: 85%; max-width: 360px; height: 100%;
+    padding: 0; border-left: 1px solid #333; box-shadow: -5px 0 25px #0008;
+  }
+  body[data-theme="walkmanhires"] .queue-header { min-height: 48px; padding: 6px 12px; font-size: 16px; gap: 8px; }
+  body[data-theme="walkmanhires"] .walkman-hires-queue-library { width: 32px; height: 32px; }
+  body[data-theme="walkmanhires"] .walkman-hires-queue-source { min-height: 32px; font-size: 13px; padding: 4px 12px; }
+  body[data-theme="walkmanhires"] .queue-item { min-height: 56px; padding: 6px 8px; gap: 6px; }
+  body[data-theme="walkmanhires"] .queue-item-title { font-size: 14px; }
+  body[data-theme="walkmanhires"] .queue-item-artist { font-size: 12px; }
+  body[data-theme="walkmanhires"] .walkman-hires-queue-audio { font-size: 12px; }
+  body[data-theme="walkmanhires"] #walkman-hires-queue-player { display: none; }
+}
+
+/* Walkman Hi-Res library: monochrome shortcuts and the Sony docked player. */
+body[data-theme="walkmanhires"].walkman-hires-library-open header { background: #000; }
+body[data-theme="walkmanhires"].walkman-hires-library-open #bg-container::after { opacity: 0; }
+body[data-theme="walkmanhires"] #view-music { background: #000; padding: 12px 16px; }
+body[data-theme="walkmanhires"].z1-has-mini #view-music { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+body[data-theme="walkmanhires"] :is(#home-featured,#home-grid) { display: none !important; }
+body[data-theme="walkmanhires"] #walkman-hires-library-home:not([hidden]) { display: block; }
+body[data-theme="walkmanhires"] .walkman-hires-library-heading { display: flex; align-items: center; justify-content: space-between; min-height: 40px; margin-bottom: 12px; }
+body[data-theme="walkmanhires"] .walkman-hires-library-heading h2 { font-size: 21px; font-weight: 500; }
+body[data-theme="walkmanhires"] .walkman-hires-library-heading button { width: 40px; height: 40px; border: 0; color: white; background: none; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-library-heading button:disabled { opacity: .4; }
+body[data-theme="walkmanhires"] .walkman-hires-library-search { display: flex; align-items: center; gap: 12px; width: 100%; height: 40px; padding: 0 14px; margin: 0 0 16px; border: 1px solid #666; border-radius: 24px; background: none; color: #888; font-size: 14px; text-align: left; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-library-search .material-icons { font-size: 25px; }
+body[data-theme="walkmanhires"] .walkman-hires-library-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+body[data-theme="walkmanhires"] .walkman-hires-library-grid button { display: flex; align-items: center; min-height: 72px; gap: 10px; padding: 8px 4px; min-width: 0; border: 0; background: none; color: #ddd; font-size: 13px; font-weight: 300; text-align: left; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-library-grid button:hover { background: #ffffff0a; }
+body[data-theme="walkmanhires"] .walkman-hires-library-grid .material-icons { flex-shrink: 0; width: 30px; text-align: center; font-size: 30px; color: white; }
+body[data-theme="walkmanhires"] .walkman-hires-library-grid button > span:last-child { overflow-wrap: anywhere; }
+body[data-theme="walkmanhires"] .walkman-hires-library-hr { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 30px; height: 24px; border: 1.5px solid #b79c54; border-radius: 3px; color: #b79c54; font: bold 17px Arial, sans-serif; }
+body[data-theme="walkmanhires"] #list-view > .menu-header { font-size: 20px; font-weight: 500; margin: 12px -16px 0; padding: 8px 16px 16px; border-bottom: 1px solid #666; }
+body[data-theme="walkmanhires"] #view-music .back-btn { color: #aaa; font-size: 13px; margin: 0 0 8px; }
+body[data-theme="walkmanhires"] #items-container { gap: 0; }
+body[data-theme="walkmanhires"] #items-container > .list-item { min-height: 60px; border: 0; border-radius: 0; background: none; padding: 8px 0; gap: 10px; }
+body[data-theme="walkmanhires"] #items-container .list-item-info { min-width: 0; }
+body[data-theme="walkmanhires"] #items-container .list-item-title { color: #eee; font-size: 16px; font-weight: 400; }
+body[data-theme="walkmanhires"] #items-container .list-item-sub { color: #999; font-size: 14px; }
+body[data-theme="walkmanhires"] #items-container .list-item-more { width: 32px; height: 44px; padding: 0; flex-shrink: 0; color: #aaa; }
+body[data-theme="walkmanhires"] #items-container .walkman-hires-audio-row > img { display: none; }
+body[data-theme="walkmanhires"] .walkman-hires-media-audio { display: flex; flex-direction: column; align-items: flex-end; min-width: 44px; flex-shrink: 0; font-size: 13px; color: #eee; line-height: 1.6; }
+body[data-theme="walkmanhires"] .walkman-hires-media-audio > span:last-child { color: #999; }
+body[data-theme="walkmanhires"] #items-container > .walkman-hires-genre-row { width: 100%; color: #eee; text-align: left; cursor: pointer; }
+body[data-theme="walkmanhires"] .walkman-hires-genre-row > .material-icons { font-size: 28px; color: white; }
+body[data-theme="walkmanhires"] .walkman-hires-genre-row > span:last-child { color: #999; font-size: 13px; }
+body[data-theme="walkmanhires"] #list-sortbar { background: #111; border: 0; border-radius: 0; }
+body[data-theme="walkmanhires"] .list-sort-select { background: #222; border-color: #444; border-radius: 0; }
+body[data-theme="walkmanhires"] #fav-view .grid-card { background: #000 !important; border: 0; box-shadow: none; justify-content: center; padding-left: 50px; }
+body[data-theme="walkmanhires"] #fav-view .grid-card::before { display: none; }
+body[data-theme="walkmanhires"] #fav-view .grid-card::after { content: 'music_note'; position: absolute; left: 8px; top: calc(50% - 16px); color: white; font: 32px 'Material Icons'; }
+body[data-theme="walkmanhires"] #fav-view [data-preview-category="albums"]::after { content: 'album'; }
+body[data-theme="walkmanhires"] #fav-view .grid-card-title { font-size: 14px; font-weight: 400; }
+body[data-theme="walkmanhires"] #z1-mini-player:not([hidden]) { display: flex; position: fixed; inset: auto 0 0; z-index: 35; min-height: calc(76px + env(safe-area-inset-bottom, 0px)); padding: 6px 16px calc(6px + env(safe-area-inset-bottom, 0px)) 8px; background: #000; gap: 16px; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-track { gap: 16px; }
+body[data-theme="walkmanhires"] #z1-mini-cover { width: 64px; height: 64px; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-info { flex: 1; min-width: 0; text-align: center; gap: 6px; }
+body[data-theme="walkmanhires"] #z1-mini-title { font-size: 16px; }
+body[data-theme="walkmanhires"] #z1-mini-artist { font-size: 13px; color: #999; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-controls { padding: 0; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-controls button:not(.z1-mini-play) { display: none; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-play { width: 48px; height: 48px; border: 1.5px solid #ddd; }
+body[data-theme="walkmanhires"] #z1-mini-play-icon { font-size: 36px; }
+@media (orientation: landscape) {
+  body[data-theme="walkmanhires"] .walkman-hires-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body[data-theme="walkmanhires"] .walkman-hires-library-grid button { min-height: 64px; }
+}
+
+/* Optional cassette screen, exclusively for Walkman Hi-Res. */
+body[data-theme="walkmanhires"] #walkman-hires-cassette-settings { display: block; }
+.walkman-hires-cassette-delay { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #ccc; font-size: 13px; flex-wrap: wrap; }
+.walkman-hires-cassette-delay input { width: 64px; border: 1px solid #666; border-radius: 3px; padding: 7px; background: #181818; color: white; font-size: 14px; }
+.walkman-hires-cassette-delay input:disabled { opacity: .4; }
+#walkman-hires-cassette-hint { margin-top: 10px; color: #999; font-size: 12px; line-height: 1.5; }
+#walkman-hires-cassette { position: fixed; inset: 0; z-index: 1000; width: 100%; height: 100dvh; overflow: hidden; padding: 0; border: 0; background: #000; color: #aaa; cursor: pointer; align-items: center; justify-content: center; }
+#walkman-hires-cassette[hidden], body:not([data-theme="walkmanhires"]) #walkman-hires-cassette { display: none !important; }
+#walkman-hires-cassette:not([hidden]) { display: flex; }
+.walkman-hires-cassette-stage { display: block; flex-shrink: 0; width: min(94vw, calc((100dvh - 56px) / .63), 1200px); aspect-ratio: 1000 / 630; }
+.walkman-hires-cassette-stage svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 3px #000); }
+.walkman-hires-cassette-stage svg text { user-select: none; }
+.walkman-hires-cassette-spool { transform-box: fill-box; transform-origin: center; animation: walkman-hires-cassette-turn 2.8s linear infinite; animation-play-state: paused; }
+body.walkman-hires-playing .walkman-hires-cassette-spool { animation-play-state: running; }
+.walkman-hires-cassette-return { position: absolute; left: 0; right: 0; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); text-align: center; color: #777; font-size: 12px; }
+#walkman-hires-cassette:focus-visible { outline: 1px solid #bda651; outline-offset: -4px; }
+@media (orientation: portrait) {
+  .walkman-hires-cassette-stage { width: min(88dvh, calc((100vw - 12px) / .63)); transform: rotate(-90deg); }
+}
+@keyframes walkman-hires-cassette-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .walkman-hires-cassette-spool { animation: none; }
+}
+
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-track { touch-action: pan-y; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-track img { -webkit-user-drag: none; }
+
+/* The library mini-player has an artwork wash and a paged track transition. */
+body[data-theme="walkmanhires"] #z1-mini-player::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: var(--walkman-hires-mini-wash, linear-gradient(90deg, #333, #000));
+  opacity: 0; transition: opacity 850ms ease;
+}
+body[data-theme="walkmanhires"].walkman-hires-playing #z1-mini-player::before { opacity: 1; }
+body[data-theme="walkmanhires"] #z1-mini-player :is(.z1-mini-track,.z1-mini-controls) { position: relative; z-index: 1; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-track { overflow: hidden; }
+body[data-theme="walkmanhires"] #z1-mini-player .z1-mini-track.walkman-hires-mini-swiping > :is(img,.z1-mini-info) { visibility: hidden; }
+.walkman-hires-mini-motion { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.walkman-hires-mini-page { position: absolute; inset: 0; display: flex; align-items: center; gap: 16px; width: 100%; height: 100%; will-change: transform; }
+body[data-theme="walkmanhires"] #z1-mini-player .walkman-hires-mini-page img { width: 64px; height: 64px; object-fit: cover; flex-shrink: 0; }
+.walkman-hires-mini-page-copy { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: center; }
+.walkman-hires-mini-page-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 300; color: #eee; }
+.walkman-hires-mini-page-copy > span:last-child { color: #999; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) {
+  body[data-theme="walkmanhires"] #z1-mini-player::before { transition: none; }
+}

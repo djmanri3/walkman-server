@@ -322,7 +322,7 @@
     }
 
     function applyPlayingTheme(theme) {
-      const selected = ['modern', 'classic', 'z1', 'music'].includes(theme) ? theme : 'modern';
+      const selected = ['modern', 'classic', 'z1', 'music', 'ericsony', 'walkmanhires'].includes(theme) ? theme : 'modern';
       document.querySelector('#view-playing .carousel-container').cancelAlbumSwipe?.();
       document.getElementById('view-playing').dataset.theme = selected;
       document.body.dataset.theme = selected;
@@ -378,7 +378,7 @@
       const track = playlist[currentTrackIndex];
       document.body.classList.toggle('z1-playing', document.body.dataset.theme === 'z1' && document.getElementById('view-playing').classList.contains('active'));
       document.body.classList.toggle('music-playing', document.body.dataset.theme === 'music' && document.getElementById('view-playing').classList.contains('active'));
-      const visible = ['z1', 'music'].includes(document.body.dataset.theme) && !!track && document.getElementById('view-music').classList.contains('active');
+      const visible = ['z1', 'music', 'walkmanhires'].includes(document.body.dataset.theme) && !!track && document.getElementById('view-music').classList.contains('active');
       const mini = document.getElementById('z1-mini-player');
       mini.hidden = !visible;
       document.body.classList.toggle('z1-has-mini', visible);
@@ -999,6 +999,7 @@
       document.getElementById('home-grid').style.display = 'none';
       document.getElementById('fav-view').style.display = 'block';
       navStack = [{ type: 'favmenu' }];
+      updateMusicLibraryChrome();
       await refreshFavoritesCount();
     }
 
@@ -1177,6 +1178,7 @@
     }
 
     function backToCategories() {
+      if (document.body.dataset.theme === 'walkmanhires' && navStack.at(-1)?.type === 'hires-genre') return openWalkmanHiResCollection('genres');
       if (currentCategory === 'Folders' && navStack.at(-1)?.type === 'folder') {
         const parts = navStack.at(-1).path.split('/');
         parts.pop();

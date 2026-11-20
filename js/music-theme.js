@@ -151,6 +151,7 @@ function initMusicLibraryTabGesture() {
 initMusicLibraryTabGesture();
 
 function updateMusicThemeData() {
+  if (typeof updateWalkmanHiResTheme === 'function') updateWalkmanHiResTheme();
   const music = document.body.dataset.theme === 'music';
   const playing = document.getElementById('view-playing').classList.contains('active');
   const back = document.querySelector('.z1-header-back');
@@ -359,6 +360,7 @@ function updateMusicPlayingAccent() {
 }
 
 function updateMusicLibraryChrome() {
+  if (typeof updateWalkmanHiResLibraryChrome === 'function') updateWalkmanHiResLibraryChrome();
   updateMusicPlayingAccent();
   const artwork = isMusicLibraryBackgroundEnabled();
   for (const area of ['home', 'library']) {
@@ -449,6 +451,7 @@ function musicTrackCount(count) {
 
 function decorateMusicMediaRow(row, item, index = 0, detail = false) {
   row._musicPresentation = [item, index, detail];
+  if (typeof decorateWalkmanHiResMediaRow === 'function') decorateWalkmanHiResMediaRow(row, item, detail);
   if (document.body.dataset.theme !== 'music') return;
   row.classList.add('music-media-row');
   const current = playlist[currentTrackIndex];

@@ -322,6 +322,7 @@
 
     function renderQueueList() {
       if (typeof renderMusicLibrary === 'function') renderMusicLibrary();
+      if (typeof updateWalkmanHiResQueuePlayer === 'function') updateWalkmanHiResQueuePlayer();
       const container = document.getElementById('queue-list-container');
       container.innerHTML = '';
 
@@ -353,6 +354,7 @@
         image.src = imgUrl;
         div.querySelector('.queue-item-title').textContent = item.Name || '';
         div.querySelector('.queue-item-artist').textContent = item.Artists ? item.Artists.join(', ') : 'Artista';
+        if (typeof decorateWalkmanHiResQueueRow === 'function') decorateWalkmanHiResQueueRow(div, item, idx);
         div.onclick = () => {
           if (window.__queueDragMoved) { window.__queueDragMoved = false; return; }
           playTrack(idx, true);

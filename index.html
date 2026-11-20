@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WALKMAN</title>
-  <meta name="walkman-version" content="4.1">
-  <meta name="walkman-cache-version" content="walkman-v72">
+  <meta name="walkman-version" content="4.5">
+  <meta name="walkman-cache-version" content="walkman-v94">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
@@ -84,7 +84,8 @@
   <nav id="music-navigation" class="music-only" aria-label="Music" hidden>
     <div id="music-navigation-brand"></div>
     <button type="button" data-music-target="home" onclick="navigateMusicTheme('home')"><span class="music-nav-icon music-nav-home material-icons" aria-hidden="true">dashboard</span><span data-i18n="musicHome">Inicio</span></button>
-    <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span data-i18n="musicPlayQueue">Cola de reproducción</span></button>
+    <button type="button" data-music-target="queue" onclick="navigateMusicTheme('queue')"><span class="music-nav-icon music-nav-queue material-icons" aria-hidden="true">queue_music</span><span class="queue-default-title">Play Queue</span>
+        <span class="walkman-hires-only walkman-hires-queue-heading" data-i18n="musicPlayQueue">Cola de reproducción</span></button>
     <button type="button" data-music-target="Playlists" onclick="navigateMusicTheme('Playlists')"><span class="music-nav-icon music-nav-playlists material-icons" aria-hidden="true">format_list_bulleted</span><span data-i18n="playlists">Listas</span></button>
     <button type="button" data-music-target="Artists" onclick="navigateMusicTheme('Artists')"><span class="music-nav-icon music-nav-artists material-icons" aria-hidden="true">person</span><span data-i18n="artists">Artistas</span></button>
     <button type="button" data-music-target="Albums" onclick="navigateMusicTheme('Albums')"><span class="music-nav-icon music-nav-albums material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
@@ -151,7 +152,7 @@
       <span class="material-icons">code</span>
       GitHub: djmanri3/walkman-server
     </a>
-    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
+    <div class="app-version" id="settings-app-version"><span data-i18n="appVersion">Versión</span><span>4.5</span></div>
   </div>
 
 
@@ -166,6 +167,19 @@
     <div class="settings-group">
       <div class="settings-group-label" id="playing-theme-label" data-i18n="playingTheme">Tema de Reproduciendo</div>
       <div class="playing-theme-options" role="group" aria-labelledby="playing-theme-label">
+        <button type="button" class="playing-theme-option" data-playing-theme="ericsony" aria-pressed="false" onclick="setPlayingTheme('ericsony')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <defs><linearGradient id="ericsony-preview-bg"><stop stop-color="#49332e"/><stop offset="1" stop-color="#050505"/></linearGradient></defs>
+            <rect width="160" height="104" fill="url(#ericsony-preview-bg)"/>
+            <rect x="7" y="17" width="58" height="65" fill="#eee"/><rect x="12" y="28" width="48" height="42" fill="#77655e"/>
+            <path d="M73 24h49" stroke="#eee" stroke-width="2"/><path d="M73 32h40" stroke="#b58d7f" stroke-width="3"/>
+            <g stroke="#aaa" stroke-width="3" fill="none"><circle cx="88" cy="60" r="6"/><circle cx="109" cy="60" r="10"/><circle cx="130" cy="60" r="6"/></g>
+            <path d="m106 55 8 5-8 5z" fill="#aaa"/><path d="M73 79h78" stroke="#99786c" stroke-width="2"/>
+            <path d="M74 87h10m57 0h10" stroke="#aaa" stroke-width="4"/>
+          </svg>
+          <span class="playing-theme-caption"><span>ericsony</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
+
         <button type="button" class="playing-theme-option" data-playing-theme="modern" aria-pressed="true" onclick="setPlayingTheme('modern')">
           <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
             <rect x="25" y="23" width="44" height="44" rx="3" fill="#171717" stroke="white" stroke-width="1.5"/>
@@ -220,7 +234,28 @@
           </svg>
           <span class="playing-theme-caption"><span>Music</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
         </button>
+
+        <button type="button" class="playing-theme-option" data-playing-theme="walkmanhires" aria-pressed="false" onclick="setPlayingTheme('walkmanhires')">
+          <svg class="playing-theme-preview" viewBox="0 0 160 104" aria-hidden="true" focusable="false">
+            <defs><linearGradient id="walkman-hires-preview-bg" x2="0" y2="1"><stop stop-color="#c7749c"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+            <rect width="160" height="104" fill="url(#walkman-hires-preview-bg)"/>
+            <rect x="55" y="8" width="50" height="50" fill="#df278c"/><path d="M65 48V29h10v19m5 0V23h10v25m5 0V35h6v13" fill="#26242c"/>
+            <path d="M65 66h30m-24 6h18m-30 11h42" stroke="white"/>
+            <g stroke="white" fill="none"><circle cx="60" cy="94" r="5"/><circle cx="80" cy="94" r="7"/><circle cx="100" cy="94" r="5"/></g>
+            <path d="m78 90 6 4-6 4z" fill="white"/>
+          </svg>
+          <span class="playing-theme-caption"><span>WalkmanHiRes</span><span class="material-icons theme-check" aria-hidden="true">check_circle</span></span>
+        </button>
       </div>
+    </div>
+
+    <div class="settings-group walkman-hires-only" id="walkman-hires-cassette-settings">
+      <button class="settings-btn" id="walkman-hires-cassette-toggle" type="button" onclick="setWalkmanHiResCassetteEnabled(!isWalkmanHiResCassetteEnabled())" aria-pressed="false" aria-describedby="walkman-hires-cassette-hint">
+        <span class="material-icons" aria-hidden="true">settings_input_component</span>
+        <span data-i18n="hiresCassetteToggle">Mostrar pantalla repr. de casete</span>
+      </button>
+      <label class="walkman-hires-cassette-delay" for="walkman-hires-cassette-delay"><span data-i18n="hiresCassetteDelay">Mostrar después de</span><input id="walkman-hires-cassette-delay" type="number" min="3" max="120" step="1" value="10" onchange="setWalkmanHiResCassetteDelay(this.value)" disabled><span data-i18n="hiresCassetteSeconds">segundos</span></label>
+      <p id="walkman-hires-cassette-hint" data-i18n="hiresCassetteHint">Durante la reproducción, tras unos segundos sin interacción. Toca el casete para volver.</p>
     </div>
 
     <div class="settings-group music-only" id="music-background-settings">
@@ -692,6 +727,7 @@
     <div class="track-header-wrapper">
       <button class="music-only music-track-action" id="music-track-favorite" type="button" onclick="toggleMusicTrackFavorite()" aria-label="Añadir a favoritos" aria-pressed="false"><span class="material-icons">star_border</span></button>
       <div class="track-info">
+        <div class="walkman-hires-only" id="walkman-hires-quality" hidden></div>
         <div class="music-only" id="music-track-quality" hidden></div>
         <div class="track-title" id="track-title"><span class="track-title-text" id="track-title-text" data-i18n="selectTrack">Selecciona una canción</span></div>
         <div class="track-artist" id="track-artist">Emby Server</div>
@@ -706,6 +742,8 @@
           <span class="material-icons">queue_music</span>
         </div>
       </div>
+      <button class="walkman-hires-only" id="walkman-hires-favorite" type="button" onclick="toggleWalkmanHiResFavorite()" aria-label="Añadir a favoritos" aria-pressed="false"><span class="material-icons">star_border</span></button>
+      <button class="walkman-hires-only" id="walkman-hires-queue" type="button" onclick="toggleQueueDrawer()" aria-label="Cola de reproducción" data-a11y="musicPlayQueue" data-i18n-title="musicPlayQueue" aria-controls="queue-drawer"><span class="material-icons">queue_music</span></button>
       <button class="music-only music-track-action" id="music-track-add" type="button" onclick="addMusicTrackToPlaylist()" data-i18n-title="addToPlaylist" aria-label="Añadir a lista de reproducción"><span class="material-icons">add_circle_outline</span></button>
     </div>
 
@@ -798,15 +836,30 @@
     <!-- PANEL DESPLEGABLE DE LA COLA DE REPRODUCCIÓN -->
     <div class="queue-drawer" id="queue-drawer">
       <div class="queue-header">
-        <span>Play Queue</span>
-        <span class="material-icons" style="cursor: pointer;" onclick="toggleQueueDrawer()">close</span>
+        <span data-i18n="musicPlayQueue">Cola de reproducción</span>
+        <button class="walkman-hires-only walkman-hires-queue-library" type="button" onclick="openWalkmanHiResQueueLibrary()" data-i18n-title="myMusic" data-i18n-aria-label="myMusic" aria-label="Mi música"><span class="material-icons">library_music</span></button>
+        <span class="material-icons queue-default-close" style="cursor: pointer;" onclick="toggleQueueDrawer()">close</span>
+        <button class="walkman-hires-only queue-close" type="button" onclick="toggleQueueDrawer()" data-i18n-aria-label="back" aria-label="Atrás"><span class="material-icons">close</span></button>
       </div>
+      <div class="walkman-hires-only walkman-hires-queue-source"><span class="material-icons" aria-hidden="true">music_note</span><span data-i18n="songs">Canciones</span><span id="walkman-hires-queue-count"></span></div>
       <div class="queue-list" id="queue-list-container">
         <div style="color: #aaa; font-size: 13px; text-align: center; margin-top: 20px;" data-i18n="emptyQueue">Sin canciones en la cola</div>
+      </div>
+      <div class="walkman-hires-only" id="walkman-hires-queue-player">
+        <input type="range" id="walkman-hires-queue-progress" min="0" max="100" step="0.01" value="0" oninput="seekTrack(this.value)" onchange="seekTrack(this.value)" aria-label="Progreso de la canción" data-i18n-aria-label="trackProgress">
+        <button class="walkman-hires-queue-track" type="button" onclick="toggleQueueDrawer()" data-i18n-aria-label="playing" aria-label="Reproduciendo">
+          <img id="walkman-hires-queue-cover" alt="">
+          <span class="walkman-hires-queue-copy"><span id="walkman-hires-queue-title"></span><span id="walkman-hires-queue-artist"></span></span>
+        </button>
+        <button id="walkman-hires-queue-play" type="button" onclick="togglePlay()" aria-label="Reproducir / Pausar"><span class="material-icons">play_arrow</span></button>
       </div>
     </div>
 
     <div class="controls-wrapper">
+      <div class="ericsony-only ericsony-shortcuts">
+        <button type="button" onclick="switchTab('music')" data-i18n-title="myMusic" aria-label="Mi música" data-a11y="myMusic"><span class="material-icons">folder</span></button>
+        <button type="button" onclick="toggleQueueDrawer()" data-i18n-title="musicPlayQueue" aria-label="Cola de reproducción" aria-controls="queue-drawer" data-a11y="musicPlayQueue"><span class="material-icons">queue_music</span></button>
+      </div>
       <div class="controls">
         <div class="control-btn" onclick="prevTrack()" data-seek-direction="-1" role="button" tabindex="0" aria-label="Canción anterior" data-a11y="prevTrack"><span class="material-icons">skip_previous</span></div>
         <div class="control-btn play" onclick="togglePlay()" role="button" tabindex="0" aria-label="Reproducir / Pausar" data-a11y="togglePlay"><span class="material-icons" id="play-icon">play_arrow</span></div>
@@ -850,6 +903,22 @@
       <button type="button" role="tab" data-music-category="Folders" onclick="navigateMusicTheme('Folders')" data-i18n="folders" aria-selected="false">Carpetas</button>
     </div>
     <div id="category-view">
+      <section class="walkman-hires-only" id="walkman-hires-library-home" hidden>
+        <div class="walkman-hires-library-heading"><h2 data-i18n="hiresLibrary">Biblioteca</h2><button type="button" id="walkman-hires-library-refresh" onclick="refreshWalkmanHiResLibrary()" data-i18n-aria-label="musicRefreshHome" aria-label="Actualizar biblioteca"><span class="material-icons">refresh</span></button></div>
+        <button class="walkman-hires-library-search" type="button" onclick="toggleSearchOverlay()"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="search">Buscar</span></button>
+        <div class="walkman-hires-library-grid">
+          <button type="button" data-hires-category="Songs" onclick="openWalkmanHiResLibrary('Songs')"><span class="material-icons" aria-hidden="true">music_note</span><span data-i18n="hiresAllSongs">Todas las canciones</span></button>
+          <button type="button" data-hires-category="Albums" onclick="openWalkmanHiResLibrary('Albums')"><span class="material-icons" aria-hidden="true">album</span><span data-i18n="albums">Álbumes</span></button>
+          <button type="button" data-hires-category="Artists" onclick="openWalkmanHiResLibrary('Artists')"><span class="material-icons" aria-hidden="true">person</span><span data-i18n="artists">Intérpretes</span></button>
+          <button type="button" data-hires-category="Folders" onclick="openWalkmanHiResLibrary('Folders')"><span class="material-icons" aria-hidden="true">folder</span><span data-i18n="folders">Carpetas</span></button>
+          <button type="button" data-hires-category="Favorites" onclick="openWalkmanHiResLibrary('Favorites')"><span class="material-icons" aria-hidden="true">star</span><span data-i18n="favorites">Favoritos</span></button>
+          <button type="button" data-hires-category="Playlists" onclick="openWalkmanHiResLibrary('Playlists')"><span class="material-icons" aria-hidden="true">playlist_play</span><span data-i18n="playlists">Listas de reproducción</span></button>
+          <button type="button" data-hires-category="recent" onclick="openWalkmanHiResCollection('recent')"><span class="material-icons" aria-hidden="true">update</span><span data-i18n="hiresRecent">Más recientes</span></button>
+          <button type="button" data-hires-category="hires" onclick="openWalkmanHiResCollection('hires')"><span class="walkman-hires-library-hr" aria-hidden="true">HR</span><span data-i18n="hiresResolution">Alta resolución</span></button>
+          <button type="button" data-hires-category="genres" onclick="openWalkmanHiResCollection('genres')"><span class="material-icons" aria-hidden="true">library_music</span><span data-i18n="hiresGenres">Géneros</span></button>
+        </div>
+      </section>
+
       <div id="home-featured" class="featured-section">
         <div class="featured-slideshow" id="featured-slideshow">
           <div class="featured-title-strip" data-i18n="myMusicHome">My Music</div>
@@ -1058,7 +1127,7 @@
       <div style="font-size: 36px; margin-bottom: 8px;">🎵</div>
       <div style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px;">Walkman Server</div>
       <div style="font-size: 12px; color: #aaa; margin-bottom: 18px;">by djmanri3</div>
-      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.1</span></div>
+      <div class="app-version" id="about-app-version"><span data-i18n="appVersion">Versión</span><span>4.5</span></div>
       <a href="https://github.com/djmanri3/walkman-server/tree/main" target="_blank" rel="noopener" style="display: inline-block; background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver en GitHub</a>
   </div>
     </div>
@@ -1134,6 +1203,52 @@
     <span id="track-seek-time">+0:00</span>
   </div>
 
+<button id="walkman-hires-cassette" type="button" hidden onclick="dismissWalkmanHiResCassette()" aria-label="Pantalla de casete. Toca para volver al reproductor.">
+  <span class="walkman-hires-cassette-stage">
+  <svg viewBox="0 0 1000 630" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="cassette-plastic" x2="0" y2="1"><stop stop-color="#4d4835"/><stop offset=".045" stop-color="#1e1e16"/><stop offset=".5" stop-color="#24231a"/><stop offset="1" stop-color="#11120e"/></linearGradient>
+      <linearGradient id="cassette-hub" x2=".6" y2="1"><stop stop-color="#b7b09a"/><stop offset=".3" stop-color="#4f4d41"/><stop offset=".6" stop-color="#171914"/><stop offset="1" stop-color="#a49f8b"/></linearGradient>
+      <linearGradient id="cassette-gold" x2=".3" y2="1"><stop stop-color="#e3cb65"/><stop offset=".5" stop-color="#b59a39"/><stop offset="1" stop-color="#e4c751"/></linearGradient>
+      <linearGradient id="cassette-paper" x2="0" y2="1"><stop stop-color="#f0efe3"/><stop offset="1" stop-color="#cfcebf"/></linearGradient>
+      <radialGradient id="cassette-tape"><stop offset=".4" stop-color="#12130f"/><stop offset=".65" stop-color="#39382b"/><stop offset=".8" stop-color="#1b1c16"/><stop offset="1" stop-color="#5b5744"/></radialGradient>
+      <clipPath id="cassette-window-clip"><rect x="187" y="237" width="626" height="163" rx="7"/></clipPath>
+      <pattern id="cassette-grid" width="9" height="9" patternUnits="userSpaceOnUse"><rect x="1" y="1" width="6" height="6" rx="1" fill="#171911" stroke="#514d37" stroke-width=".8"/><path d="M2 6V2H6" stroke="#797157" stroke-width=".5" fill="none" opacity=".4"/></pattern>
+    </defs>
+    <path d="M150 13 163 3H837L850 13Z" fill="#3f3d2c"/>
+    <rect x="5" y="12" width="990" height="610" rx="30" fill="url(#cassette-plastic)" stroke="#676047" stroke-width="4"/>
+    <rect x="14" y="23" width="972" height="588" rx="23" fill="url(#cassette-grid)" stroke="#0d0f0a" stroke-width="5"/>
+    <rect x="66" y="67" width="868" height="437" rx="12" fill="#24241c" stroke="#75705a" stroke-width="2"/>
+    <rect x="77" y="77" width="846" height="102" rx="9" fill="url(#cassette-paper)"/>
+    <path d="M77 124H923" stroke="#4b4a3e" stroke-width="1"/>
+    <text x="92" y="111" font-size="11" fill="#38382f" font-family="Arial">INDEX</text>
+    <text id="walkman-hires-cassette-title" x="145" y="111" font-size="26" fill="#171811" font-family="Arial" font-weight="bold">WALKMAN</text>
+    <text id="walkman-hires-cassette-artist" x="145" y="160" font-size="24" fill="#171811" font-family="Arial">CASSETTE</text>
+    <text x="95" y="203" font-size="15" fill="url(#cassette-gold)" font-family="Arial" font-weight="bold" letter-spacing=".7">TYPE IV (METAL) POSITION. 46 MINUTES (23 MIN. EACH SIDE)</text>
+    <rect x="174" y="225" width="652" height="188" rx="12" fill="#0c0e09" stroke="#58523e" stroke-width="3"/>
+    <rect x="187" y="237" width="626" height="163" rx="7" fill="#1f2118" stroke="#373a2a"/>
+    <g clip-path="url(#cassette-window-clip)"><circle id="walkman-hires-cassette-tape-left" cx="292" cy="318" r="101" fill="url(#cassette-tape)" stroke="#78725b" stroke-width="2"/>
+    <circle id="walkman-hires-cassette-tape-right" cx="708" cy="318" r="60" fill="url(#cassette-tape)" stroke="#78725b" stroke-width="2"/></g>
+    <rect x="409" y="245" width="182" height="148" fill="url(#cassette-grid)" stroke="#80785c" stroke-width="3"/>
+    <path d="M500 249V390M484 269H516M479 293H521M475 318H525M479 344H521M484 370H516" stroke="#c1bda6" opacity=".6" stroke-width="2"/>
+    <g transform="translate(292 318)"><circle r="62" fill="url(#cassette-hub)" stroke="#080807" stroke-width="7"/><circle r="50" fill="#151511" stroke="#8d8774" stroke-width="4"/>
+<g class="walkman-hires-cassette-spool"><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(0)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(60)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(120)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(180)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(240)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(300)"/><circle r="32" fill="#090a08" stroke="#38372d" stroke-width="3"/><circle r="18" fill="#25261e" stroke="#595748" stroke-width="2"/><path d="M-4-18H4L3-5H-3ZM17 8L13 15 3 6 6 1ZM-13 15-17 8-6 1-3 6Z" fill="#c9c7b5"/><circle r="5" fill="#080906"/></g></g>
+    <g transform="translate(708 318)"><circle r="62" fill="url(#cassette-hub)" stroke="#080807" stroke-width="7"/><circle r="50" fill="#151511" stroke="#8d8774" stroke-width="4"/>
+<g class="walkman-hires-cassette-spool"><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(0)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(60)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(120)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(180)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(240)"/><path d="M-9-52H9L13-32H-13Z" fill="#bbb5a0" stroke="#5b574a" stroke-width="2" transform="rotate(300)"/><circle r="32" fill="#090a08" stroke="#38372d" stroke-width="3"/><circle r="18" fill="#25261e" stroke="#595748" stroke-width="2"/><path d="M-4-18H4L3-5H-3ZM17 8L13 15 3 6 6 1ZM-13 15-17 8-6 1-3 6Z" fill="#c9c7b5"/><circle r="5" fill="#080906"/></g></g>
+    <text x="95" y="390" font-size="46" fill="url(#cassette-gold)" font-family="Georgia" font-weight="bold">A</text>
+    <text x="852" y="255" font-size="10" fill="#d5d2bd" font-family="Arial" text-anchor="middle">NOISE</text><text x="852" y="267" font-size="10" fill="#d5d2bd" font-family="Arial" text-anchor="middle">REDUCTION</text>
+    <rect x="833" y="277" width="39" height="41" fill="#e3e2d4"/><text x="852" y="292" font-size="11" fill="#171912" font-family="Arial" text-anchor="middle">ON</text><text x="852" y="310" font-size="11" fill="#171912" font-family="Arial" text-anchor="middle">OFF</text>
+    <text x="375" y="457" font-size="12" fill="#d4d2bf" font-family="Arial" font-style="italic">COMPACT</text><text x="375" y="472" font-size="12" fill="#d4d2bf" font-family="Arial" font-style="italic">CASSETTE</text>
+    <text x="898" y="479" font-size="49" fill="url(#cassette-gold)" font-family="Arial" font-weight="bold" text-anchor="end">METALLIC 46</text>
+    <path d="M224 523H776L802 608H198Z" fill="url(#cassette-plastic)" stroke="#625b40" stroke-width="4"/>
+    <path d="M237 534H763L783 599H217Z" fill="url(#cassette-grid)" stroke="#10120b" stroke-width="3"/>
+    <g fill="#080a06" stroke="#514b35" stroke-width="4"><circle cx="278" cy="569" r="16"/><circle cx="722" cy="569" r="16"/><circle cx="409" cy="574" r="10"/><circle cx="591" cy="574" r="10"/></g>
+    <g transform="translate(32 32)"><circle r="24" fill="#0b0b09" stroke="#625c45" stroke-width="4"/><circle r="15" fill="url(#cassette-hub)" stroke="#211f17" stroke-width="3"/><path d="M-9-2H-3V-9H2V-3H9V2H3V9H-2V3H-9Z" fill="#0d0d09" stroke="#353226"/></g><g transform="translate(968 32)"><circle r="24" fill="#0b0b09" stroke="#625c45" stroke-width="4"/><circle r="15" fill="url(#cassette-hub)" stroke="#211f17" stroke-width="3"/><path d="M-9-2H-3V-9H2V-3H9V2H3V9H-2V3H-9Z" fill="#0d0d09" stroke="#353226"/></g><g transform="translate(32 598)"><circle r="24" fill="#0b0b09" stroke="#625c45" stroke-width="4"/><circle r="15" fill="url(#cassette-hub)" stroke="#211f17" stroke-width="3"/><path d="M-9-2H-3V-9H2V-3H9V2H3V9H-2V3H-9Z" fill="#0d0d09" stroke="#353226"/></g><g transform="translate(968 598)"><circle r="24" fill="#0b0b09" stroke="#625c45" stroke-width="4"/><circle r="15" fill="url(#cassette-hub)" stroke="#211f17" stroke-width="3"/><path d="M-9-2H-3V-9H2V-3H9V2H3V9H-2V3H-9Z" fill="#0d0d09" stroke="#353226"/></g>
+  </svg>
+  </span>
+  <span class="walkman-hires-cassette-return" data-i18n="hiresCassetteReturn">Toca para volver</span>
+</button>
+
   <audio id="audio-player" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></audio>
 
     <!-- Módulos de la aplicación (divididos desde el monolito original) -->
@@ -1152,6 +1267,8 @@
   <script src="js/ui.js"></script>
   <script src="js/folders.js"></script>
   <script src="js/music-theme.js"></script>
+  <script src="js/walkman-hires.js"></script>
+  <script src="js/walkman-hires-cassette.js"></script>
   <script src="js/app.js"></script>
 
   <div id="local-banner" class="local-wait-banner" style="display:none;">

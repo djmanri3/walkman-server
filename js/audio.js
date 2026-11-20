@@ -963,13 +963,25 @@
       }
     }
 
+    function updatePlayingProgress(value) {
+      const progress = Math.max(0, Math.min(100, Number(value) || 0));
+      const slider = $('progress-bar');
+      slider.value = progress;
+      slider.style.setProperty('--played-fraction', String(progress / 100));
+    }
+
+    ['loadedmetadata', 'emptied'].forEach(event => audio.addEventListener(event, () => {
+      updatePlayingProgress(Number.isFinite(audio.duration) && audio.duration > 0
+        ? audio.currentTime / audio.duration * 100 : 0);
+    }));
+
     audio.addEventListener('timeupdate', () => {
       if (isNaN(audio.duration)) return;
       const cur = audio.currentTime;
       if (cur === audio._lastTimeUpdate) return;
       audio._lastTimeUpdate = cur;
       const progress = ((cur / audio.duration) * 100).toFixed(2);
-      $('progress-bar').value = progress;
+      updatePlayingProgress(progress);
       $('time-current').textContent = formatTime(cur);
       $('time-total').textContent = formatTime(audio.duration);
       // Barra de progreso del Visualizador (solo si está visible)
@@ -1005,6 +1017,7 @@
     function seekTrack(value) {
       if (audio.duration) {
         audio.currentTime = (value / 100) * audio.duration;
+        updatePlayingProgress(value);
       }
     }
 

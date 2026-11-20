@@ -32,7 +32,7 @@ await run(`(()=>{
 })()`);
 await new Promise(r=>setTimeout(r,500));
 // Changing language must preserve loaded song metadata in every player theme.
-for (const theme of ['modern','classic','z1','music']) {
+for (const theme of ['modern','classic','z1','music','ericsony','walkmanhires']) {
  await run(`applyPlayingTheme('${theme}')`);
  for (const lang of ['en','es','fr','de','it','pt']) {
   await run(`setLang('${lang}')`);
@@ -45,7 +45,7 @@ await run("applyPlayingTheme('modern');setLang('en')");
 console.log('PASS language changes preserve the song title and playback in all themes');
 assert.equal(await run("document.getElementById('view-playing').dataset.theme"),'modern');
 await run("toggleSettingsMenu();openSettingsSection('customization')");
-assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),4);
+assert.equal(await run("document.querySelectorAll('.playing-theme-option svg.playing-theme-preview').length"),6);
 await run("document.querySelector('[data-playing-theme=classic]').click()");
 assert.equal(await run("document.querySelector('[data-playing-theme=classic]').getAttribute('aria-pressed')"),'true');
 const screenshot=async name=>{const shot=await command('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(artifacts,name+'.png'),Buffer.from(shot.data,'base64'));};

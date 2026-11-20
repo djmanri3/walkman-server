@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v72';
+const CACHE_NAME = 'walkman-v94';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,8 @@ const SHELL_ASSETS = [
   './js/favorites.js',
   './js/ui.js',
   './js/music-theme.js',
+  './js/walkman-hires.js',
+  './js/walkman-hires-cassette.js',
   './js/folders.js',
   './js/app.js',
   './js/updates.js',

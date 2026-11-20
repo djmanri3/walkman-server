@@ -126,6 +126,10 @@ docker-compose up -d
 - Add settings on theme Music to change background on My Library and Home the same with player (album cover blur...)
 - Add Folder view
 
+### Version 4.5
+- Add theme ericsony
+- Add theme WalkmanHiRes
+
 ### App update notices
 When hosted over HTTP(S), the app checks `version.json` without using the cached response on each page load. It compares the installed cache revision with the available one and shows an update notice in the selected language. **Update** activates the downloaded service worker, removes obsolete app caches and reloads; server configuration, preferences and local-library storage are preserved. **Later** hides the notice until the next page load. Offline checks leave the current installation unchanged.
 

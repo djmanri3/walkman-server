@@ -134,7 +134,7 @@
     // background, en iOS desactivamos el procesado Web Audio y dejamos que el
     // elemento <audio> reproduzca de forma nativa directamente.
 
-    function dominantFromCanvas(img) {
+    function dominantFromCanvas(img, colorful = false) {
       const cv = document.createElement('canvas');
       const size = 32;
       cv.width = size; cv.height = size;
@@ -143,15 +143,35 @@
         ctx.drawImage(img, 0, 0, size, size);
         const data = ctx.getImageData(0, 0, size, size).data;
         let r = 0, g = 0, b = 0, n = 0;
+        const swatches = new Map();
         for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 128) continue;
           r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+          if (colorful) {
+            const channels = [data[i], data[i + 1], data[i + 2]];
+            const max = Math.max(...channels), min = Math.min(...channels);
+            const saturation = max ? (max - min) / max : 0;
+            if (max < 70 || saturation < .2) continue;
+            const key = channels.map(value => value >> 5).join(',');
+            const bucket = swatches.get(key) || { r: 0, g: 0, b: 0, count: 0, score: 0 };
+            bucket.r += channels[0]; bucket.g += channels[1]; bucket.b += channels[2]; bucket.count++;
+            bucket.score += saturation * (max / 255) ** 2;
+            swatches.set(key, bucket);
+          }
         }
+        if (swatches.size) {
+          const best = [...swatches.values()].sort((a, b) => b.score - a.score)[0];
+          return { r: Math.round(best.r / best.count), g: Math.round(best.g / best.count), b: Math.round(best.b / best.count) };
+        }
+        if (!n) return { r: 120, g: 120, b: 120 };
         r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
         return { r: r, g: g, b: b };
       } catch (e) {
         return { r: 120, g: 120, b: 120 };
       }
     }
+
+    let ericsonyArtworkColor = null;
 
     function paintAlbumBackground(color) {
       const bg = $('bg-container');
@@ -163,6 +183,40 @@
       const gain = chroma > 0 ? Math.min(1.65, 2 * Math.min(midpoint, 255 - midpoint) / chroma) : 1;
       const glowColor = [r, g, b].map(channel => Math.round(midpoint + (channel - midpoint) * gain));
       bg.style.setProperty('--music-beat-color', glowColor.join(' '));
+      if (playing.dataset.theme === 'walkmanhires') {
+        const swatch = ericsonyArtworkColor || color;
+        const channels = [swatch.r, swatch.g, swatch.b];
+        const lift = .3 * (Math.max(...channels) / 255) ** 2;
+        const top = channels.map(channel => Math.round(channel + (255 - channel) * lift));
+        // Ease into black across the full height, avoiding a visible cutoff
+        // where the old gradient reached black above the bottom controls.
+        const stops = [[0, 1], [25, .66], [50, .32], [70, .12], [85, .035], [94, .008], [100, 0]]
+          .map(([position, intensity]) =>
+            `rgb(${top.map(channel => Math.round(channel * intensity)).join(',')}) ${position}%`);
+        document.body.style.setProperty('--walkman-hires-wash',
+          `linear-gradient(180deg, ${stops.join(', ')})`);
+        const miniStops = [[0, .72], [20, .6], [42, .36], [64, .15], [82, .035], [94, .004], [100, 0]]
+          .map(([position, intensity]) =>
+            `rgb(${top.map(channel => Math.round(channel * intensity)).join(',')}) ${position}%`);
+        document.body.style.setProperty('--walkman-hires-mini-wash',
+          `linear-gradient(90deg, ${miniStops.join(', ')})`);
+        bg.style.background = '#000';
+        return;
+      }
+      if (playing.dataset.theme === 'ericsony') {
+        // Keep the artwork's vivid swatch for the title, seek bar and spotlight,
+        // independently of the user's global accent preference.
+        const swatch = ericsonyArtworkColor || color;
+        const channels = [swatch.r, swatch.g, swatch.b];
+        const peak = Math.max(...channels), floor = Math.min(...channels);
+        const neutral = peak - floor < 12;
+        const normalized = channels.map(channel => Math.round(channel * (peak ? 185 / peak : 1)));
+        const accent = neutral ? 'rgb(180,180,180)' : `rgb(${normalized.join(',')})`;
+        const spotlight = neutral ? 'rgb(55,55,55)' : `rgb(${normalized.map(channel => Math.round(channel * .44)).join(',')})`;
+        document.body.style.setProperty('--ericsony-accent', accent);
+        bg.style.background = `radial-gradient(ellipse at 25% 48%, ${spotlight} 0%, #030303 85%)`;
+        return;
+      }
       if (playing.dataset.theme !== 'z1') {
         bg.style.background = `radial-gradient(circle at 50% 60%, rgb(${r},${g},${b}) 0%, #050505 85%)`;
         return;
@@ -198,6 +252,7 @@
           visAlbumColor = { r: r, g: g, b: b };
 
           // El fondo SIEMPRE se adapta al color de la carátula, independientemente del modo
+          ericsonyArtworkColor = dominantFromCanvas(imgCurrent, true);
           paintAlbumBackground(visAlbumColor);
           
           // Solo el color de acento depende del modo
