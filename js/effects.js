@@ -188,6 +188,7 @@
         const channels = [swatch.r, swatch.g, swatch.b];
         const lift = .3 * (Math.max(...channels) / 255) ** 2;
         const top = channels.map(channel => Math.round(channel + (255 - channel) * lift));
+        document.body.style.setProperty('--walkman-beat-color', top.join(' '));
         // Ease into black across the full height, avoiding a visible cutoff
         // where the old gradient reached black above the bottom controls.
         const stops = [[0, 1], [25, .66], [50, .32], [70, .12], [85, .035], [94, .008], [100, 0]]
@@ -211,6 +212,7 @@
         const peak = Math.max(...channels), floor = Math.min(...channels);
         const neutral = peak - floor < 12;
         const normalized = channels.map(channel => Math.round(channel * (peak ? 185 / peak : 1)));
+        document.body.style.setProperty('--walkman-beat-color', (neutral ? [180, 180, 180] : normalized).join(' '));
         const accent = neutral ? 'rgb(180,180,180)' : `rgb(${normalized.join(',')})`;
         const spotlight = neutral ? 'rgb(55,55,55)' : `rgb(${normalized.map(channel => Math.round(channel * .44)).join(',')})`;
         document.body.style.setProperty('--ericsony-accent', accent);
@@ -702,7 +704,7 @@
         }
       } catch (e) {}
 
-      if (['z1', 'music'].includes($('view-playing').dataset.theme)) {
+      if (['z1', 'music', 'ericsony', 'walkmanhires'].includes($('view-playing').dataset.theme)) {
         const dt = z1BeatLastTime ? (now - z1BeatLastTime) / 1000 : 1 / 60;
         z1BeatLastTime = now;
         let bands = null, binHz = 1, rms = null;
@@ -726,6 +728,9 @@
         // remain stable, including on pause, silence and high-energy tracks.
         const level = updateZ1BeatEnvelope(bands, dt, binHz, rms);
         $('bg-container').style.setProperty('--z1-beat-level', level.toFixed(3));
+        if (['ericsony', 'walkmanhires'].includes($('view-playing').dataset.theme)) {
+          document.body.style.setProperty('--walkman-beat-level', level.toFixed(3));
+        }
       } else if (analyserNode && audio && !audio.paused) {
         try {
           const bin = analyserNode.frequencyBinCount;
@@ -760,6 +765,7 @@
 
     function resetBeatGlowBackground() {
       resetZ1BeatEnvelope();
+      document.body.style.setProperty('--walkman-beat-level', '0');
       const c = visAlbumColor || { r: 120, g: 120, b: 120 };
       const bg = document.getElementById('bg-container');
       if (bg) {

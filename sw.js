@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkman-v94';
+const CACHE_NAME = 'walkman-v96';
 const SHELL_ASSETS = [
   './',
   './index.html',

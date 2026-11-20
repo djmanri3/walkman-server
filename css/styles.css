@@ -4109,7 +4109,7 @@ body[data-theme="z1"] .folder-breadcrumb button:hover { background: #ffffff0d; c
 /* Sony Ericsson's early Android player: square sleeve and silver transport. */
 .ericsony-only { display: none; }
 body[data-theme="ericsony"] { --ericsony-silver: #aaa6a5; --ericsony-accent: #b4b4b4; }
-body[data-theme="ericsony"] header { background: rgba(0,0,0,.16); }
+body[data-theme="ericsony"] header { background: transparent; }
 #view-playing[data-theme="ericsony"] {
   --album-size: min(calc(76vw * var(--carousel-size)), 420px, max(120px, calc(100dvh - 360px)));
   padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
@@ -4508,3 +4508,18 @@ body[data-theme="walkmanhires"] #z1-mini-player .walkman-hires-mini-page img { w
 @media (prefers-reduced-motion: reduce) {
   body[data-theme="walkmanhires"] #z1-mini-player::before { transition: none; }
 }
+
+/* Beat glow is a separate opacity layer: the artwork palette stays stable. */
+body:is([data-theme="ericsony"], [data-theme="walkmanhires"]) #bg-container::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at 45% 42%, rgb(var(--walkman-beat-color, 180 180 180) / .85) 0%, rgb(var(--walkman-beat-color, 180 180 180) / .4) 30%, transparent 78%);
+  opacity: var(--walkman-beat-level, 0); will-change: opacity;
+}
+body[data-theme="walkmanhires"]:not(.walkman-hires-playing) #bg-container::before,
+body[data-theme="walkmanhires"].walkman-hires-library-open #bg-container::before { opacity: 0; }
+body[data-theme="walkmanhires"] #z1-mini-player::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 15% 50%, rgb(var(--walkman-beat-color, 180 180 180) / .8), transparent 85%);
+  opacity: 0; will-change: opacity;
+}
+body[data-theme="walkmanhires"].walkman-hires-playing #z1-mini-player::after { opacity: var(--walkman-beat-level, 0); }
