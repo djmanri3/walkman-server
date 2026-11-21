@@ -395,7 +395,7 @@
     function updateZ1MiniProgress() {
       const slider = document.getElementById('z1-mini-progress');
       const seekable = !!playlist[currentTrackIndex] && Number.isFinite(audio.duration) && audio.duration > 0;
-      const progress = seekable ? Math.min(100, Math.max(0, audio.currentTime / audio.duration * 100)) : 0;
+      const progress = seekable ? displayedPlaybackProgress() : 0;
       slider.disabled = !seekable;
       slider.value = progress;
       slider.style.setProperty('--mini-progress', `${progress}%`);

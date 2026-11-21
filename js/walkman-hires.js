@@ -69,7 +69,7 @@ function updateWalkmanHiResQueueProgress() {
   if (document.body.dataset.theme !== 'walkmanhires') return;
   const slider = document.getElementById('walkman-hires-queue-progress');
   const seekable = !!playlist[currentTrackIndex] && Number.isFinite(audio.duration) && audio.duration > 0;
-  const progress = seekable ? Math.max(0, Math.min(100, audio.currentTime / audio.duration * 100)) : 0;
+  const progress = seekable ? displayedPlaybackProgress() : 0;
   slider.disabled = !seekable;
   slider.value = progress;
   slider.style.setProperty('--queue-progress', progress + '%');

@@ -1151,6 +1151,26 @@
       display: flex;
     }
 
+    #progress-bar, #vis-progress-bar, #z1-mini-progress, #walkman-hires-queue-progress {
+      --seek-thumb-width: 12px;
+      touch-action: none;
+    }
+    #vis-progress-bar { --seek-thumb-width: 14px; }
+    #z1-mini-progress { --seek-thumb-width: 9px; }
+    #walkman-hires-queue-progress { --seek-thumb-width: 0px; }
+    #view-playing[data-theme="ericsony"] #progress-bar { --seek-thumb-width: 26px; }
+
+    input.seeking-directly::-webkit-slider-thumb { opacity: 0; }
+    input.seeking-directly::-moz-range-thumb { opacity: 0; }
+    .seek-drag-thumb {
+      position: fixed;
+      pointer-events: none;
+      z-index: 105;
+      border-radius: 50%;
+      transition: none;
+      animation: none;
+    }
+
     .progress-container {
       width: 100%;
       display: flex;
@@ -4189,7 +4209,7 @@ body[data-theme="ericsony"] header { background: transparent; }
 /* The portrait player places transport across the sleeve's lower edge. */
 @media (max-aspect-ratio: 6/5) {
   #view-playing[data-theme="ericsony"] {
-    --album-size: min(calc(92vw * var(--carousel-size)), 560px, max(120px, calc(100dvh - 280px)));
+    --album-size: min(calc(82vw * var(--carousel-size)), 500px, max(120px, calc(100dvh - 280px)));
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto auto;
     align-content: stretch; align-items: center;
@@ -4260,7 +4280,7 @@ body[data-theme="walkmanhires"] #bg-container::after {
 }
 body[data-theme="walkmanhires"].walkman-hires-playing #bg-container::after { opacity: 1; }
 #view-playing[data-theme="walkmanhires"] {
-  --album-size: min(calc(88vw * var(--carousel-size)), 560px, max(120px, calc(100dvh - 380px)));
+  --album-size: min(calc(78vw * var(--carousel-size)), 500px, max(120px, calc(100dvh - 380px)));
   grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto;
   align-content: stretch; align-items: center; justify-items: center;
   gap: 24px; padding: 24px 16px calc(16px + env(safe-area-inset-bottom, 0px));

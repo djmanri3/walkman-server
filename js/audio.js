@@ -963,6 +963,31 @@
       }
     }
 
+    let seekPreviewProgress = null;
+    let draggingSeek = false;
+
+    function displayedPlaybackProgress() {
+      return seekPreviewProgress ?? (Number.isFinite(audio.duration) && audio.duration > 0
+        ? audio.currentTime / audio.duration * 100 : 0);
+    }
+
+    function showSeekPreview(value) {
+      seekPreviewProgress = Math.max(0, Math.min(100, Number(value) || 0));
+      updatePlayingProgress(seekPreviewProgress);
+      for (const id of ['vis-progress-bar', 'z1-mini-progress', 'walkman-hires-queue-progress']) {
+        $(id).value = seekPreviewProgress;
+      }
+      $('z1-mini-progress').style.setProperty('--mini-progress', seekPreviewProgress + '%');
+      $('walkman-hires-queue-progress').style.setProperty('--queue-progress', seekPreviewProgress + '%');
+      $('view-playing').style.setProperty('--music-progress', seekPreviewProgress + '%');
+      const time = formatTime(seekPreviewProgress / 100 * audio.duration);
+      $('time-current').textContent = time;
+      $('vis-time-current').textContent = time;
+    }
+
+    audio.addEventListener('seeked', () => { if (!draggingSeek) seekPreviewProgress = null; });
+    audio.addEventListener('emptied', () => { seekPreviewProgress = null; });
+
     function updatePlayingProgress(value) {
       const progress = Math.max(0, Math.min(100, Number(value) || 0));
       const slider = $('progress-bar');
@@ -976,7 +1001,7 @@
     }));
 
     audio.addEventListener('timeupdate', () => {
-      if (isNaN(audio.duration)) return;
+      if (isNaN(audio.duration) || seekPreviewProgress !== null) return;
       const cur = audio.currentTime;
       if (cur === audio._lastTimeUpdate) return;
       audio._lastTimeUpdate = cur;
@@ -1015,9 +1040,116 @@
     });
 
     function seekTrack(value) {
-      if (audio.duration) {
-        audio.currentTime = (value / 100) * audio.duration;
-        updatePlayingProgress(value);
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        showSeekPreview(value);
+        // Commit once on release: repeated remote seeks during a swipe can
+        // queue decoding/network work and make the playhead lag behind.
+        const target = seekPreviewProgress / 100 * audio.duration;
+        if (audio.currentTime === target && !audio.seeking) seekPreviewProgress = null;
+        else audio.currentTime = target;
       }
     }
+
+    // Handle seeking directly so touch input bypasses the native range animation.
+    ['progress-bar', 'vis-progress-bar', 'z1-mini-progress', 'walkman-hires-queue-progress'].forEach(id => {
+      const slider = $(id);
+      let pointerId = null;
+      let touchId = null;
+      const thumb = document.createElement('span');
+      thumb.className = 'seek-drag-thumb';
+      thumb.hidden = true;
+      thumb.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(thumb);
+
+      function finishSeek(commit) {
+        draggingSeek = false;
+        slider.classList.remove('seeking-directly');
+        thumb.hidden = true;
+        if (commit && seekPreviewProgress !== null) seekTrack(seekPreviewProgress);
+        else {
+          seekPreviewProgress = null;
+          showSeekPreview(displayedPlaybackProgress());
+          seekPreviewProgress = null;
+        }
+      }
+
+      function seekAtPointer(event) {
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+        draggingSeek = true;
+        const rect = slider.getBoundingClientRect();
+        const thumbWidth = parseFloat(getComputedStyle(slider).getPropertyValue('--seek-thumb-width')) || 0;
+        const width = rect.width - thumbWidth;
+        if (width <= 0) return;
+        const value = Math.max(0, Math.min(100,
+          (event.clientX - rect.left - thumbWidth / 2) / width * 100));
+        showSeekPreview(value);
+        // Draw the drag thumb ourselves; native touch range painting can ease
+        // toward its value even when the value has already changed.
+        const style = getComputedStyle(slider);
+        slider.classList.add('seeking-directly');
+        thumb.hidden = thumbWidth === 0;
+        Object.assign(thumb.style, {
+          width: thumbWidth + 'px', height: thumbWidth + 'px',
+          left: (rect.left + (rect.width - thumbWidth) * value / 100) + 'px',
+          top: (rect.top + (rect.height - thumbWidth) / 2) + 'px',
+          background: id === 'progress-bar' && $('view-playing').dataset.theme === 'ericsony'
+            ? style.getPropertyValue('--ericsony-knob-face')
+            : ($('view-playing').classList.contains('music-playing-accent') && id === 'progress-bar'
+              ? style.getPropertyValue('--music-playing-accent-color') : '#fff'),
+          boxShadow: id === 'progress-bar' && $('view-playing').dataset.theme === 'ericsony'
+            ? style.getPropertyValue('--ericsony-knob-shadow') : 'none'
+        });
+      }
+
+      slider.addEventListener('pointerdown', event => {
+        if (event.pointerType === 'touch' || slider.disabled || !event.isPrimary || event.button !== 0) return;
+        event.preventDefault();
+        slider.focus({ preventScroll: true });
+        pointerId = event.pointerId;
+        slider.setPointerCapture(pointerId);
+        seekAtPointer(event);
+      });
+      slider.addEventListener('pointermove', event => {
+        if (event.pointerId === pointerId) seekAtPointer(event);
+      });
+      slider.addEventListener('pointerup', event => {
+        if (event.pointerId !== pointerId) return;
+        seekAtPointer(event);
+        const releasedPointer = pointerId;
+        pointerId = null;
+        finishSeek(true);
+        slider.releasePointerCapture(releasedPointer);
+      });
+      slider.addEventListener('lostpointercapture', () => {
+        if (pointerId !== null) { pointerId = null; finishSeek(false); }
+      });
+
+      // Cancelling pointerdown alone does not cancel the range's native touch
+      // handling. Cancel touch events as well, before it can animate the thumb.
+      slider.addEventListener('touchstart', event => {
+        if (slider.disabled || touchId !== null) return;
+        event.preventDefault();
+        const touch = event.changedTouches[0];
+        touchId = touch.identifier;
+        slider.focus({ preventScroll: true });
+        seekAtPointer(touch);
+      }, { passive: false });
+      slider.addEventListener('touchmove', event => {
+        if (touchId === null) return;
+        event.preventDefault();
+        const touch = Array.from(event.changedTouches).find(touch => touch.identifier === touchId);
+        if (touch) seekAtPointer(touch);
+      }, { passive: false });
+      slider.addEventListener('touchend', event => {
+        const touch = Array.from(event.changedTouches).find(touch => touch.identifier === touchId);
+        if (!touch) return;
+        event.preventDefault();
+        seekAtPointer(touch);
+        touchId = null;
+        finishSeek(true);
+      }, { passive: false });
+      slider.addEventListener('touchcancel', () => {
+        if (touchId !== null) { touchId = null; finishSeek(false); }
+      });
+    });
 

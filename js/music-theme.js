@@ -727,7 +727,7 @@ document.addEventListener('keydown', event => {
 
 audio.addEventListener('timeupdate', () => {
   if (document.body.dataset.theme !== 'music') return;
-  const progress = Number.isFinite(audio.duration) && audio.duration > 0 ? Math.min(100, audio.currentTime / audio.duration * 100) : 0;
+  const progress = displayedPlaybackProgress();
   document.getElementById('view-playing').style.setProperty('--music-progress', progress + '%');
 });
 
